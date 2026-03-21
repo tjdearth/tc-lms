@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+const TC_LOGO_URL =
+  "https://lh7-rt.googleusercontent.com/docsz/AD_4nXcuZ3fOJUGrPHzT0Tu5n3IyhjOPWYUjkhaEcBcNhdpt2I5hcRLGyL_Sj635ZffMbHWB3xfPa8vnDZ06Pfl0ez9vedO8hDGzYaZxhKsj7yyVeyk-sUcbBz4G6KXjTCvXUgo48Y2n?key=5z7x5EJrcuoubrabZrlshg";
+
 const navItems = [
   {
     label: "Home",
@@ -64,95 +67,139 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
     if (onMobileClose) onMobileClose();
   };
 
-  return (
-    <aside
-      className={`fixed left-0 top-0 bottom-0 w-[220px] flex flex-col z-[70] transition-transform duration-300 ease-in-out
-        ${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
-      style={{ backgroundColor: "#1a2332" }}
-    >
-      {/* Logo + App Name */}
-      <div className="flex flex-col items-center pt-6 pb-1">
-        <img
-          src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXcuZ3fOJUGrPHzT0Tu5n3IyhjOPWYUjkhaEcBcNhdpt2I5hcRLGyL_Sj635ZffMbHWB3xfPa8vnDZ06Pfl0ez9vedO8hDGzYaZxhKsj7yyVeyk-sUcbBz4G6KXjTCvXUgo48Y2n?key=5z7x5EJrcuoubrabZrlshg"
-          alt="Travel Collection"
-          className="h-[56px] w-auto mb-1"
-        />
-        {/* Close button on mobile — positioned top right */}
-        <button
-          onClick={onMobileClose}
-          className="md:hidden absolute top-4 right-4 text-white/60 hover:text-white p-1"
-          aria-label="Close menu"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+  const sidebarContent = (
+    <>
+      {/* Logo */}
+      <div
+        className="px-5 py-5"
+        style={{ borderBottom: "1px solid #2A3F52" }}
+      >
+        <div className="flex flex-col items-center gap-3">
+          <img
+            src={TC_LOGO_URL}
+            alt="Travel Collection"
+            className="w-full h-auto"
+            style={{ filter: "brightness(0) invert(1)" }}
+          />
+          <div
+            className="text-[13px] font-bold tracking-wide uppercase text-center"
+            style={{ color: "#27a28c" }}
+          >
+            Atlas
+          </div>
+        </div>
       </div>
 
-      {/* ATLAS label — teal, centered, prominent */}
-      <div className="text-center pb-5">
-        <span className="text-[15px] font-bold tracking-[0.2em]" style={{ color: "#27a28c" }}>
-          ATLAS
-        </span>
-      </div>
-
-      {/* Search bar — dark bg, prominent */}
-      <div className="px-4 pb-5">
-        <button
-          onClick={() => {
-            onSearchClick?.();
-            handleNavClick();
-          }}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-colors"
-          style={{ backgroundColor: "#141c27", color: "rgba(255,255,255,0.5)" }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#1c2636"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#141c27"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      {/* Search */}
+      <div className="px-3 pt-3">
+        <div className="relative">
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="absolute left-2.5 top-1/2 -translate-y-1/2"
+            style={{ color: "#8A9BB0" }}
+          >
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          <span>Search everything...</span>
-        </button>
+          <button
+            onClick={() => {
+              onSearchClick?.();
+              handleNavClick();
+            }}
+            className="w-full text-left pl-8 pr-7 py-2 rounded-lg text-[12px]"
+            style={{
+              backgroundColor: "#0F1923",
+              border: "1px solid #2A3F52",
+              color: "#8A9BB0",
+            }}
+          >
+            Search everything...
+          </button>
+        </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3">
-        <ul className="space-y-0.5">
-          {navItems.map((item) => {
-            const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.href);
+      {/* Nav */}
+      <nav className="px-3 py-3 flex-1 space-y-0.5 overflow-y-auto">
+        {navItems.map((item) => {
+          const active =
+            item.href === "/"
+              ? pathname === "/"
+              : pathname.startsWith(item.href);
 
-            return (
-              <li key={item.label}>
-                <Link
-                  href={item.href}
-                  onClick={handleNavClick}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-[13px] transition-colors ${
-                    isActive
-                      ? "text-white font-semibold"
-                      : "text-white/50 hover:text-white hover:bg-white/5"
-                  }`}
-                  style={isActive ? { backgroundColor: "rgba(39,162,140,0.2)" } : undefined}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={handleNavClick}
+              className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm transition-all duration-150"
+              style={
+                active
+                  ? { backgroundColor: "#304256", color: "#E8EDF2", fontWeight: 600 }
+                  : { color: "#8A9BB0" }
+              }
+              onMouseEnter={(e) => {
+                if (!active) {
+                  e.currentTarget.style.color = "#E8EDF2";
+                  e.currentTarget.style.backgroundColor = "rgba(48,66,86,0.3)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!active) {
+                  e.currentTarget.style.color = "#8A9BB0";
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }
+              }}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Bottom */}
-      <div className="px-5 py-4 border-t border-white/5">
-        <span className="text-[10px] text-white/20 tracking-wide">
+      <div
+        className="px-4 py-4"
+        style={{ borderTop: "1px solid #2A3F52" }}
+      >
+        <span className="text-[10px] tracking-wide" style={{ color: "rgba(232,237,242,0.3)" }}>
           Travel Collection
         </span>
       </div>
+    </>
+  );
+
+  return (
+    <aside
+      className={`w-[240px] flex flex-col fixed top-0 left-0 bottom-0 z-50 transition-transform duration-200 ease-in-out md:translate-x-0 ${
+        mobileOpen ? "translate-x-0" : "-translate-x-full"
+      }`}
+      style={{
+        backgroundColor: "#1A2A3A",
+        borderRight: "1px solid #2A3F52",
+      }}
+    >
+      {/* Mobile close button */}
+      <button
+        onClick={onMobileClose}
+        className="md:hidden absolute top-4 right-4 z-10 cursor-pointer"
+        style={{ color: "#8A9BB0" }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = "#E8EDF2"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = "#8A9BB0"; }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      {sidebarContent}
     </aside>
   );
 }

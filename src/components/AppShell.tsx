@@ -72,7 +72,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         onMobileClose={() => setSidebarOpen(false)}
       />
 
-      <main className="md:ml-[220px] min-h-screen pt-14 md:pt-0">{children}</main>
+      <main className="md:ml-[240px] min-h-screen pt-14 md:pt-0">{children}</main>
 
       <SearchModal
         isOpen={searchOpen}
