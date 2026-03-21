@@ -1005,7 +1005,7 @@ export default function WikiAdminPage() {
                       <p className="text-xs text-gray-400 mb-2">Content preview</p>
                       <div
                         className="scribe-content max-h-[300px] overflow-y-auto rounded-lg border border-gray-100 p-4"
-                        dangerouslySetInnerHTML={{ __html: pastedHtml }}
+                        dangerouslySetInnerHTML={{ __html: transformScribeHtml(pastedHtml) }}
                       />
                     </div>
                   </div>
@@ -1115,7 +1115,7 @@ export default function WikiAdminPage() {
                             <p className="text-xs text-gray-400 mb-2">Preview</p>
                             <div
                               className="scribe-content max-h-[300px] overflow-y-auto rounded-lg border border-gray-100 p-4"
-                              dangerouslySetInnerHTML={{ __html: editHtml }}
+                              dangerouslySetInnerHTML={{ __html: transformScribeHtml(editHtml) }}
                             />
                           </div>
                         )}
