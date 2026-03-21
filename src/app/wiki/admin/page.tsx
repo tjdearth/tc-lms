@@ -565,7 +565,7 @@ export default function WikiAdminPage() {
       } else {
         const sortOrder = numberingToSortOrder(ancestorNum);
         const created = await apiCreate({
-          title: ancestorNum,
+          title: `${ancestorNum} (Section)`,
           node_type: "heading",
           parent_id: parentId,
           sort_order: sortOrder,
@@ -604,7 +604,8 @@ export default function WikiAdminPage() {
       const bareHeading = parsed.numbering
         ? flatNodes.find((n) => {
             const { numbering } = extractNumbering(n.title);
-            return numbering === parsed.numbering && n.node_type === "heading" && !extractNumbering(n.title).name;
+            const extracted = extractNumbering(n.title);
+            return numbering === parsed.numbering && n.node_type === "heading" && (!extracted.name || extracted.name === "(Section)");
           })
         : null;
 

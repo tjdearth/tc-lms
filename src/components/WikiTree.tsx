@@ -32,9 +32,10 @@ function TreeNode({
     <div>
       <button
         onClick={() => {
-          if (isHeading && hasChildren) {
+          if (hasChildren) {
             setExpanded(!expanded);
-          } else if (node.node_type === "article") {
+          }
+          if (node.node_type === "article" || (isHeading && !hasChildren)) {
             onSelectArticle(node);
           }
         }}
@@ -44,7 +45,7 @@ function TreeNode({
           borderRadius: isActive ? "0 999px 999px 0" : "6px",
           backgroundColor: isActive ? "#27a28c" : "transparent",
           color: isActive ? "#ffffff" : isHeading ? "#1a2a3a" : "#4a5568",
-          fontWeight: isActive ? 600 : isHeading ? 600 : 400,
+          fontWeight: isActive ? 600 : (isHeading && hasChildren) ? 600 : 400,
           ...(isActive
             ? {
                 marginLeft: "-8px",
