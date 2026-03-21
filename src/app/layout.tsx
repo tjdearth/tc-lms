@@ -11,6 +11,9 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "Atlas — Travel Collection",
   description: "Travel Collection internal knowledge base and learning platform",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

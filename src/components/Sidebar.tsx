@@ -5,14 +5,12 @@ import { usePathname } from "next/navigation";
 
 const navItems = [
   {
-    label: "Dashboard",
+    label: "Home",
     href: "/",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="3" width="7" height="7" rx="1" />
-        <rect x="3" y="14" width="7" height="7" rx="1" />
-        <rect x="14" y="14" width="7" height="7" rx="1" />
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
       </svg>
     ),
   },
@@ -51,16 +49,6 @@ const navItems = [
       </svg>
     ),
   },
-  {
-    label: "Search",
-    href: "#search",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="8" />
-        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-      </svg>
-    ),
-  },
 ];
 
 interface SidebarProps {
@@ -81,8 +69,8 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
       className={`fixed left-0 top-0 bottom-0 w-[220px] bg-navy flex flex-col z-[70] transition-transform duration-300 ease-in-out
         ${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
     >
-      {/* Logo + mobile close */}
-      <div className="px-5 py-5 flex items-center gap-3">
+      {/* Logo */}
+      <div className="px-5 pt-5 pb-2 flex items-center justify-between">
         <img
           src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXcuZ3fOJUGrPHzT0Tu5n3IyhjOPWYUjkhaEcBcNhdpt2I5hcRLGyL_Sj635ZffMbHWB3xfPa8vnDZ06Pfl0ez9vedO8hDGzYaZxhKsj7yyVeyk-sUcbBz4G6KXjTCvXUgo48Y2n?key=5z7x5EJrcuoubrabZrlshg"
           alt="Travel Collection"
@@ -91,7 +79,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
         {/* Close button on mobile */}
         <button
           onClick={onMobileClose}
-          className="md:hidden ml-auto text-white/60 hover:text-white p-1"
+          className="md:hidden text-white/60 hover:text-white p-1"
           aria-label="Close menu"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -101,35 +89,38 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
         </button>
       </div>
 
+      {/* App name in teal */}
+      <div className="px-5 pb-4">
+        <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#27a28c" }}>
+          ATLAS
+        </span>
+      </div>
+
+      {/* Prominent search bar */}
+      <div className="px-3 pb-4">
+        <button
+          onClick={() => {
+            onSearchClick?.();
+            handleNavClick();
+          }}
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors bg-white/10 hover:bg-white/15 text-white/50 hover:text-white/70"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <span>Search everything...</span>
+        </button>
+      </div>
+
       {/* Navigation */}
-      <nav className="flex-1 px-3 mt-2">
+      <nav className="flex-1 px-3">
         <ul className="space-y-1">
           {navItems.map((item) => {
             const isActive =
               item.href === "/"
                 ? pathname === "/"
-                : pathname.startsWith(item.href) && item.href !== "#search";
-            const isSearch = item.href === "#search";
-
-            if (isSearch) {
-              return (
-                <li key={item.label}>
-                  <button
-                    onClick={() => {
-                      onSearchClick?.();
-                      handleNavClick();
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-white/60 hover:text-white hover:bg-white/10"
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                    <span className="ml-auto text-xs text-white/30 font-mono hidden md:inline">
-                      Ctrl+K
-                    </span>
-                  </button>
-                </li>
-              );
-            }
+                : pathname.startsWith(item.href);
 
             return (
               <li key={item.label}>
@@ -151,10 +142,10 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
         </ul>
       </nav>
 
-      {/* Bottom label */}
+      {/* Bottom */}
       <div className="px-5 py-4 border-t border-white/10">
-        <span className="text-xs text-white/40 tracking-wide">
-          Atlas
+        <span className="text-[10px] text-white/30 tracking-wide">
+          Travel Collection
         </span>
       </div>
     </aside>
