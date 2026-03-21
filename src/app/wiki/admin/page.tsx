@@ -421,22 +421,24 @@ export default function WikiAdminPage() {
       .select("id, title, sort_order")
       .order("sort_order");
 
-    const nodesBySortOrder = new Map<number, string>();
+    // Map numbering prefix → node id (e.g. "2.4" from title "2.4 Dashboards and Reports")
+    const nodesByNumbering = new Map<string, string>();
     if (currentNodes) {
       for (const n of currentNodes) {
-        nodesBySortOrder.set(n.sort_order, n.id);
+        const { numbering } = extractNumbering(n.title);
+        if (numbering) nodesByNumbering.set(numbering, n.id);
       }
     }
 
     let parentId: string | null = null;
 
     for (const ancestorNum of ancestorNumberings) {
-      const sortOrder = numberingToSortOrder(ancestorNum);
-      const existingId = nodesBySortOrder.get(sortOrder);
+      const existingId = nodesByNumbering.get(ancestorNum);
 
       if (existingId) {
         parentId = existingId;
       } else {
+        const sortOrder = numberingToSortOrder(ancestorNum);
         const created = await apiCreate({
           title: ancestorNum,
           node_type: "heading",
@@ -445,7 +447,7 @@ export default function WikiAdminPage() {
           brand,
         });
         parentId = created.id;
-        nodesBySortOrder.set(sortOrder, created.id);
+        nodesByNumbering.set(ancestorNum, created.id);
       }
     }
 
