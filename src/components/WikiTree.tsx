@@ -37,13 +37,22 @@ function TreeNode({
             onSelectArticle(node);
           }
         }}
-        className="w-full text-left flex items-center gap-1 py-[7px] text-[13px] transition-colors rounded-md"
+        className={`text-left flex items-center gap-1 py-[7px] text-[13px] transition-colors ${isActive ? "" : "w-full"}`}
         style={{
-          paddingLeft: `${depth * 14 + 12}px`,
           paddingRight: "12px",
-          backgroundColor: isActive ? "rgba(39,162,140,0.18)" : "transparent",
-          color: isActive ? "#1a6b5c" : isHeading ? "#1a2a3a" : "#4a5568",
+          borderRadius: isActive ? "0 999px 999px 0" : "6px",
+          backgroundColor: isActive ? "#27a28c" : "transparent",
+          color: isActive ? "#ffffff" : isHeading ? "#1a2a3a" : "#4a5568",
           fontWeight: isActive ? 600 : isHeading ? 600 : 400,
+          ...(isActive
+            ? {
+                marginLeft: "-8px",
+                width: "calc(100% + 8px)",
+                paddingLeft: `${depth * 14 + 20}px`,
+              }
+            : {
+                paddingLeft: `${depth * 14 + 12}px`,
+              }),
         }}
         onMouseEnter={(e) => {
           if (!isActive) {
@@ -59,7 +68,7 @@ function TreeNode({
         {hasChildren ? (
           <span
             className="w-5 flex-shrink-0 inline-flex items-center justify-center text-[11px]"
-            style={{ color: isActive ? "#27a28c" : "#9ca3af", transition: "transform 150ms ease", transform: expanded ? "rotate(90deg)" : "rotate(0deg)" }}
+            style={{ color: isActive ? "#ffffff" : "#9ca3af", transition: "transform 150ms ease", transform: expanded ? "rotate(90deg)" : "rotate(0deg)" }}
           >
             &#x203A;
           </span>

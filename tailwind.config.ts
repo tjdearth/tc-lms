@@ -12,7 +12,7 @@ const config: Config = {
         navy: "#304256",
         accent: "#27a28c",
         surface: "#0F1923",
-        background: "#F0F2F5",
+        background: "#eeeeee",
         foreground: "#171717",
       },
       fontFamily: {
