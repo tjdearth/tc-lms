@@ -424,15 +424,17 @@ export default function CompanyPage() {
             </div>
             <div className="flex flex-col lg:flex-row">
               {/* Rate Table */}
-              <div className="flex-1 flex justify-center p-4 border-b lg:border-b-0 lg:border-r border-[#E8ECF1]">
-                <iframe
-                  title="FX Rate Table"
-                  src="https://wise.com/gb/currency-converter/fx-widget/table?sourceCurrency=USD&targetCurrencies=EUR%2CMXN%2CJPY%2CAED%2CMAD%2CIDR%2CGBP%2CAUD%2CPEN%2CCOP%2CTRY%2CTHB"
-                  height={870}
-                  width={340}
-                  frameBorder={0}
-                  style={{ border: "none", maxWidth: "100%" }}
-                />
+              <div className="flex justify-center p-4 border-b lg:border-b-0 lg:border-r border-[#E8ECF1] overflow-hidden" style={{ maxHeight: 520 }}>
+                <div style={{ transform: "scale(0.85)", transformOrigin: "top center" }}>
+                  <iframe
+                    title="FX Rate Table"
+                    src="https://wise.com/gb/currency-converter/fx-widget/table?sourceCurrency=USD&targetCurrencies=EUR%2CMXN%2CJPY%2CAED%2CMAD%2CIDR%2CGBP%2CAUD%2CPEN%2CCOP%2CTRY%2CTHB"
+                    height={600}
+                    width={320}
+                    frameBorder={0}
+                    style={{ border: "none" }}
+                  />
+                </div>
               </div>
               {/* Chart */}
               <div className="flex-1 p-4">
@@ -465,16 +467,18 @@ export default function CompanyPage() {
                     </button>
                   ))}
                 </div>
-                <div className="flex justify-center">
-                  <iframe
-                    key={fxTarget}
-                    title={`FX Chart USD to ${fxTarget}`}
-                    src={`https://wise.com/gb/currency-converter/fx-widget/chart?sourceCurrency=USD&targetCurrency=${fxTarget}`}
-                    height={870}
-                    width={370}
-                    frameBorder={0}
-                    style={{ border: "none", maxWidth: "100%" }}
-                  />
+                <div className="flex justify-center overflow-hidden" style={{ maxHeight: 460 }}>
+                  <div style={{ transform: "scale(0.85)", transformOrigin: "top center" }}>
+                    <iframe
+                      key={fxTarget}
+                      title={`FX Chart USD to ${fxTarget}`}
+                      src={`https://wise.com/gb/currency-converter/fx-widget/chart?sourceCurrency=USD&targetCurrency=${fxTarget}`}
+                      height={540}
+                      width={370}
+                      frameBorder={0}
+                      style={{ border: "none" }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
