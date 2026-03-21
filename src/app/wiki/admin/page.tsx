@@ -51,7 +51,7 @@ function numberingToSortOrder(numbering: string): number {
 /** Extract numbering prefix and plain name from a title like "3.2.1.5 Creating a Combo" */
 function extractNumbering(title: string): { numbering: string; name: string } {
   const match = title.match(/^([\d.]+)(?:\s+(.*))?$/);
-  if (match) return { numbering: match[1], name: match[2] || "" };
+  if (match) return { numbering: match[1].replace(/\.+$/, ""), name: match[2] || "" };
   return { numbering: "", name: title };
 }
 
@@ -1091,6 +1091,66 @@ export default function WikiAdminPage() {
                   </button>
                   <p className="text-[11px] text-gray-400 mt-1">
                     Applies the styled card format to previously imported articles
+                  </p>
+
+                  <button
+                    onClick={async () => {
+                      setSaving(true);
+                      setStatusMsg("");
+                      try {
+                        // Find bare placeholder headings (title is just a number like "3" or "3 (Section)")
+                        const bareNodes = flatNodes.filter((n) => {
+                          const { numbering, name } = extractNumbering(n.title);
+                          return numbering && (!name || name === "(Section)") && n.node_type === "heading";
+                        });
+
+                        if (bareNodes.length === 0) {
+                          setStatusMsg("✓ No bare placeholder headings found — all clean!");
+                          setSaving(false);
+                          return;
+                        }
+
+                        let fixed = 0;
+                        for (const bare of bareNodes) {
+                          const { numbering: bareNum } = extractNumbering(bare.title);
+                          // Find the "real" node with same numbering but a proper name
+                          const real = flatNodes.find((n) => {
+                            if (n.id === bare.id) return false;
+                            const { numbering, name } = extractNumbering(n.title);
+                            return numbering === bareNum && !!name && name !== "(Section)";
+                          });
+
+                          if (real) {
+                            // Reparent bare node's children under the real node
+                            const orphans = flatNodes.filter((n) => n.parent_id === bare.id);
+                            for (const orphan of orphans) {
+                              await apiUpdate({ id: orphan.id, parent_id: real.id });
+                            }
+                            // Delete the bare duplicate
+                            await apiDelete(bare.id);
+                            fixed++;
+                          }
+                        }
+
+                        setStatusMsg(
+                          fixed > 0
+                            ? `✓ Fixed ${fixed} duplicate heading(s) — children reparented`
+                            : `⚠ Found ${bareNodes.length} bare heading(s) but no matching real nodes to merge into`
+                        );
+                        await fetchNodes();
+                      } catch (e: unknown) {
+                        const message = e instanceof Error ? e.message : "Unknown error";
+                        setStatusMsg(`✗ Error: ${message}`);
+                      }
+                      setSaving(false);
+                    }}
+                    disabled={saving}
+                    className="mt-3 px-4 py-2 text-xs font-medium rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Fix duplicate placeholder headings
+                  </button>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Finds bare headings like &quot;3&quot; or &quot;3 (Section)&quot; that duplicate a real heading, reparents their children, and deletes the duplicate
                   </p>
                 </div>
               </div>
