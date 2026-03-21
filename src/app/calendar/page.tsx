@@ -25,7 +25,7 @@ export default function CalendarPage() {
             Holidays &amp; Festivals Calendar
           </h1>
           <p className="text-gray-500">
-            Key dates across all 15 DMC brands. Plan ahead for holidays, peak
+            Key dates across all 16 DMC brands. Plan ahead for holidays, peak
             seasons, and cultural events.
           </p>
         </div>
