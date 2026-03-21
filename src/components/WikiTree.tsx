@@ -112,10 +112,12 @@ export default function WikiTree({
     return items
       .map((node) => {
         const matchesTitle = node.title.toLowerCase().includes(lower);
+        const matchesContent =
+          node.search_text?.toLowerCase().includes(lower) ?? false;
         const filteredChildren = node.children
           ? filterNodes(node.children, query)
           : [];
-        if (matchesTitle || filteredChildren.length > 0) {
+        if (matchesTitle || matchesContent || filteredChildren.length > 0) {
           return {
             ...node,
             children:

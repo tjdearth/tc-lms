@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { WikiNode } from "@/types";
-import { getAllArticles, findParentHeading } from "@/lib/api";
+import { getAllArticles, buildBreadcrumb } from "@/lib/api";
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -121,7 +121,9 @@ export default function SearchModal({
             </div>
           )}
           {results.map((article) => {
-            const parent = findParentHeading(nodes, article.id);
+            const crumbs = buildBreadcrumb(nodes, article.id);
+            // Remove the last crumb (it's the article itself)
+            const parentPath = crumbs.slice(0, -1).join(" / ");
             return (
               <button
                 key={article.id}
@@ -131,11 +133,11 @@ export default function SearchModal({
                 <p className="text-sm font-medium text-gray-800">
                   {article.title}
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {parent
-                    ? `Salesforce Academy / ${parent.title}`
-                    : "Salesforce Academy"}
-                </p>
+                {parentPath && (
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {parentPath}
+                  </p>
+                )}
                 {article.search_text && (
                   <p className="text-xs text-gray-500 mt-1 line-clamp-1">
                     {article.search_text}
