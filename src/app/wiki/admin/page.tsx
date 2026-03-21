@@ -1186,55 +1186,73 @@ export default function WikiAdminPage() {
 
                     {/* Content editor */}
                     <div className="bg-white rounded-xl border border-gray-200 p-5">
-                        <div className="flex items-center justify-between mb-3">
-                          <label className="text-xs text-gray-400">Content</label>
-                          <div className="flex gap-0.5 bg-gray-100 rounded-md p-0.5">
-                            <button
-                              onClick={() => setEditView("visual")}
-                              className={`px-2.5 py-1 text-[11px] rounded transition-colors ${
-                                editView === "visual"
-                                  ? "bg-white text-navy font-medium shadow-sm"
-                                  : "text-gray-500 hover:text-gray-700"
-                              }`}
-                            >
-                              Visual
-                            </button>
-                            <button
-                              onClick={() => setEditView("source")}
-                              className={`px-2.5 py-1 text-[11px] rounded transition-colors ${
-                                editView === "source"
-                                  ? "bg-white text-navy font-medium shadow-sm"
-                                  : "text-gray-500 hover:text-gray-700"
-                              }`}
-                            >
-                              Source
-                            </button>
-                          </div>
-                        </div>
-
-                        {editView === "visual" ? (
-                          <BlockEditor
-                            content={editHtml}
-                            onChange={(html) => setEditHtml(html)}
-                          />
-                        ) : (
-                          <>
-                            <textarea
-                              value={editHtml}
-                              onChange={(e) => setEditHtml(e.target.value)}
-                              className="w-full h-64 px-4 py-3 text-sm font-mono border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:border-accent resize-y"
-                            />
-                            {editHtml && (
-                              <div className="mt-4 border-t border-gray-100 pt-4">
-                                <p className="text-xs text-gray-400 mb-2">Preview</p>
-                                <div
-                                  className="scribe-content max-h-[300px] overflow-y-auto rounded-lg border border-gray-100 p-4"
-                                  dangerouslySetInnerHTML={{ __html: transformScribeHtml(editHtml) }}
-                                />
+                        {(() => {
+                          const isScribeContent = editHtml.includes('class="scribe-step"') || editHtml.includes('class="scribe-step-text"');
+                          const currentView = isScribeContent ? "source" : editView;
+                          return (
+                            <>
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <label className="text-xs text-gray-400">Content</label>
+                                  {isScribeContent && (
+                                    <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-200 rounded px-1.5 py-0.5">
+                                      Scribe import — source only
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex gap-0.5 bg-gray-100 rounded-md p-0.5">
+                                  <button
+                                    onClick={() => !isScribeContent && setEditView("visual")}
+                                    className={`px-2.5 py-1 text-[11px] rounded transition-colors ${
+                                      isScribeContent
+                                        ? "text-gray-300 cursor-not-allowed"
+                                        : currentView === "visual"
+                                          ? "bg-white text-navy font-medium shadow-sm"
+                                          : "text-gray-500 hover:text-gray-700"
+                                    }`}
+                                    title={isScribeContent ? "Scribe HTML must be edited in source view" : ""}
+                                  >
+                                    Visual
+                                  </button>
+                                  <button
+                                    onClick={() => setEditView("source")}
+                                    className={`px-2.5 py-1 text-[11px] rounded transition-colors ${
+                                      currentView === "source"
+                                        ? "bg-white text-navy font-medium shadow-sm"
+                                        : "text-gray-500 hover:text-gray-700"
+                                    }`}
+                                  >
+                                    Source
+                                  </button>
+                                </div>
                               </div>
-                            )}
-                          </>
-                        )}
+
+                              {currentView === "visual" ? (
+                                <BlockEditor
+                                  content={editHtml}
+                                  onChange={(html) => setEditHtml(html)}
+                                />
+                              ) : (
+                                <>
+                                  <textarea
+                                    value={editHtml}
+                                    onChange={(e) => setEditHtml(e.target.value)}
+                                    className="w-full h-64 px-4 py-3 text-sm font-mono border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:border-accent resize-y"
+                                  />
+                                  {editHtml && (
+                                    <div className="mt-4 border-t border-gray-100 pt-4">
+                                      <p className="text-xs text-gray-400 mb-2">Preview</p>
+                                      <div
+                                        className="scribe-content max-h-[300px] overflow-y-auto rounded-lg border border-gray-100 p-4"
+                                        dangerouslySetInnerHTML={{ __html: transformScribeHtml(editHtml) }}
+                                      />
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
 
                     {/* Save / Delete */}
