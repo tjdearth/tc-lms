@@ -35,15 +35,16 @@ function buildTree(flatNodes: WikiNode[]): WikiNode[] {
 }
 
 function numberingToSortOrder(numbering: string): number {
+  // Max Postgres integer: 2,147,483,647
+  // Supports up to 5 levels, each 0-99: e.g. 20.99.99.99.99
   const parts = numbering.split(".").map(Number);
-  while (parts.length < 6) parts.push(0);
+  while (parts.length < 5) parts.push(0);
   return (
-    parts[0] * 10000000000 +
-    parts[1] * 100000000 +
-    parts[2] * 1000000 +
-    parts[3] * 10000 +
-    parts[4] * 100 +
-    parts[5]
+    parts[0] * 100000000 +
+    parts[1] * 1000000 +
+    parts[2] * 10000 +
+    parts[3] * 100 +
+    parts[4]
   );
 }
 
