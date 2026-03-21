@@ -71,19 +71,78 @@ function transformScribeHtml(html: string): string {
   result = result.replace(/^(\s*<br\s*\/?>\s*)+/gi, "");
   result = result.replace(/(<\/p>)\s*(<br\s*\/?>\s*)+/gi, "$1");
 
-  // Transform each scribe-step: extract number, restructure with .step-number + .step-content
-  // Also absorb any immediately following screenshot containers into the step
-  result = result.replace(
-    /<div class="scribe-step">\s*<p class="scribe-step-text">\s*(\d+)\.\s*([\s\S]*?)<\/p>\s*<\/div>(\s*<p class="scribe-screenshot-container">[\s\S]*?<\/p>)?/gi,
-    (_, num, text, screenshot) => {
-      const screenshotHtml = screenshot
-        ? screenshot.replace(/<p class="scribe-screenshot-container">/gi, '<div class="scribe-screenshot-container">').replace(/<\/p>$/i, "</div>")
-        : "";
-      return `<div class="scribe-step"><div class="step-number">${num}</div><div class="step-content"><p>${text.trim()}</p>${screenshotHtml}</div></div>`;
+  // Transform each scribe-step that has a numbered scribe-step-text.
+  // Match the entire <div class="scribe-step">...</div> block, then extract the number
+  // and restructure into .step-number + .step-content format.
+  // Use a function to find matching closing </div> properly.
+  const blocks: string[] = [];
+  let i = 0;
+  while (i < result.length) {
+    const stepStart = result.indexOf('<div class="scribe-step">', i);
+    if (stepStart === -1) {
+      blocks.push(result.substring(i));
+      break;
     }
-  );
+    // Push content before this step
+    blocks.push(result.substring(i, stepStart));
 
-  // Handle any remaining standalone screenshot containers (not preceded by a step)
+    // Find the matching closing </div> by counting depth
+    let depth = 0;
+    let j = stepStart;
+    let endIdx = -1;
+    while (j < result.length) {
+      const openDiv = result.indexOf("<div", j);
+      const closeDiv = result.indexOf("</div>", j);
+      if (closeDiv === -1) break;
+      if (openDiv !== -1 && openDiv < closeDiv) {
+        depth++;
+        j = openDiv + 4;
+      } else {
+        depth--;
+        if (depth === 0) {
+          endIdx = closeDiv + 6;
+          break;
+        }
+        j = closeDiv + 6;
+      }
+    }
+
+    if (endIdx === -1) {
+      blocks.push(result.substring(stepStart));
+      break;
+    }
+
+    let stepHtml = result.substring(stepStart, endIdx);
+
+    // Check if this step has a numbered step-text (skip tips/warnings/already transformed)
+    const numMatch = stepHtml.match(/<p class="scribe-step-text">\s*(\d+)\.\s*/);
+    if (numMatch && !stepHtml.includes('class="step-number"') && !stepHtml.includes('scribe-step-warning') && !stepHtml.includes('scribe-step-tip') && !stepHtml.includes('scribe-step-alert')) {
+      const num = numMatch[1];
+      // Extract inner content (everything inside the outer div)
+      let inner = stepHtml.replace(/^<div class="scribe-step">\s*/, "").replace(/\s*<\/div>$/, "");
+      // Remove the number prefix from the first step-text paragraph
+      inner = inner.replace(/<p class="scribe-step-text">\s*\d+\.\s*/, "<p>");
+
+      // Check for a following screenshot container to absorb into this step
+      const afterStep = result.substring(endIdx);
+      const screenshotMatch = afterStep.match(/^\s*(<(?:p|div) class="scribe-screenshot-container">[\s\S]*?<\/(?:p|div)>)/i);
+      let screenshotHtml = "";
+      if (screenshotMatch) {
+        screenshotHtml = screenshotMatch[1]
+          .replace(/<p class="scribe-screenshot-container">/gi, '<div class="scribe-screenshot-container">')
+          .replace(/<\/p>$/i, "</div>");
+        endIdx += screenshotMatch[0].length;
+      }
+
+      stepHtml = `<div class="scribe-step"><div class="step-number">${num}</div><div class="step-content">${inner}${screenshotHtml}</div></div>`;
+    }
+
+    blocks.push(stepHtml);
+    i = endIdx;
+  }
+  result = blocks.join("");
+
+  // Handle any remaining standalone screenshot containers
   result = result.replace(
     /<p class="scribe-screenshot-container">([\s\S]*?)<\/p>/gi,
     '<div class="scribe-screenshot-container">$1</div>'

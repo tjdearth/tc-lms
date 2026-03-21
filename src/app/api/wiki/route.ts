@@ -165,19 +165,43 @@ function transformScribeHtml(html: string): string {
   result = result.replace(/<p class="scribe-author">[\s\S]*?<\/p>/gi, "");
   result = result.replace(/^(\s*<br\s*\/?>\s*)+/gi, "");
   result = result.replace(/(<\/p>)\s*(<br\s*\/?>\s*)+/gi, "$1");
-  result = result.replace(
-    /<div class="scribe-step">\s*<p class="scribe-step-text">\s*(\d+)\.\s*([\s\S]*?)<\/p>\s*<\/div>(\s*<p class="scribe-screenshot-container">[\s\S]*?<\/p>)?/gi,
-    (_, num, text, screenshot) => {
-      const screenshotHtml = screenshot
-        ? screenshot.replace(/<p class="scribe-screenshot-container">/gi, '<div class="scribe-screenshot-container">').replace(/<\/p>$/i, "</div>")
-        : "";
-      return `<div class="scribe-step"><div class="step-number">${num}</div><div class="step-content"><p>${text.trim()}</p>${screenshotHtml}</div></div>`;
+
+  // Parse step blocks properly by finding matching closing </div>
+  const blocks: string[] = [];
+  let i = 0;
+  while (i < result.length) {
+    const stepStart = result.indexOf('<div class="scribe-step">', i);
+    if (stepStart === -1) { blocks.push(result.substring(i)); break; }
+    blocks.push(result.substring(i, stepStart));
+    let depth = 0, j = stepStart, endIdx = -1;
+    while (j < result.length) {
+      const openDiv = result.indexOf("<div", j);
+      const closeDiv = result.indexOf("</div>", j);
+      if (closeDiv === -1) break;
+      if (openDiv !== -1 && openDiv < closeDiv) { depth++; j = openDiv + 4; }
+      else { depth--; if (depth === 0) { endIdx = closeDiv + 6; break; } j = closeDiv + 6; }
     }
-  );
-  result = result.replace(
-    /<p class="scribe-screenshot-container">([\s\S]*?)<\/p>/gi,
-    '<div class="scribe-screenshot-container">$1</div>'
-  );
+    if (endIdx === -1) { blocks.push(result.substring(stepStart)); break; }
+    let stepHtml = result.substring(stepStart, endIdx);
+    const numMatch = stepHtml.match(/<p class="scribe-step-text">\s*(\d+)\.\s*/);
+    if (numMatch && !stepHtml.includes('class="step-number"') && !stepHtml.includes('scribe-step-warning') && !stepHtml.includes('scribe-step-tip') && !stepHtml.includes('scribe-step-alert')) {
+      const num = numMatch[1];
+      let inner = stepHtml.replace(/^<div class="scribe-step">\s*/, "").replace(/\s*<\/div>$/, "");
+      inner = inner.replace(/<p class="scribe-step-text">\s*\d+\.\s*/, "<p>");
+      const afterStep = result.substring(endIdx);
+      const screenshotMatch = afterStep.match(/^\s*(<(?:p|div) class="scribe-screenshot-container">[\s\S]*?<\/(?:p|div)>)/i);
+      let screenshotHtml = "";
+      if (screenshotMatch) {
+        screenshotHtml = screenshotMatch[1].replace(/<p class="scribe-screenshot-container">/gi, '<div class="scribe-screenshot-container">').replace(/<\/p>$/i, "</div>");
+        endIdx += screenshotMatch[0].length;
+      }
+      stepHtml = `<div class="scribe-step"><div class="step-number">${num}</div><div class="step-content">${inner}${screenshotHtml}</div></div>`;
+    }
+    blocks.push(stepHtml);
+    i = endIdx;
+  }
+  result = blocks.join("");
+  result = result.replace(/<p class="scribe-screenshot-container">([\s\S]*?)<\/p>/gi, '<div class="scribe-screenshot-container">$1</div>');
   return result;
 }
 
