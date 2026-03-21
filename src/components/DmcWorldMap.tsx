@@ -34,7 +34,7 @@ const DMC_BRANDS: DmcBrand[] = [
   {
     name: "Truly Swahili",
     color: "#2D6A4F",
-    countries: ["Kenya", "United Republic of Tanzania", "Uganda", "Rwanda"],
+    countries: ["Kenya", "United Republic of Tanzania", "Tanzania", "Uganda", "Rwanda"],
     markers: [{ city: "Arusha", lat: -3.39, lon: 36.68 }],
   },
   {
