@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { isAdmin } from "@/lib/admin";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+
+async function requireAdmin() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email || !isAdmin(session.user.email)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+  return null;
+}
 
 function slugify(text: string): string {
   return text
@@ -19,6 +30,8 @@ function stripHtmlForSearch(html: string): string {
 
 // POST — create a wiki node
 export async function POST(req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { title, node_type, parent_id, sort_order, brand, html_content, slug, is_published } = body;
@@ -61,6 +74,8 @@ export async function POST(req: NextRequest) {
 
 // PATCH — update a wiki node
 export async function PATCH(req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { id, ...updates } = body;
@@ -101,6 +116,8 @@ export async function PATCH(req: NextRequest) {
 
 // DELETE — delete a wiki node
 export async function DELETE(req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { id } = body;
