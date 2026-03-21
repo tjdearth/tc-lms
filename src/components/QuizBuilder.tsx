@@ -54,7 +54,7 @@ export default function QuizBuilder({ quizId, onSave }: QuizBuilderProps) {
       // Fetch quiz with questions from the quizzes table via supabase
       // Since there's no GET endpoint for quizzes by ID, we fetch via course detail
       // For now, fetch directly from the quiz data embedded in lesson
-      const res = await fetch(`/api/learn/quizzes?quiz_id=${quizId}`);
+      const res = await fetch(`/api/learn/quizzes?lesson_id=${quizId}`);
       if (res.ok) {
         const data = await res.json();
         setQuiz(data);

@@ -9,10 +9,10 @@ import type { Course, Enrollment } from "@/types";
 
 const categories = [
   { key: "all", label: "All" },
-  { key: "general_onboarding", label: "General Onboarding" },
-  { key: "salesforce_academy", label: "Salesforce Academy" },
-  { key: "product_training", label: "Travel Advisors" },
-  { key: "compliance", label: "Best Practices" },
+  { key: "General Onboarding", label: "General Onboarding" },
+  { key: "Salesforce Academy", label: "Salesforce Academy" },
+  { key: "Travel Advisors", label: "Travel Advisors" },
+  { key: "Best Practices", label: "Best Practices" },
 ];
 
 const statusFilters = [

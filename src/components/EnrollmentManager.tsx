@@ -153,9 +153,14 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
                         className="px-2 py-1 text-xs border border-[#E8ECF1] rounded-lg outline-none focus:border-[#27a28c]"
                       />
                       <button
-                        onClick={() => {
-                          // Would PATCH enrollment due_date here
+                        onClick={async () => {
+                          await fetch("/api/learn/admin/enrollments", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ id: enr.id, due_date: dueDateDraft || null }),
+                          });
                           setEditDueDate(null);
+                          fetchEnrollments();
                         }}
                         className="text-[#27a28c] text-xs font-medium"
                       >
@@ -192,8 +197,13 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
                 <td className="px-4 py-2.5">
                   {enr.status !== "completed" && (
                     <button
-                      onClick={() => {
-                        // Would PATCH enrollment status to completed here
+                      onClick={async () => {
+                        await fetch("/api/learn/admin/enrollments", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ id: enr.id, status: "completed" }),
+                        });
+                        fetchEnrollments();
                       }}
                       className="text-xs text-[#27a28c] hover:text-[#27a28c]/80 font-medium"
                     >

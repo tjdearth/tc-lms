@@ -12,10 +12,10 @@ import { fetchCourseDetail, fetchCourses } from "@/lib/learn-api";
 import type { Course, LmsTrack, CompletionRule, Lesson } from "@/types";
 
 const CATEGORIES = [
-  { value: "general_onboarding", label: "General Onboarding" },
-  { value: "salesforce_academy", label: "Salesforce Academy" },
-  { value: "product_training", label: "Product Training" },
-  { value: "compliance", label: "Compliance" },
+  { value: "General Onboarding", label: "General Onboarding" },
+  { value: "Salesforce Academy", label: "Salesforce Academy" },
+  { value: "Travel Advisors", label: "Travel Advisors" },
+  { value: "Best Practices", label: "Best Practices" },
 ];
 
 const TRACKS: { value: LmsTrack; label: string }[] = [
@@ -53,7 +53,7 @@ export default function CourseBuilderPage() {
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
-  const [category, setCategory] = useState("general_onboarding");
+  const [category, setCategory] = useState("General Onboarding");
   const [tracks, setTracks] = useState<LmsTrack[]>(["general"]);
   const [estimatedMinutes, setEstimatedMinutes] = useState(0);
   const [completionRule, setCompletionRule] =
@@ -186,6 +186,17 @@ export default function CourseBuilderPage() {
         const data = await res.json();
         throw new Error(data.error || "Failed to save");
       }
+
+      // Save prerequisites
+      await fetch("/api/learn/courses", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: courseId,
+          _update_prerequisites: true,
+          prerequisite_ids: prerequisiteIds,
+        }),
+      });
 
       setSaveMsg("Settings saved");
       setTimeout(() => setSaveMsg(null), 2000);

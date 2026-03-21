@@ -29,19 +29,37 @@ export default function CourseOverview() {
         const res = await fetch(`/api/learn/courses/${courseId}`);
         const data = await res.json();
 
-        setCourse(data.course || data);
-        setEnrollment(data.enrollment || null);
+        const courseData = data.course || data;
+        setCourse(courseData);
+        setEnrollment(data.enrollment || courseData.enrollment || null);
 
-        // Check prerequisites
-        if (data.unmet_prerequisites && data.unmet_prerequisites.length > 0) {
-          setPrerequisitesMet(false);
-          setUnmetPrereqs(data.unmet_prerequisites);
+        // Check prerequisites — API returns prerequisite_ids
+        const prereqIds: string[] = courseData.prerequisite_ids || data.prerequisite_ids || [];
+        if (prereqIds.length > 0 && !(data.enrollment || courseData.enrollment)) {
+          try {
+            const enrollRes = await fetch("/api/learn/enroll");
+            const enrollments = await enrollRes.json();
+            const completedCourseIds = new Set(
+              (Array.isArray(enrollments) ? enrollments : [])
+                .filter((e: Enrollment) => e.status === "completed")
+                .map((e: Enrollment) => e.course_id)
+            );
+            const unmet = prereqIds.filter((id: string) => !completedCourseIds.has(id));
+            if (unmet.length > 0) {
+              setPrerequisitesMet(false);
+              const allCoursesRes = await fetch("/api/learn/courses");
+              const allCourses: Course[] = await allCoursesRes.json();
+              setUnmetPrereqs(allCourses.filter((c) => unmet.includes(c.id)));
+            }
+          } catch {
+            // If check fails, allow — server enforces on enroll
+          }
         }
 
         // Expand first module by default
-        if (data.course?.modules?.[0] || data.modules?.[0]) {
-          const firstMod = data.course?.modules?.[0] || data.modules?.[0];
-          setExpandedModules(new Set([firstMod.id]));
+        const mods = courseData.modules || data.modules || [];
+        if (mods.length > 0) {
+          setExpandedModules(new Set([mods[0].id]));
         }
       } catch (err) {
         console.error("Course load error:", err);

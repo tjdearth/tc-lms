@@ -104,10 +104,30 @@ export async function PATCH(req: NextRequest) {
   if (denied) return denied;
   try {
     const body = await req.json();
-    const { id, ...updates } = body;
+    const { id, _update_prerequisites, prerequisite_ids, ...updates } = body;
 
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+
+    // Handle prerequisite updates
+    if (_update_prerequisites && Array.isArray(prerequisite_ids)) {
+      // Delete existing prerequisites
+      await supabaseAdmin
+        .from("course_prerequisites")
+        .delete()
+        .eq("course_id", id);
+
+      // Insert new prerequisites
+      if (prerequisite_ids.length > 0) {
+        const rows = prerequisite_ids.map((prereqId: string) => ({
+          course_id: id,
+          prerequisite_id: prereqId,
+        }));
+        await supabaseAdmin.from("course_prerequisites").insert(rows);
+      }
+
+      return NextResponse.json({ success: true });
     }
 
     updates.updated_at = new Date().toISOString();

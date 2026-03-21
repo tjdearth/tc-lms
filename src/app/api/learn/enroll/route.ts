@@ -3,6 +3,43 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+// GET — list current user's enrollments
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const email = session.user.email.toLowerCase();
+
+    const { data: lmsUser } = await supabaseAdmin
+      .from("lms_users")
+      .select("id")
+      .eq("email", email)
+      .single();
+
+    if (!lmsUser) {
+      return NextResponse.json([]);
+    }
+
+    const { data: enrollments, error } = await supabaseAdmin
+      .from("enrollments")
+      .select("*")
+      .eq("user_id", lmsUser.id)
+      .order("enrolled_at", { ascending: false });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(enrollments || []);
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
 // POST — enroll current user in a course
 export async function POST(req: NextRequest) {
   try {

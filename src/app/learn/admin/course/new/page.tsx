@@ -9,10 +9,10 @@ import { isCourseCreator } from "@/lib/admin";
 import type { CourseTemplate, LmsTrack, CompletionRule, LessonType } from "@/types";
 
 const CATEGORIES = [
-  { value: "general_onboarding", label: "General Onboarding" },
-  { value: "salesforce_academy", label: "Salesforce Academy" },
-  { value: "product_training", label: "Product Training" },
-  { value: "compliance", label: "Compliance" },
+  { value: "General Onboarding", label: "General Onboarding" },
+  { value: "Salesforce Academy", label: "Salesforce Academy" },
+  { value: "Travel Advisors", label: "Travel Advisors" },
+  { value: "Best Practices", label: "Best Practices" },
 ];
 
 const TRACKS: { value: LmsTrack; label: string }[] = [
@@ -51,7 +51,7 @@ export default function CreateCoursePage() {
   const [title, setTitle] = useState("");
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("general_onboarding");
+  const [category, setCategory] = useState("General Onboarding");
   const [tracks, setTracks] = useState<LmsTrack[]>(["general"]);
   const [completionRule, setCompletionRule] =
     useState<CompletionRule>("all_lessons");
