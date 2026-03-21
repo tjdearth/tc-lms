@@ -378,7 +378,7 @@ export default function CompanyPage() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [, setTick] = useState(0);
-  const [expandedDmc, setExpandedDmc] = useState<string | null>(null);
+  const [selectedDmc, setSelectedDmc] = useState(0);
   const [teamByBrand, setTeamByBrand] = useState<Record<string, BrandTeam>>({});
 
   // Fetch team members
@@ -605,146 +605,160 @@ export default function CompanyPage() {
         )}
 
         {/* Local DMCs */}
-        {activeTab === "dmcs" && (
-          <div className="bg-white rounded-xl border border-[#E8ECF1] shadow-sm overflow-hidden divide-y divide-[#E8ECF1]">
-            {DMC_BRANDS_INFO.map((brand) => {
-              const isOpen = expandedDmc === brand.name;
-              const brandData = teamByBrand[brand.name];
-              const gm = brandData?.gm || null;
-              const team = brandData?.team || [];
-              const allMembers = [...(gm ? [gm] : []), ...team];
+        {activeTab === "dmcs" && (() => {
+          const brand = DMC_BRANDS_INFO[selectedDmc];
+          const brandData = teamByBrand[brand.name];
+          const gm = brandData?.gm || null;
+          const team = brandData?.team || [];
 
-              return (
-                <div key={brand.name}>
-                  {/* Accordion header */}
+          return (
+            <div>
+              {/* Brand selector strip */}
+              <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+                {DMC_BRANDS_INFO.map((b, i) => (
                   <button
-                    onClick={() => setExpandedDmc(isOpen ? null : brand.name)}
-                    className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-gray-50/50 transition-colors"
+                    key={b.name}
+                    onClick={() => setSelectedDmc(i)}
+                    className={`group flex-shrink-0 flex items-center gap-2.5 px-4 py-2.5 rounded-full border transition-all duration-200 ${
+                      selectedDmc === i
+                        ? "border-transparent text-white shadow-lg"
+                        : "border-[#E8ECF1] bg-white text-gray-500 hover:border-gray-300 hover:shadow-sm"
+                    }`}
+                    style={selectedDmc === i ? { backgroundColor: b.color } : undefined}
                   >
-                    <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: brand.color }} />
-                    <div className="flex-1 min-w-0">
-                      <span className="text-sm font-semibold text-[#304256]">{brand.name}</span>
-                      <span className="text-xs text-gray-400 ml-3">{brand.countries.join(", ")}</span>
-                    </div>
-                    {allMembers.length > 0 && (
-                      <div className="flex -space-x-1.5 flex-shrink-0">
-                        {allMembers.slice(0, 4).map((m) => (
-                          m.avatar_url ? (
-                            <img key={m.email} src={m.avatar_url} alt={m.name} className="w-6 h-6 rounded-full border-2 border-white object-cover" />
-                          ) : (
-                            <div key={m.email} className="w-6 h-6 rounded-full border-2 border-white bg-[#E8ECF1] flex items-center justify-center text-[9px] font-semibold text-gray-500">
-                              {m.name.charAt(0).toUpperCase()}
-                            </div>
-                          )
-                        ))}
-                        {allMembers.length > 4 && (
-                          <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[9px] font-medium text-gray-400">
-                            +{allMembers.length - 4}
-                          </div>
-                        )}
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${selectedDmc === i ? "bg-white/40" : ""}`}
+                      style={selectedDmc !== i ? { backgroundColor: b.color } : undefined}
+                    />
+                    <span className="text-xs font-medium whitespace-nowrap">{b.name}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Hero showcase card */}
+              <div className="rounded-2xl overflow-hidden shadow-sm border border-[#E8ECF1]" style={{ backgroundColor: brand.color + "08" }}>
+                <div className="grid grid-cols-1 lg:grid-cols-5">
+                  {/* Photo — takes 2/5 */}
+                  <div className="relative lg:col-span-2 h-64 lg:h-auto min-h-[360px]">
+                    {brand.photo ? (
+                      <img src={brand.photo} alt={brand.name} className="absolute inset-0 w-full h-full object-cover" />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: brand.color + "18" }}>
+                        <p className="text-sm text-gray-400">Photo coming soon</p>
                       </div>
                     )}
-                    <span className="text-[11px] text-gray-300 flex-shrink-0 hidden sm:block">{brand.city}</span>
-                    <svg
-                      width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                      className={`flex-shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                    >
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </button>
+                    {/* Gradient overlay at bottom for elegance */}
+                    <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/30 to-transparent lg:hidden" />
+                    {/* Brand color accent bar */}
+                    <div className="absolute top-0 left-0 w-full h-1 lg:w-1 lg:h-full lg:right-auto" style={{ backgroundColor: brand.color }} />
+                  </div>
 
-                  {/* Expanded content */}
-                  {isOpen && (
-                    <div className="px-5 pb-5">
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pl-7">
-                        {/* Photo */}
-                        <div className="rounded-lg overflow-hidden h-52 lg:h-auto" style={{ backgroundColor: brand.color + "12" }}>
-                          {brand.photo ? (
-                            <img src={brand.photo} alt={brand.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <p className="text-[11px] text-gray-400">Photo coming soon</p>
-                            </div>
-                          )}
-                        </div>
+                  {/* Content — takes 3/5 */}
+                  <div className="lg:col-span-3 p-6 lg:p-8 bg-white">
+                    {/* Brand heading */}
+                    <div className="mb-6">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: brand.color }} />
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-400">
+                          {brand.countries.join(" · ")}
+                        </span>
+                      </div>
+                      <h2 className="text-2xl font-bold text-[#304256] mb-3">{brand.name}</h2>
+                      <p className="text-sm text-gray-500 leading-relaxed max-w-lg">{brand.description}</p>
+                    </div>
 
-                        {/* Info */}
-                        <div className="lg:col-span-2 space-y-4">
-                          <div>
-                            <h4 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">About</h4>
-                            <p className="text-sm text-gray-600 leading-relaxed">{brand.description}</p>
-                          </div>
-
-                          <div className="grid grid-cols-3 gap-4">
-                            <div>
-                              <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Office</p>
-                              <p className="text-sm font-medium text-[#304256]">{brand.city}</p>
-                            </div>
-                            <div>
-                              <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Countries</p>
-                              <p className="text-sm font-medium text-[#304256]">{brand.countries.join(", ")}</p>
-                            </div>
-                            <div>
-                              <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Established</p>
-                              <p className="text-sm font-medium text-[#304256]">{brand.established || "—"}</p>
-                            </div>
-                          </div>
-
-                          {/* General Manager */}
-                          <div>
-                            <h4 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">General Manager</h4>
-                            {gm ? (
-                              <div className="flex items-center gap-3">
-                                {gm.avatar_url ? (
-                                  <img src={gm.avatar_url} alt={gm.name} className="w-10 h-10 rounded-full object-cover" />
-                                ) : (
-                                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white" style={{ backgroundColor: brand.color }}>
-                                    {gm.name.charAt(0).toUpperCase()}
-                                  </div>
-                                )}
-                                <div>
-                                  <p className="text-sm font-semibold text-[#304256]">{gm.name}</p>
-                                  <p className="text-[11px] text-gray-400">General Manager</p>
-                                </div>
-                              </div>
-                            ) : (
-                              <p className="text-xs text-gray-300 italic">Not assigned</p>
-                            )}
-                          </div>
-
-                          {/* Team */}
-                          <div>
-                            <h4 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                              Team {team.length > 0 && <span className="text-gray-300 font-normal">({team.length})</span>}
-                            </h4>
-                            {team.length > 0 ? (
-                              <div className="flex flex-wrap gap-3">
-                                {team.map((m) => (
-                                  <div key={m.email} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
-                                    {m.avatar_url ? (
-                                      <img src={m.avatar_url} alt={m.name} className="w-7 h-7 rounded-full object-cover" />
-                                    ) : (
-                                      <div className="w-7 h-7 rounded-full bg-[#304256] flex items-center justify-center text-[10px] font-semibold text-white">
-                                        {m.name.charAt(0).toUpperCase()}
-                                      </div>
-                                    )}
-                                    <span className="text-xs font-medium text-[#304256]">{m.name}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-xs text-gray-300 italic">No team members registered yet</p>
-                            )}
-                          </div>
-                        </div>
+                    {/* Stats row */}
+                    <div className="flex items-center gap-8 mb-8 pb-6 border-b border-[#E8ECF1]">
+                      <div>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">Headquarters</p>
+                        <p className="text-sm font-semibold text-[#304256]">{brand.city}</p>
+                      </div>
+                      <div className="w-px h-8 bg-[#E8ECF1]" />
+                      <div>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">Established</p>
+                        <p className="text-sm font-semibold text-[#304256]">{brand.established || "—"}</p>
+                      </div>
+                      <div className="w-px h-8 bg-[#E8ECF1]" />
+                      <div>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">Team Size</p>
+                        <p className="text-sm font-semibold text-[#304256]">{(gm ? 1 : 0) + team.length}</p>
                       </div>
                     </div>
-                  )}
+
+                    {/* General Manager */}
+                    <div className="mb-6">
+                      <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.12em] mb-3">General Manager</h4>
+                      {gm ? (
+                        <div className="flex items-center gap-4">
+                          {gm.avatar_url ? (
+                            <img src={gm.avatar_url} alt={gm.name} className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-md" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center text-base font-semibold text-white ring-2 ring-white shadow-md" style={{ backgroundColor: brand.color }}>
+                              {gm.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-sm font-semibold text-[#304256]">{gm.name}</p>
+                            <p className="text-[11px] text-gray-400">{brand.name}</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-300 italic">Not assigned</p>
+                      )}
+                    </div>
+
+                    {/* Team */}
+                    <div>
+                      <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.12em] mb-3">
+                        Team {team.length > 0 && <span className="text-gray-300 font-normal ml-1">({team.length})</span>}
+                      </h4>
+                      {team.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {team.map((m) => (
+                            <div key={m.email} className="flex items-center gap-2 border border-[#E8ECF1] rounded-full pl-1 pr-3 py-1 hover:shadow-sm transition-shadow bg-white">
+                              {m.avatar_url ? (
+                                <img src={m.avatar_url} alt={m.name} className="w-7 h-7 rounded-full object-cover" />
+                              ) : (
+                                <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white" style={{ backgroundColor: brand.color }}>
+                                  {m.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              <span className="text-xs font-medium text-[#304256]">{m.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-300 italic">No team members registered yet</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              </div>
+
+              {/* Navigation arrows */}
+              <div className="flex items-center justify-between mt-4">
+                <button
+                  onClick={() => setSelectedDmc(selectedDmc === 0 ? DMC_BRANDS_INFO.length - 1 : selectedDmc - 1)}
+                  className="flex items-center gap-2 text-xs text-gray-400 hover:text-[#304256] transition-colors group"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                  {DMC_BRANDS_INFO[selectedDmc === 0 ? DMC_BRANDS_INFO.length - 1 : selectedDmc - 1].name}
+                </button>
+                <span className="text-[11px] text-gray-300 tabular-nums">{selectedDmc + 1} / {DMC_BRANDS_INFO.length}</span>
+                <button
+                  onClick={() => setSelectedDmc(selectedDmc === DMC_BRANDS_INFO.length - 1 ? 0 : selectedDmc + 1)}
+                  className="flex items-center gap-2 text-xs text-gray-400 hover:text-[#304256] transition-colors group"
+                >
+                  {DMC_BRANDS_INFO[selectedDmc === DMC_BRANDS_INFO.length - 1 ? 0 : selectedDmc + 1].name}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </AppShell>
   );
