@@ -481,44 +481,28 @@ export default function WikiAdminPage() {
     const current = siblings[idx];
     const swap = siblings[swapIdx];
 
-    // Swap sort_orders
+    // Swap sort_orders only — titles/numbering stay with their content
     const currentSortOrder = current.sort_order;
     const swapSortOrder = swap.sort_order;
-
-    // Swap numbering in titles
-    const currentParts = extractNumbering(current.title);
-    const swapParts = extractNumbering(swap.title);
-
-    const newCurrentTitle =
-      swapParts.numbering
-        ? `${swapParts.numbering} ${currentParts.name}`
-        : currentParts.name;
-    const newSwapTitle =
-      currentParts.numbering
-        ? `${currentParts.numbering} ${swapParts.name}`
-        : swapParts.name;
 
     try {
       await Promise.all([
         apiUpdate({
           id: current.id,
           sort_order: swapSortOrder,
-          title: newCurrentTitle,
         }),
         apiUpdate({
           id: swap.id,
           sort_order: currentSortOrder,
-          title: newSwapTitle,
         }),
       ]);
       setStatusMsg(
-        `✓ Moved "${currentParts.name}" ${direction}`
+        `✓ Moved "${current.title}" ${direction}`
       );
       await fetchNodes();
       // Keep the moved node selected if it was
       if (selectedNode?.id === current.id) {
-        setSelectedNode({ ...current, sort_order: swapSortOrder, title: newCurrentTitle });
-        setEditTitle(newCurrentTitle);
+        setSelectedNode({ ...current, sort_order: swapSortOrder });
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Unknown error";
