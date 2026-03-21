@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
+import { isAdmin } from "@/lib/admin";
 import { WikiNode } from "@/types";
 
 // ── Helpers ──────────────────────────────────────────────
@@ -240,6 +243,9 @@ function AdminTreeNode({
 // ── Main Admin Page ──────────────────────────────────────
 
 export default function WikiAdminPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
   const [flatNodes, setFlatNodes] = useState<WikiNode[]>([]);
   const [tree, setTree] = useState<WikiNode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -368,22 +374,43 @@ export default function WikiAdminPage() {
         sortOrder = numberingToSortOrder(parsed.numbering);
       }
 
-      await apiCreate({
-        title: parsed.numbering
-          ? `${parsed.numbering} ${parsed.title}`
-          : parsed.title,
-        node_type: "article",
-        parent_id: parentId,
-        sort_order: sortOrder,
-        brand: "tc",
-        html_content: parsed.content,
-      });
+      const fullTitle = parsed.numbering
+        ? `${parsed.numbering} ${parsed.title}`
+        : parsed.title;
+
+      // Check if an article with this sort_order already exists under the same parent
+      const existing = flatNodes.find(
+        (n) =>
+          n.sort_order === sortOrder &&
+          n.parent_id === parentId &&
+          n.node_type === "article"
+      );
+
+      if (existing) {
+        // Update existing article
+        await apiUpdate({
+          id: existing.id,
+          title: fullTitle,
+          html_content: parsed.content,
+        });
+        setStatusMsg(`✓ "${parsed.title}" updated (existing article)`);
+      } else {
+        // Create new article
+        await apiCreate({
+          title: fullTitle,
+          node_type: "article",
+          parent_id: parentId,
+          sort_order: sortOrder,
+          brand: "tc",
+          html_content: parsed.content,
+        });
+        setStatusMsg(`✓ "${parsed.title}" saved successfully`);
+      }
 
       setImportCount((c) => c + 1);
       setPastedHtml("");
       setParsedTitle("");
       setParsedNumbering("");
-      setStatusMsg(`✓ "${parsed.title}" saved successfully`);
       await fetchNodes();
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Unknown error";
@@ -469,6 +496,21 @@ export default function WikiAdminPage() {
     }
     return chain;
   };
+
+  // Auth guard — redirect non-admins
+  if (status === "loading") {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
+        </div>
+      </AppShell>
+    );
+  }
+  if (!session?.user?.email || !isAdmin(session.user.email)) {
+    router.replace("/");
+    return null;
+  }
 
   return (
     <AppShell>
