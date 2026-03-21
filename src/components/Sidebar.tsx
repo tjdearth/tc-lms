@@ -66,20 +66,21 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
 
   return (
     <aside
-      className={`fixed left-0 top-0 bottom-0 w-[220px] bg-navy flex flex-col z-[70] transition-transform duration-300 ease-in-out
+      className={`fixed left-0 top-0 bottom-0 w-[220px] flex flex-col z-[70] transition-transform duration-300 ease-in-out
         ${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+      style={{ backgroundColor: "#1a2332" }}
     >
-      {/* Logo */}
-      <div className="px-5 pt-5 pb-2 flex items-center justify-between">
+      {/* Logo + App Name */}
+      <div className="flex flex-col items-center pt-6 pb-1">
         <img
           src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXcuZ3fOJUGrPHzT0Tu5n3IyhjOPWYUjkhaEcBcNhdpt2I5hcRLGyL_Sj635ZffMbHWB3xfPa8vnDZ06Pfl0ez9vedO8hDGzYaZxhKsj7yyVeyk-sUcbBz4G6KXjTCvXUgo48Y2n?key=5z7x5EJrcuoubrabZrlshg"
           alt="Travel Collection"
-          className="h-[40px] w-auto"
+          className="h-[56px] w-auto mb-1"
         />
-        {/* Close button on mobile */}
+        {/* Close button on mobile — positioned top right */}
         <button
           onClick={onMobileClose}
-          className="md:hidden text-white/60 hover:text-white p-1"
+          className="md:hidden absolute top-4 right-4 text-white/60 hover:text-white p-1"
           aria-label="Close menu"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -89,23 +90,26 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
         </button>
       </div>
 
-      {/* App name in teal */}
-      <div className="px-5 pb-4">
-        <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#27a28c" }}>
+      {/* ATLAS label — teal, centered, prominent */}
+      <div className="text-center pb-5">
+        <span className="text-[15px] font-bold tracking-[0.2em]" style={{ color: "#27a28c" }}>
           ATLAS
         </span>
       </div>
 
-      {/* Prominent search bar */}
-      <div className="px-3 pb-4">
+      {/* Search bar — dark bg, prominent */}
+      <div className="px-4 pb-5">
         <button
           onClick={() => {
             onSearchClick?.();
             handleNavClick();
           }}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors bg-white/10 hover:bg-white/15 text-white/50 hover:text-white/70"
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-colors"
+          style={{ backgroundColor: "#141c27", color: "rgba(255,255,255,0.5)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#1c2636"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#141c27"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
@@ -115,7 +119,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
 
       {/* Navigation */}
       <nav className="flex-1 px-3">
-        <ul className="space-y-1">
+        <ul className="space-y-0.5">
           {navItems.map((item) => {
             const isActive =
               item.href === "/"
@@ -127,11 +131,12 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
                 <Link
                   href={item.href}
                   onClick={handleNavClick}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-[13px] transition-colors ${
                     isActive
-                      ? "bg-white/15 text-white font-medium"
-                      : "text-white/60 hover:text-white hover:bg-white/10"
+                      ? "text-white font-semibold"
+                      : "text-white/50 hover:text-white hover:bg-white/5"
                   }`}
+                  style={isActive ? { backgroundColor: "rgba(39,162,140,0.2)" } : undefined}
                 >
                   {item.icon}
                   <span>{item.label}</span>
@@ -143,8 +148,8 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
       </nav>
 
       {/* Bottom */}
-      <div className="px-5 py-4 border-t border-white/10">
-        <span className="text-[10px] text-white/30 tracking-wide">
+      <div className="px-5 py-4 border-t border-white/5">
+        <span className="text-[10px] text-white/20 tracking-wide">
           Travel Collection
         </span>
       </div>
