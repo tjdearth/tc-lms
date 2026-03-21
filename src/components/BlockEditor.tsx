@@ -24,6 +24,28 @@ async function uploadImage(file: File): Promise<string> {
   return data.url;
 }
 
+async function proxyUploadUrl(url: string): Promise<string> {
+  const res = await fetch("/api/wiki/upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Proxy upload failed");
+  }
+  const data = await res.json();
+  return data.url;
+}
+
+function isExternalImageUrl(src: string): boolean {
+  if (!src) return false;
+  // Skip data URIs, blob URIs, and our own Supabase storage URLs
+  if (src.startsWith("data:") || src.startsWith("blob:")) return false;
+  if (src.includes("supabase.co/storage")) return false;
+  return true;
+}
+
 function ToolbarButton({
   onClick,
   active,
@@ -92,12 +114,13 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
       handlePaste: (view, event) => {
         const items = event.clipboardData?.items;
         if (!items) return false;
+
+        // Case 1: Binary image on clipboard (right-click copy image)
         for (const item of Array.from(items)) {
           if (item.type.startsWith("image/")) {
             event.preventDefault();
             const file = item.getAsFile();
             if (file) {
-              // We need to get the editor from the view
               setUploading(true);
               uploadImage(file)
                 .then((url) => {
@@ -116,6 +139,54 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
             return true;
           }
         }
+
+        // Case 2: HTML paste with <img> tags (Ctrl+C from a webpage)
+        const html = event.clipboardData?.getData("text/html");
+        if (html) {
+          const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
+          const matches: string[] = [];
+          let m;
+          while ((m = imgRegex.exec(html)) !== null) {
+            if (isExternalImageUrl(m[1])) matches.push(m[1]);
+          }
+
+          if (matches.length > 0) {
+            // Let Tiptap handle the paste first (returns false), then re-upload images after
+            setTimeout(() => {
+              setUploading(true);
+              const promises = matches.map((originalSrc) =>
+                proxyUploadUrl(originalSrc)
+                  .then((newUrl) => ({ originalSrc, newUrl }))
+                  .catch(() => null) // skip failed downloads silently
+              );
+
+              Promise.all(promises).then((results) => {
+                // Walk the document and replace external image srcs
+                const { tr } = view.state;
+                let changed = false;
+                view.state.doc.descendants((node, pos) => {
+                  if (node.type.name === "image" && node.attrs.src) {
+                    const replacement = results.find(
+                      (r) => r && r.originalSrc === node.attrs.src
+                    );
+                    if (replacement) {
+                      tr.setNodeMarkup(pos, undefined, {
+                        ...node.attrs,
+                        src: replacement.newUrl,
+                      });
+                      changed = true;
+                    }
+                  }
+                });
+                if (changed) view.dispatch(tr);
+                setUploading(false);
+              });
+            }, 100);
+
+            return false; // Let Tiptap process the HTML paste normally first
+          }
+        }
+
         return false;
       },
       handleDrop: (view, event, _slice, moved) => {
