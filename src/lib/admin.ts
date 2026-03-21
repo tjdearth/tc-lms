@@ -1,7 +1,7 @@
 // Admin email addresses — only these users can access /wiki/admin and the wiki API
 // Add emails here as needed
 export const ADMIN_EMAILS: string[] = [
-  "tucker@travelcollection.com",
+  "tucker@travelcollection.co",
   "tdearth@travelcollection.com",
   // Add more admin emails here
 ];

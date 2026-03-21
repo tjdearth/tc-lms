@@ -588,7 +588,7 @@ export default function WikiAdminPage() {
     return chain;
   };
 
-  // Auth guard — redirect non-admins
+  // Auth guard — block non-admins
   if (status === "loading") {
     return (
       <AppShell>
@@ -598,9 +598,21 @@ export default function WikiAdminPage() {
       </AppShell>
     );
   }
-  if (!session?.user?.email || !isAdmin(session.user.email)) {
-    router.replace("/");
+  if (status === "unauthenticated") {
+    router.replace("/login");
     return null;
+  }
+  if (!isAdmin(session?.user?.email)) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <h1 className="text-lg font-semibold text-navy mb-2">Access Denied</h1>
+            <p className="text-sm text-gray-500">You don&apos;t have admin access.</p>
+          </div>
+        </div>
+      </AppShell>
+    );
   }
 
   // Get root-level siblings for canMoveUp/Down on root nodes
