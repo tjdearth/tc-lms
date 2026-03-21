@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import AppShell from "@/components/AppShell";
 import Link from "next/link";
 import { fetchWikiTree, fetchCalendarEvents, getAllArticles } from "@/lib/api";
-import { WikiNode, CalendarEvent } from "@/types";
+import { WikiNode, CalendarEvent, Course } from "@/types";
 
 const EVENT_TYPE_COLORS: Record<string, { dot: string }> = {
   public_holiday: { dot: "bg-blue-500" },
@@ -47,17 +47,21 @@ function getRandomQuote() {
 export default function DashboardPage() {
   const [wikiTree, setWikiTree] = useState<WikiNode[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [courseCount, setCourseCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [quote] = useState(getRandomQuote);
 
   useEffect(() => {
-    Promise.all([fetchWikiTree(), fetchCalendarEvents()]).then(
-      ([tree, events]) => {
-        setWikiTree(tree);
-        setCalendarEvents(events);
-        setLoading(false);
-      }
-    );
+    Promise.all([
+      fetchWikiTree(),
+      fetchCalendarEvents(),
+      fetch("/api/learn/courses").then((r) => r.ok ? r.json() : []),
+    ]).then(([tree, events, courses]) => {
+      setWikiTree(tree);
+      setCalendarEvents(events);
+      setCourseCount((courses as Course[]).length);
+      setLoading(false);
+    });
   }, []);
 
   const allArticles = getAllArticles(wikiTree);
@@ -80,8 +84,8 @@ export default function DashboardPage() {
 
   const stats = [
     { label: "Wiki Articles", value: allArticles.length },
-    { label: "DMC Brands", value: 16 },
-    { label: "Countries", value: 22 },
+    { label: "DMC Brands & Countries", value: "16 brands · 22 countries" },
+    { label: "Learn Courses", value: courseCount },
     { label: "Calendar Events", value: calendarEvents.length },
   ];
 
@@ -124,7 +128,7 @@ export default function DashboardPage() {
               key={stat.label}
               className="bg-white rounded-xl border border-gray-200 p-5"
             >
-              <div className="text-2xl font-bold text-navy">
+              <div className={`font-bold text-navy ${typeof stat.value === "string" ? "text-sm mt-1" : "text-2xl"}`}>
                 {loading ? "—" : stat.value}
               </div>
               <div className="text-sm text-gray-400 mt-1">{stat.label}</div>
