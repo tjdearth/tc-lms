@@ -38,12 +38,10 @@ async function proxyUploadUrl(url: string): Promise<string> {
   return data.url;
 }
 
-function isExternalImageUrl(src: string): boolean {
+function isOurUrl(src: string): boolean {
   if (!src) return false;
-  // Skip data URIs, blob URIs, and our own Supabase storage URLs
-  if (src.startsWith("data:") || src.startsWith("blob:")) return false;
-  if (src.includes("supabase.co/storage")) return false;
-  return true;
+  if (src.includes("supabase.co/storage")) return true;
+  return false;
 }
 
 function ToolbarButton({
@@ -79,12 +77,16 @@ function Divider() {
 
 export default function BlockEditor({ content, onChange }: BlockEditorProps) {
   const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const replaceInputRef = useRef<HTMLInputElement>(null);
+  const replacePosRef = useRef<number | null>(null);
 
   const handleImageUpload = useCallback(
     async (file: File, editorInstance: ReturnType<typeof useEditor>) => {
       if (!editorInstance) return;
       setUploading(true);
+      setUploadStatus("Uploading image...");
       try {
         const url = await uploadImage(file);
         editorInstance.chain().focus().setImage({ src: url }).run();
@@ -92,6 +94,7 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
         alert(err instanceof Error ? err.message : "Image upload failed");
       } finally {
         setUploading(false);
+        setUploadStatus("");
       }
     },
     []
@@ -115,79 +118,55 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
         const items = event.clipboardData?.items;
         if (!items) return false;
 
-        // Case 1: Binary image on clipboard (right-click copy image)
+        // Case 1: Binary image on clipboard (right-click copy image, screenshot paste)
         for (const item of Array.from(items)) {
           if (item.type.startsWith("image/")) {
             event.preventDefault();
             const file = item.getAsFile();
             if (file) {
               setUploading(true);
+              setUploadStatus("Uploading image...");
               uploadImage(file)
                 .then((url) => {
-                  const { tr } = view.state;
                   const node = view.state.schema.nodes.image.create({ src: url });
-                  const transaction = tr.replaceSelectionWith(node);
-                  view.dispatch(transaction);
+                  const tr = view.state.tr.replaceSelectionWith(node);
+                  view.dispatch(tr);
                 })
                 .catch((err) => {
                   alert(err instanceof Error ? err.message : "Image upload failed");
                 })
                 .finally(() => {
                   setUploading(false);
+                  setUploadStatus("");
                 });
             }
             return true;
           }
         }
 
-        // Case 2: HTML paste with <img> tags (Ctrl+C from a webpage)
+        // Case 2: HTML paste with <img> tags (Ctrl+C a section from a webpage)
+        // Let Tiptap handle the paste normally. Then try to re-upload external images.
         const html = event.clipboardData?.getData("text/html");
         if (html) {
           const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
-          const matches: string[] = [];
+          const externalUrls: string[] = [];
           let m;
           while ((m = imgRegex.exec(html)) !== null) {
-            if (isExternalImageUrl(m[1])) matches.push(m[1]);
+            const src = m[1];
+            if (src && !src.startsWith("data:") && !src.startsWith("blob:") && !isOurUrl(src)) {
+              externalUrls.push(src);
+            }
           }
 
-          if (matches.length > 0) {
-            // Let Tiptap handle the paste first (returns false), then re-upload images after
+          if (externalUrls.length > 0) {
+            // After Tiptap processes the paste, try to re-upload external images
             setTimeout(() => {
-              setUploading(true);
-              const promises = matches.map((originalSrc) =>
-                proxyUploadUrl(originalSrc)
-                  .then((newUrl) => ({ originalSrc, newUrl }))
-                  .catch(() => null) // skip failed downloads silently
-              );
-
-              Promise.all(promises).then((results) => {
-                // Walk the document and replace external image srcs
-                const { tr } = view.state;
-                let changed = false;
-                view.state.doc.descendants((node, pos) => {
-                  if (node.type.name === "image" && node.attrs.src) {
-                    const replacement = results.find(
-                      (r) => r && r.originalSrc === node.attrs.src
-                    );
-                    if (replacement) {
-                      tr.setNodeMarkup(pos, undefined, {
-                        ...node.attrs,
-                        src: replacement.newUrl,
-                      });
-                      changed = true;
-                    }
-                  }
-                });
-                if (changed) view.dispatch(tr);
-                setUploading(false);
-              });
-            }, 100);
-
-            return false; // Let Tiptap process the HTML paste normally first
+              reUploadExternalImages(view, externalUrls);
+            }, 200);
           }
         }
 
-        return false;
+        return false; // Let Tiptap handle the paste
       },
       handleDrop: (view, event, _slice, moved) => {
         if (moved) return false;
@@ -197,6 +176,7 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
         if (!file.type.startsWith("image/")) return false;
         event.preventDefault();
         setUploading(true);
+        setUploadStatus("Uploading image...");
         const coordinates = view.posAtCoords({
           left: event.clientX,
           top: event.clientY,
@@ -205,11 +185,9 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
           .then((url) => {
             const node = view.state.schema.nodes.image.create({ src: url });
             if (coordinates) {
-              const transaction = view.state.tr.insert(coordinates.pos, node);
-              view.dispatch(transaction);
+              view.dispatch(view.state.tr.insert(coordinates.pos, node));
             } else {
-              const transaction = view.state.tr.replaceSelectionWith(node);
-              view.dispatch(transaction);
+              view.dispatch(view.state.tr.replaceSelectionWith(node));
             }
           })
           .catch((err) => {
@@ -217,14 +195,110 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
           })
           .finally(() => {
             setUploading(false);
+            setUploadStatus("");
           });
         return true;
+      },
+      // When user clicks on an image node, allow replacing it
+      handleClickOn: (view, pos, node) => {
+        if (node.type.name === "image" && !isOurUrl(node.attrs.src || "")) {
+          // This is an external/broken image — offer to replace
+          replacePosRef.current = pos;
+          replaceInputRef.current?.click();
+          return true;
+        }
+        return false;
       },
     },
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
   });
+
+  // Try to re-upload external images via server proxy
+  const reUploadExternalImages = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (view: any, urls: string[]) => {
+      const uniqueUrls = Array.from(new Set(urls));
+      let succeeded = 0;
+      let failed = 0;
+
+      setUploading(true);
+      setUploadStatus(`Re-uploading ${uniqueUrls.length} image(s)...`);
+
+      const results: Array<{ originalSrc: string; newUrl: string } | null> = [];
+
+      for (const originalSrc of uniqueUrls) {
+        try {
+          const newUrl = await proxyUploadUrl(originalSrc);
+          results.push({ originalSrc, newUrl });
+          succeeded++;
+        } catch {
+          results.push(null);
+          failed++;
+        }
+        setUploadStatus(
+          `Re-uploading images... ${succeeded + failed}/${uniqueUrls.length}`
+        );
+      }
+
+      // Replace URLs in the document
+      const successfulResults = results.filter(Boolean) as Array<{
+        originalSrc: string;
+        newUrl: string;
+      }>;
+
+      if (successfulResults.length > 0) {
+        // Collect positions to update (reverse order to maintain position validity)
+        const updates: Array<{
+          pos: number;
+          attrs: Record<string, unknown>;
+        }> = [];
+        view.state.doc.descendants(
+          (node: { type: { name: string }; attrs: Record<string, unknown> }, pos: number) => {
+            if (node.type.name === "image" && node.attrs.src) {
+              const match = successfulResults.find(
+                (r) => r.originalSrc === node.attrs.src
+              );
+              if (match) {
+                updates.push({
+                  pos,
+                  attrs: { ...node.attrs, src: match.newUrl },
+                });
+              }
+            }
+          }
+        );
+
+        if (updates.length > 0) {
+          // Apply in reverse order so positions stay valid
+          updates.sort((a, b) => b.pos - a.pos);
+          let tr = view.state.tr;
+          for (const update of updates) {
+            tr = tr.setNodeMarkup(update.pos, undefined, update.attrs);
+          }
+          view.dispatch(tr);
+        }
+      }
+
+      setUploading(false);
+      if (failed > 0 && succeeded === 0) {
+        setUploadStatus("");
+        // Don't alert — images will show with external URLs. User can click to replace.
+        console.warn(
+          `Could not re-upload ${failed} image(s) from external source. Click on any broken image to replace it.`
+        );
+      } else if (failed > 0) {
+        setUploadStatus("");
+        console.warn(
+          `Re-uploaded ${succeeded} image(s). ${failed} could not be fetched — click to replace.`
+        );
+      } else {
+        setUploadStatus("");
+      }
+    },
+    []
+  );
 
   // Sync external content changes (e.g. switching between nodes)
   useEffect(() => {
@@ -233,6 +307,28 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [content]);
+
+  // Add click-to-replace for broken images in the editor DOM
+  useEffect(() => {
+    if (!editor) return;
+    const editorEl = editor.view.dom;
+
+    const handleImgError = (e: Event) => {
+      const img = e.target as HTMLImageElement;
+      if (img.tagName !== "IMG") return;
+      // Style the broken image as a clickable placeholder
+      img.style.minHeight = "80px";
+      img.style.minWidth = "200px";
+      img.style.background = "#f3f4f6";
+      img.style.border = "2px dashed #d1d5db";
+      img.style.borderRadius = "8px";
+      img.style.cursor = "pointer";
+      img.title = "Click to upload a replacement image";
+    };
+
+    editorEl.addEventListener("error", handleImgError, true);
+    return () => editorEl.removeEventListener("error", handleImgError, true);
+  }, [editor]);
 
   if (!editor) return null;
 
@@ -259,19 +355,59 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
     if (file) {
       handleImageUpload(file, editor);
     }
-    // Reset so the same file can be selected again
     e.target.value = "";
+  };
+
+  // Replace a broken image at a known position
+  const handleReplaceImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const pos = replacePosRef.current;
+    if (!file || pos === null || !editor) {
+      e.target.value = "";
+      return;
+    }
+
+    setUploading(true);
+    setUploadStatus("Replacing image...");
+    try {
+      const url = await uploadImage(file);
+      // Find the node at this position and replace its src
+      const resolvedPos = editor.state.doc.resolve(pos);
+      const node = resolvedPos.nodeAfter;
+      if (node && node.type.name === "image") {
+        editor.view.dispatch(
+          editor.state.tr.setNodeMarkup(pos, undefined, {
+            ...node.attrs,
+            src: url,
+          })
+        );
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Image upload failed");
+    } finally {
+      setUploading(false);
+      setUploadStatus("");
+      replacePosRef.current = null;
+      e.target.value = "";
+    }
   };
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden bg-white relative">
-      {/* Hidden file input */}
+      {/* Hidden file inputs */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
         className="hidden"
         onChange={handleFileSelect}
+      />
+      <input
+        ref={replaceInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+        className="hidden"
+        onChange={handleReplaceImage}
       />
 
       {/* Upload overlay */}
@@ -282,7 +418,7 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-            Uploading image...
+            {uploadStatus || "Uploading..."}
           </div>
         </div>
       )}
@@ -393,7 +529,7 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
           </svg>
         </ToolbarButton>
 
-        {/* Image dropdown with upload + URL options */}
+        {/* Image: upload + URL */}
         <div className="relative group">
           <ToolbarButton onClick={addImageFromFile} title="Upload image">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
