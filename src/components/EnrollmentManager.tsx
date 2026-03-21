@@ -1,17 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 interface EnrollmentRow {
   id: string;
   user_email: string;
   user_name: string | null;
+  user_brand: string | null;
   status: "enrolled" | "in_progress" | "completed";
   enrolled_at: string;
   due_date: string | null;
   completed_at: string | null;
   progress_pct: number;
 }
+
+type SortKey = "user_name" | "user_brand" | "status" | "enrolled_at" | "due_date" | "progress_pct";
+type SortDir = "asc" | "desc";
 
 interface EnrollmentManagerProps {
   courseId: string;
@@ -22,6 +26,8 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
   const [loading, setLoading] = useState(true);
   const [editDueDate, setEditDueDate] = useState<string | null>(null);
   const [dueDateDraft, setDueDateDraft] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("enrolled_at");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   useEffect(() => {
     fetchEnrollments();
@@ -38,11 +44,50 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
         setEnrollments(data);
       }
     } catch {
-      // Endpoint may not exist yet -- show placeholder
+      // Network error
     } finally {
       setLoading(false);
     }
   };
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const sorted = useMemo(() => {
+    const arr = [...enrollments];
+    const statusOrder: Record<string, number> = { enrolled: 0, in_progress: 1, completed: 2 };
+    arr.sort((a, b) => {
+      let cmp = 0;
+      switch (sortKey) {
+        case "user_name":
+          cmp = (a.user_name || "").localeCompare(b.user_name || "");
+          break;
+        case "user_brand":
+          cmp = (a.user_brand || "").localeCompare(b.user_brand || "");
+          break;
+        case "status":
+          cmp = (statusOrder[a.status] ?? 0) - (statusOrder[b.status] ?? 0);
+          break;
+        case "enrolled_at":
+          cmp = (a.enrolled_at || "").localeCompare(b.enrolled_at || "");
+          break;
+        case "due_date":
+          cmp = (a.due_date || "9999").localeCompare(b.due_date || "9999");
+          break;
+        case "progress_pct":
+          cmp = a.progress_pct - b.progress_pct;
+          break;
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return arr;
+  }, [enrollments, sortKey, sortDir]);
 
   const statusColors: Record<string, string> = {
     enrolled: "bg-blue-50 text-blue-600",
@@ -55,6 +100,28 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
     in_progress: "In Progress",
     completed: "Completed",
   };
+
+  const SortIcon = ({ col }: { col: SortKey }) => (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`inline-block ml-1 transition-transform ${
+        sortKey === col
+          ? sortDir === "desc"
+            ? "rotate-180 text-[#27a28c]"
+            : "text-[#27a28c]"
+          : "text-gray-300"
+      }`}
+    >
+      <polyline points="6 9 12 4 18 9" />
+    </svg>
+  );
 
   if (loading) {
     return (
@@ -109,16 +176,47 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-[11px] uppercase tracking-wide text-gray-400 border-b border-[#E8ECF1]">
-              <th className="px-4 py-2.5 font-medium">User</th>
-              <th className="px-4 py-2.5 font-medium">Status</th>
-              <th className="px-4 py-2.5 font-medium">Enrolled</th>
-              <th className="px-4 py-2.5 font-medium">Due Date</th>
-              <th className="px-4 py-2.5 font-medium">Progress</th>
+              <th
+                className="px-4 py-2.5 font-medium cursor-pointer select-none hover:text-[#304256]"
+                onClick={() => handleSort("user_name")}
+              >
+                User <SortIcon col="user_name" />
+              </th>
+              <th
+                className="px-4 py-2.5 font-medium cursor-pointer select-none hover:text-[#304256]"
+                onClick={() => handleSort("user_brand")}
+              >
+                DMC <SortIcon col="user_brand" />
+              </th>
+              <th
+                className="px-4 py-2.5 font-medium cursor-pointer select-none hover:text-[#304256]"
+                onClick={() => handleSort("status")}
+              >
+                Status <SortIcon col="status" />
+              </th>
+              <th
+                className="px-4 py-2.5 font-medium cursor-pointer select-none hover:text-[#304256]"
+                onClick={() => handleSort("enrolled_at")}
+              >
+                Enrolled <SortIcon col="enrolled_at" />
+              </th>
+              <th
+                className="px-4 py-2.5 font-medium cursor-pointer select-none hover:text-[#304256]"
+                onClick={() => handleSort("due_date")}
+              >
+                Due Date <SortIcon col="due_date" />
+              </th>
+              <th
+                className="px-4 py-2.5 font-medium cursor-pointer select-none hover:text-[#304256]"
+                onClick={() => handleSort("progress_pct")}
+              >
+                Progress <SortIcon col="progress_pct" />
+              </th>
               <th className="px-4 py-2.5 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {enrollments.map((enr) => (
+            {sorted.map((enr) => (
               <tr
                 key={enr.id}
                 className="border-b border-[#E8ECF1] last:border-b-0 hover:bg-gray-50/50"
@@ -130,6 +228,15 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
                     </p>
                     <p className="text-xs text-gray-400">{enr.user_email}</p>
                   </div>
+                </td>
+                <td className="px-4 py-2.5">
+                  {enr.user_brand ? (
+                    <span className="inline-block px-2 py-0.5 text-[11px] font-medium rounded-full bg-[#304256]/5 text-[#304256]">
+                      {enr.user_brand}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-300">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-2.5">
                   <span

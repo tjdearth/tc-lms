@@ -38,11 +38,11 @@ export async function GET(req: NextRequest) {
     const userIds = enrollments.map((e) => e.user_id);
     const { data: users } = await supabaseAdmin
       .from("lms_users")
-      .select("id, email, name")
+      .select("id, email, name, brand")
       .in("id", userIds);
 
     const userMap = new Map(
-      (users || []).map((u: { id: string; email: string; name: string | null }) => [u.id, u])
+      (users || []).map((u: { id: string; email: string; name: string | null; brand: string | null }) => [u.id, u])
     );
 
     // Get lesson counts for progress calculation
@@ -94,6 +94,7 @@ export async function GET(req: NextRequest) {
         id: e.id,
         user_email: user?.email || "unknown",
         user_name: user?.name || null,
+        user_brand: user?.brand || null,
         status: e.status,
         enrolled_at: e.enrolled_at,
         due_date: e.due_date,
