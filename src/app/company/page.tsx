@@ -189,6 +189,7 @@ function WeatherIcon({ code, isDay, size = 32 }: { code: number; isDay: boolean;
 }
 
 export default function CompanyPage() {
+  const [activeTab, setActiveTab] = useState<"map" | "weather">("map");
   const [weather, setWeather] = useState<Record<string, WeatherData>>({});
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string>("");
@@ -256,25 +257,54 @@ export default function CompanyPage() {
           </p>
         </div>
 
-        {/* World Map */}
-        <div className="mb-8">
-          <DmcWorldMap />
-        </div>
-
-        {/* Weather Section */}
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[#304256] flex items-center gap-2">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#27a28c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {/* Tab Navigation */}
+        <div className="flex items-center gap-1 mb-6 border-b border-[#E8ECF1]">
+          <button
+            onClick={() => setActiveTab("map")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              activeTab === "map"
+                ? "border-[#27a28c] text-[#304256]"
+                : "border-transparent text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            Global Presence
+          </button>
+          <button
+            onClick={() => setActiveTab("weather")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              activeTab === "weather"
+                ? "border-[#27a28c] text-[#304256]"
+                : "border-transparent text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
             </svg>
             Office Weather
-          </h2>
-          {lastUpdated && (
+          </button>
+        </div>
+
+        {/* Global Presence - Map */}
+        {activeTab === "map" && (
+          <div>
+            <DmcWorldMap />
+          </div>
+        )}
+
+        {/* Office Weather */}
+        {activeTab === "weather" && (
+          <>
+        {lastUpdated && (
+          <div className="flex justify-end mb-4">
             <span className="text-[11px] text-gray-400">
               Updated {lastUpdated}
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -362,6 +392,8 @@ export default function CompanyPage() {
               );
             })}
           </div>
+        )}
+          </>
         )}
       </div>
     </AppShell>
