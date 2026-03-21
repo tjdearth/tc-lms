@@ -1,0 +1,302 @@
+"use client";
+
+import { useState, useMemo, useEffect } from "react";
+import { mockCalendarEvents } from "@/lib/mock-data";
+
+const EVENT_TYPE_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
+  public_holiday: { bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-500" },
+  festival: { bg: "bg-purple-50", text: "text-purple-700", dot: "bg-purple-500" },
+  peak_season: { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
+  low_season: { bg: "bg-gray-50", text: "text-gray-600", dot: "bg-gray-400" },
+  office_closure: { bg: "bg-red-50", text: "text-red-700", dot: "bg-red-500" },
+  custom: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
+};
+
+const EVENT_TYPE_LABELS: Record<string, string> = {
+  public_holiday: "Public Holiday",
+  festival: "Festival",
+  peak_season: "Peak Season",
+  low_season: "Low Season",
+  office_closure: "Office Closure",
+  custom: "Custom",
+};
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const allBrands = Array.from(new Set(mockCalendarEvents.map((e) => e.brand))).sort();
+
+export default function CalendarView() {
+  const [viewMode, setViewMode] = useState<"calendar" | "list">("list");
+  const [selectedBrand, setSelectedBrand] = useState<string>("all");
+  const [currentMonth, setCurrentMonth] = useState(2); // March (0-indexed)
+  const [currentYear] = useState(2026);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // Force list view on mobile
+  const effectiveViewMode = isMobile ? "list" : viewMode;
+
+  const filteredEvents = useMemo(() => {
+    let events = mockCalendarEvents;
+    if (selectedBrand !== "all") {
+      events = events.filter((e) => e.brand === selectedBrand);
+    }
+    return events.sort(
+      (a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime()
+    );
+  }, [selectedBrand]);
+
+  // Calendar grid helpers
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  const getEventsForDay = (day: number) => {
+    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return filteredEvents.filter((e) => {
+      if (e.date_start === dateStr) return true;
+      if (e.date_end) {
+        return e.date_start <= dateStr && e.date_end >= dateStr;
+      }
+      return false;
+    });
+  };
+
+  return (
+    <div>
+      {/* Header controls */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-6">
+        {/* Brand filter */}
+        <select
+          value={selectedBrand}
+          onChange={(e) => setSelectedBrand(e.target.value)}
+          className="w-full sm:w-auto px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+        >
+          <option value="all">All Brands</option>
+          {allBrands.map((brand) => (
+            <option key={brand} value={brand}>
+              {brand}
+            </option>
+          ))}
+        </select>
+
+        {/* View toggle — hidden on mobile */}
+        <div className="hidden md:flex bg-gray-100 rounded-lg p-0.5 sm:ml-auto">
+          <button
+            onClick={() => setViewMode("list")}
+            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+              viewMode === "list"
+                ? "bg-white text-navy font-medium shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            List
+          </button>
+          <button
+            onClick={() => setViewMode("calendar")}
+            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+              viewMode === "calendar"
+                ? "bg-white text-navy font-medium shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Calendar
+          </button>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-3 md:gap-4 mb-6">
+        {Object.entries(EVENT_TYPE_LABELS).map(([type, label]) => {
+          const colors = EVENT_TYPE_COLORS[type];
+          return (
+            <div key={type} className="flex items-center gap-1.5">
+              <span className={`w-2.5 h-2.5 rounded-full ${colors.dot}`} />
+              <span className="text-xs text-gray-500">{label}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {effectiveViewMode === "list" ? (
+        /* List View */
+        <div className="space-y-3">
+          {filteredEvents.length === 0 && (
+            <p className="text-gray-400 text-sm py-8 text-center">
+              No events found.
+            </p>
+          )}
+          {filteredEvents.map((event) => {
+            const colors = EVENT_TYPE_COLORS[event.event_type] || EVENT_TYPE_COLORS.custom;
+            const startDate = new Date(event.date_start);
+            const formattedDate = startDate.toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            });
+            const endDate = event.date_end
+              ? new Date(event.date_end).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                })
+              : null;
+
+            return (
+              <div
+                key={event.id}
+                className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col sm:flex-row gap-3 sm:gap-4 hover:shadow-sm transition-shadow"
+              >
+                {/* Date block */}
+                <div className="flex-shrink-0 flex sm:block items-center gap-2 sm:w-16 sm:text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-navy">
+                    {startDate.getDate()}
+                  </div>
+                  <div className="text-xs text-gray-400 uppercase">
+                    {startDate.toLocaleDateString("en-GB", { month: "short" })}
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 className="font-medium text-gray-800">
+                      {event.title}
+                    </h3>
+                    <span
+                      className={`inline-block px-2 py-0.5 text-xs rounded-full ${colors.bg} ${colors.text}`}
+                    >
+                      {EVENT_TYPE_LABELS[event.event_type]}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs text-gray-400 mb-1">
+                    <span>{event.brand}</span>
+                    {event.country && (
+                      <>
+                        <span>|</span>
+                        <span>{event.country}</span>
+                      </>
+                    )}
+                    {endDate && (
+                      <>
+                        <span>|</span>
+                        <span>
+                          {formattedDate} - {endDate}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  {event.description && (
+                    <p className="text-sm text-gray-500 mb-1">
+                      {event.description}
+                    </p>
+                  )}
+                  {event.impact_notes && (
+                    <p className="text-xs text-amber-700 bg-amber-50 rounded-md px-2 py-1 inline-block mt-1">
+                      {event.impact_notes}
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* Calendar Grid View */
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          {/* Month navigation */}
+          <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200">
+            <button
+              onClick={() => setCurrentMonth((m) => (m === 0 ? 11 : m - 1))}
+              className="p-1 hover:bg-gray-100 rounded text-gray-500"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <h3 className="font-semibold text-navy">
+              {MONTHS[currentMonth]} {currentYear}
+            </h3>
+            <button
+              onClick={() => setCurrentMonth((m) => (m === 11 ? 0 : m + 1))}
+              className="p-1 hover:bg-gray-100 rounded text-gray-500"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Day headers */}
+          <div className="grid grid-cols-7 border-b border-gray-100">
+            {DAYS.map((day) => (
+              <div
+                key={day}
+                className="text-center text-xs font-medium text-gray-400 py-2"
+              >
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar cells */}
+          <div className="grid grid-cols-7">
+            {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+              <div key={`empty-${i}`} className="h-24 border-b border-r border-gray-100" />
+            ))}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const dayEvents = getEventsForDay(day);
+              const isToday =
+                day === 21 && currentMonth === 2 && currentYear === 2026;
+              return (
+                <div
+                  key={day}
+                  className="h-24 border-b border-r border-gray-100 p-1"
+                >
+                  <div
+                    className={`text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full ${
+                      isToday ? "bg-accent text-white" : "text-gray-600"
+                    }`}
+                  >
+                    {day}
+                  </div>
+                  <div className="space-y-0.5">
+                    {dayEvents.slice(0, 2).map((ev) => {
+                      const colors =
+                        EVENT_TYPE_COLORS[ev.event_type] ||
+                        EVENT_TYPE_COLORS.custom;
+                      return (
+                        <div
+                          key={ev.id}
+                          className={`text-[10px] truncate px-1 rounded ${colors.bg} ${colors.text}`}
+                          title={`${ev.title} (${ev.brand})`}
+                        >
+                          {ev.title}
+                        </div>
+                      );
+                    })}
+                    {dayEvents.length > 2 && (
+                      <div className="text-[10px] text-gray-400 px-1">
+                        +{dayEvents.length - 2} more
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -3,25 +3,174 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --navy: #304256;
+  --accent: #27a28c;
+  --surface: #0F1923;
+  --background: #F0F2F5;
 }
 
 body {
-  color: var(--foreground);
+  color: #171717;
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+/* Scrollbar styling */
+.wiki-tree-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.wiki-tree-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.wiki-tree-scroll::-webkit-scrollbar-thumb {
+  background: #c4c8cc;
+  border-radius: 4px;
+}
+
+/* Scribe HTML content styling */
+.scribe-content .scribe-steps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.scribe-content .scribe-step {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  padding-left: 4rem;
+  position: relative;
+  counter-increment: step-counter;
+}
+
+.scribe-content .scribe-step::before {
+  content: counter(step-counter);
+  position: absolute;
+  left: 1.25rem;
+  top: 1.5rem;
+  width: 2rem;
+  height: 2rem;
+  background: #27a28c;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.scribe-content .scribe-steps-container {
+  counter-reset: step-counter;
+}
+
+.scribe-content .scribe-step-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #1f2937;
+}
+
+.scribe-content .scribe-step-text strong {
+  color: #304256;
+  font-weight: 600;
+}
+
+.scribe-content .scribe-screenshot-container {
+  margin-top: 1rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.scribe-content .scribe-screenshot-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.scribe-content .scribe-step-tip {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  padding-left: 3rem;
+  position: relative;
+  color: #1e40af;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.scribe-content .scribe-step-tip::before {
+  content: "";
+  position: absolute;
+  left: 1.125rem;
+  top: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  background: #3b82f6;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z' clip-rule='evenodd'/%3E%3C/svg%3E") center/contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z' clip-rule='evenodd'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+
+.scribe-content .scribe-step-warning,
+.scribe-content .scribe-step-alert {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  padding-left: 3rem;
+  position: relative;
+  color: #92400e;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.scribe-content .scribe-step-warning::before,
+.scribe-content .scribe-step-alert::before {
+  content: "";
+  position: absolute;
+  left: 1.125rem;
+  top: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  background: #f59e0b;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z' clip-rule='evenodd'/%3E%3C/svg%3E") center/contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z' clip-rule='evenodd'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+
+/* Mobile responsive scribe content */
+@media (max-width: 767px) {
+  .scribe-content .scribe-step {
+    padding: 1rem;
+    padding-left: 3rem;
+  }
+
+  .scribe-content .scribe-step::before {
+    left: 0.75rem;
+    top: 1rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.75rem;
+  }
+
+  .scribe-content .scribe-screenshot-container img {
+    width: 100%;
+    height: auto;
+  }
+
+  .scribe-content .scribe-step-tip,
+  .scribe-content .scribe-step-warning,
+  .scribe-content .scribe-step-alert {
+    padding: 0.75rem 1rem;
+    padding-left: 2.5rem;
+  }
+
+  .scribe-content .scribe-step-tip::before,
+  .scribe-content .scribe-step-warning::before,
+  .scribe-content .scribe-step-alert::before {
+    left: 0.75rem;
+    top: 0.875rem;
+    width: 1rem;
+    height: 1rem;
   }
 }
