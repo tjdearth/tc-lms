@@ -134,9 +134,6 @@ export async function PUT(_req: NextRequest) {
     let updated = 0;
     for (const article of articles || []) {
       const html = article.html_content as string;
-      // Skip if already transformed (has .step-number)
-      if (html.includes('class="step-number"')) continue;
-      // Skip if no scribe steps to transform
       if (!html.includes('class="scribe-step"')) continue;
 
       const transformed = transformScribeHtml(html);
