@@ -31,7 +31,6 @@ export default function DashboardPage() {
   }, []);
 
   const allArticles = getAllArticles(wikiTree);
-  const totalHeadings = wikiTree.filter((n) => n.node_type === "heading").length;
 
   // Upcoming events (next 30 days from today)
   const today = new Date();
@@ -51,8 +50,8 @@ export default function DashboardPage() {
 
   const stats = [
     { label: "Wiki Articles", value: allArticles.length },
-    { label: "Categories", value: totalHeadings },
-    { label: "DMC Brands", value: 15 },
+    { label: "DMC Brands", value: 16 },
+    { label: "Countries", value: 22 },
     { label: "Calendar Events", value: calendarEvents.length },
   ];
 
@@ -65,7 +64,7 @@ export default function DashboardPage() {
             Welcome to Atlas
           </h1>
           <p className="text-gray-500">
-            Your hub for Travel Collection knowledge, processes, and learning.
+            Your hub for Travel Collection knowledge, processes, skills, and continuous learning.
           </p>
         </div>
 
