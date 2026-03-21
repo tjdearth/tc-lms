@@ -179,7 +179,7 @@ function AdminTreeNode({
           className={`flex-1 text-left truncate ${
             isSelected
               ? "text-accent font-semibold"
-              : isHeading
+              : isHeading && hasChildren
               ? "text-navy font-semibold"
               : "text-gray-600"
           }`}
