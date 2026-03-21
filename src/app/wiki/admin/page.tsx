@@ -276,6 +276,7 @@ function AdminTreeNode({
         {/* Title — click to select/edit */}
         <button
           onClick={() => onSelect(node)}
+          title={node.title}
           className={`flex-1 text-left truncate ${
             isSelected
               ? "text-accent font-semibold"
@@ -288,7 +289,7 @@ function AdminTreeNode({
         </button>
 
         {/* Action buttons (visible on hover) */}
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
           {/* Move up */}
           {canMoveUp && (
             <button
@@ -748,7 +749,7 @@ export default function WikiAdminPage() {
     <AppShell>
       <div className="flex h-[calc(100vh-3.5rem)] md:h-screen" style={{ marginLeft: 0 }}>
         {/* ── Left: Tree Panel ── */}
-        <div className="w-[320px] bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+        <div className="w-[360px] bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
           <div className="px-4 pt-5 pb-3 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-navy">Wiki Tree</h2>
