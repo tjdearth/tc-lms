@@ -47,15 +47,25 @@ function numberingToSortOrder(numbering: string): number {
   );
 }
 
+/** Extract numbering prefix and plain name from a title like "3.2.1.5 Creating a Combo" */
+function extractNumbering(title: string): { numbering: string; name: string } {
+  const match = title.match(/^([\d.]+)\s+(.*)/);
+  if (match) return { numbering: match[1], name: match[2] };
+  return { numbering: "", name: title };
+}
+
+/** Build a new title by replacing the numbering prefix */
+function rebuildTitle(title: string, newNumbering: string): string {
+  const { name } = extractNumbering(title);
+  return newNumbering ? `${newNumbering} ${name}` : name;
+}
+
 function parseScribeHtml(html: string): {
   numbering: string;
   title: string;
   content: string;
 } {
-  // Try to extract from <h1 class="scribe-title">3.2.1.1 Title</h1>
-  const h1Match = html.match(
-    /<h1[^>]*>([\d.]+)\s+(.*?)<\/h1>/i
-  );
+  const h1Match = html.match(/<h1[^>]*>([\d.]+)\s+(.*?)<\/h1>/i);
   if (h1Match) {
     return {
       numbering: h1Match[1],
@@ -63,18 +73,6 @@ function parseScribeHtml(html: string): {
       content: html,
     };
   }
-
-  // Fallback: try any <h1>3.2.1.1 Title</h1>
-  const anyH1 = html.match(/<h1[^>]*>([\d.]+)\s+(.*?)<\/h1>/i);
-  if (anyH1) {
-    return {
-      numbering: anyH1[1],
-      title: anyH1[2].trim(),
-      content: html,
-    };
-  }
-
-  // No numbering found
   const titleOnly = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
   return {
     numbering: "",
@@ -133,6 +131,10 @@ function AdminTreeNode({
   onSelect,
   onAddChild,
   onDelete,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
 }: {
   node: WikiNode;
   depth: number;
@@ -140,6 +142,10 @@ function AdminTreeNode({
   onSelect: (node: WikiNode) => void;
   onAddChild: (parentId: string) => void;
   onDelete: (node: WikiNode) => void;
+  onMoveUp: (node: WikiNode) => void;
+  onMoveDown: (node: WikiNode) => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
 }) {
   const [expanded, setExpanded] = useState(depth < 3);
   const hasChildren = node.children && node.children.length > 0;
@@ -189,6 +195,37 @@ function AdminTreeNode({
 
         {/* Action buttons (visible on hover) */}
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* Move up */}
+          {canMoveUp && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveUp(node);
+              }}
+              className="p-1 text-gray-400 hover:text-accent rounded"
+              title="Move up"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="18 15 12 9 6 15" />
+              </svg>
+            </button>
+          )}
+          {/* Move down */}
+          {canMoveDown && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveDown(node);
+              }}
+              className="p-1 text-gray-400 hover:text-accent rounded"
+              title="Move down"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+          )}
+          {/* Add child */}
           {isHeading && (
             <button
               onClick={(e) => {
@@ -204,6 +241,7 @@ function AdminTreeNode({
               </svg>
             </button>
           )}
+          {/* Delete */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -223,7 +261,7 @@ function AdminTreeNode({
       {/* Children */}
       {hasChildren && expanded && (
         <div>
-          {node.children!.map((child) => (
+          {node.children!.map((child, idx) => (
             <AdminTreeNode
               key={child.id}
               node={child}
@@ -232,6 +270,10 @@ function AdminTreeNode({
               onSelect={onSelect}
               onAddChild={onAddChild}
               onDelete={onDelete}
+              onMoveUp={onMoveUp}
+              onMoveDown={onMoveDown}
+              canMoveUp={idx > 0}
+              canMoveDown={idx < node.children!.length - 1}
             />
           ))}
         </div>
@@ -307,20 +349,78 @@ export default function WikiAdminPage() {
     setAddParentId(null);
   };
 
+  // ── Move up/down ──────────────────────────────────────
+  const handleMove = async (node: WikiNode, direction: "up" | "down") => {
+    // Get siblings sorted by sort_order
+    const siblings = flatNodes
+      .filter((n) => n.parent_id === node.parent_id)
+      .sort((a, b) => a.sort_order - b.sort_order);
+
+    const idx = siblings.findIndex((s) => s.id === node.id);
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= siblings.length) return;
+
+    const current = siblings[idx];
+    const swap = siblings[swapIdx];
+
+    // Swap sort_orders
+    const currentSortOrder = current.sort_order;
+    const swapSortOrder = swap.sort_order;
+
+    // Swap numbering in titles
+    const currentParts = extractNumbering(current.title);
+    const swapParts = extractNumbering(swap.title);
+
+    const newCurrentTitle =
+      swapParts.numbering
+        ? `${swapParts.numbering} ${currentParts.name}`
+        : currentParts.name;
+    const newSwapTitle =
+      currentParts.numbering
+        ? `${currentParts.numbering} ${swapParts.name}`
+        : swapParts.name;
+
+    try {
+      await Promise.all([
+        apiUpdate({
+          id: current.id,
+          sort_order: swapSortOrder,
+          title: newCurrentTitle,
+        }),
+        apiUpdate({
+          id: swap.id,
+          sort_order: currentSortOrder,
+          title: newSwapTitle,
+        }),
+      ]);
+      setStatusMsg(
+        `✓ Moved "${currentParts.name}" ${direction}`
+      );
+      await fetchNodes();
+      // Keep the moved node selected if it was
+      if (selectedNode?.id === current.id) {
+        setSelectedNode({ ...current, sort_order: swapSortOrder, title: newCurrentTitle });
+        setEditTitle(newCurrentTitle);
+      }
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Unknown error";
+      setStatusMsg(`✗ Error: ${message}`);
+    }
+  };
+
   // Find or create parent headings for a numbering like "3.2.1.1"
   async function ensureParentHeadings(
     numbering: string,
     brand: string
   ): Promise<string | null> {
     const parts = numbering.split(".");
-    if (parts.length <= 1) return null; // top-level, no parent needed
+    if (parts.length <= 1) return null;
 
     const ancestorNumberings: string[] = [];
     for (let i = 1; i < parts.length; i++) {
       ancestorNumberings.push(parts.slice(0, i).join("."));
     }
 
-    // Fetch current nodes to check what exists
     const { data: currentNodes } = await supabase
       .from("wiki_nodes")
       .select("id, title, sort_order")
@@ -342,7 +442,6 @@ export default function WikiAdminPage() {
       if (existingId) {
         parentId = existingId;
       } else {
-        // Create this heading
         const created = await apiCreate({
           title: ancestorNum,
           node_type: "heading",
@@ -358,7 +457,7 @@ export default function WikiAdminPage() {
     return parentId;
   }
 
-  // Save imported Scribe article
+  // Save imported Scribe article — with conflict handling (shift siblings down)
   const handleImportSave = async () => {
     if (!pastedHtml.trim()) return;
     setSaving(true);
@@ -378,7 +477,7 @@ export default function WikiAdminPage() {
         ? `${parsed.numbering} ${parsed.title}`
         : parsed.title;
 
-      // Check if an article with this sort_order already exists under the same parent
+      // Check if an article already exists at this position — if so, update it (re-import)
       const existing = flatNodes.find(
         (n) =>
           n.sort_order === sortOrder &&
@@ -387,7 +486,7 @@ export default function WikiAdminPage() {
       );
 
       if (existing) {
-        // Update existing article
+        // Update existing article with new content
         await apiUpdate({
           id: existing.id,
           title: fullTitle,
@@ -432,7 +531,6 @@ export default function WikiAdminPage() {
       await apiUpdate(updates);
       setStatusMsg(`✓ "${editTitle}" updated`);
       await fetchNodes();
-      // Update selected node reference
       setSelectedNode({ ...selectedNode, title: editTitle, html_content: editHtml });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Unknown error";
@@ -463,7 +561,6 @@ export default function WikiAdminPage() {
   const handleAddChild = async () => {
     if (!addParentId || !addTitle.trim()) return;
     try {
-      // Get siblings to determine sort order
       const siblings = flatNodes.filter((n) => n.parent_id === addParentId);
       const maxSort = siblings.length > 0
         ? Math.max(...siblings.map((s) => s.sort_order))
@@ -512,6 +609,9 @@ export default function WikiAdminPage() {
     return null;
   }
 
+  // Get root-level siblings for canMoveUp/Down on root nodes
+  const rootNodes = tree;
+
   return (
     <AppShell>
       <div className="flex h-[calc(100vh-3.5rem)] md:h-screen" style={{ marginLeft: 0 }}>
@@ -530,7 +630,7 @@ export default function WikiAdminPage() {
             ) : tree.length === 0 ? (
               <div className="text-center py-8 text-gray-400 text-sm">No nodes yet</div>
             ) : (
-              tree.map((node) => (
+              tree.map((node, idx) => (
                 <AdminTreeNode
                   key={node.id}
                   node={node}
@@ -541,10 +641,14 @@ export default function WikiAdminPage() {
                     setAddParentId(parentId);
                     setAddTitle("");
                     setAddType("heading");
-                    setMode("import"); // switch away from edit
+                    setMode("import");
                     setSelectedNode(null);
                   }}
                   onDelete={handleDelete}
+                  onMoveUp={(n) => handleMove(n, "up")}
+                  onMoveDown={(n) => handleMove(n, "down")}
+                  canMoveUp={idx > 0}
+                  canMoveDown={idx < rootNodes.length - 1}
                 />
               ))
             )}
