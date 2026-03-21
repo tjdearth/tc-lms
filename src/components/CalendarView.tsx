@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { mockCalendarEvents } from "@/lib/mock-data";
+import { CalendarEvent } from "@/types";
 import { BRAND_NAMES, getBrandColor } from "@/lib/brands";
 
 const EVENT_TYPE_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
@@ -31,7 +31,7 @@ const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const allBrands = BRAND_NAMES;
 
-export default function CalendarView() {
+export default function CalendarView({ events }: { events: CalendarEvent[] }) {
   const [viewMode, setViewMode] = useState<"calendar" | "list">("list");
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [currentMonth, setCurrentMonth] = useState(2); // March (0-indexed)
@@ -49,14 +49,14 @@ export default function CalendarView() {
   const effectiveViewMode = isMobile ? "list" : viewMode;
 
   const filteredEvents = useMemo(() => {
-    let events = mockCalendarEvents;
+    let filtered = events;
     if (selectedBrand !== "all") {
-      events = events.filter((e) => e.brand === selectedBrand);
+      filtered = filtered.filter((e) => e.brand === selectedBrand);
     }
-    return events.sort(
+    return [...filtered].sort(
       (a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime()
     );
-  }, [selectedBrand]);
+  }, [selectedBrand, events]);
 
   // Calendar grid helpers
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();

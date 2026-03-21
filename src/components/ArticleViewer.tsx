@@ -1,15 +1,15 @@
 "use client";
 
 import { WikiNode } from "@/types";
-import { findParentHeading } from "@/lib/mock-data";
-import { mockWikiTree } from "@/lib/mock-data";
+import { findParentHeading } from "@/lib/api";
 
 interface ArticleViewerProps {
   article: WikiNode | null;
   onBrowseClick?: () => void;
+  allNodes?: WikiNode[];
 }
 
-export default function ArticleViewer({ article, onBrowseClick }: ArticleViewerProps) {
+export default function ArticleViewer({ article, onBrowseClick, allNodes = [] }: ArticleViewerProps) {
   if (!article) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-gray-400 px-4">
@@ -48,7 +48,7 @@ export default function ArticleViewer({ article, onBrowseClick }: ArticleViewerP
     );
   }
 
-  const parentHeading = findParentHeading(mockWikiTree, article.id);
+  const parentHeading = findParentHeading(allNodes, article.id);
   const authorInitials = "TC";
   const stepCount = article.html_content
     ? (article.html_content.match(/scribe-step-text/g) || []).length

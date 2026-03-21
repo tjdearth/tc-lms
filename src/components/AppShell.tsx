@@ -5,12 +5,17 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Sidebar from "./Sidebar";
 import SearchModal from "./SearchModal";
-import { mockWikiTree } from "@/lib/mock-data";
+import { fetchWikiTree } from "@/lib/api";
 import { WikiNode } from "@/types";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [wikiTree, setWikiTree] = useState<WikiNode[]>([]);
+
+  useEffect(() => {
+    fetchWikiTree().then(setWikiTree);
+  }, []);
   const router = useRouter();
   const { status } = useSession();
 
@@ -101,7 +106,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
         onSelectArticle={handleSearchSelect}
-        nodes={mockWikiTree}
+        nodes={wikiTree}
       />
     </>
   );

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { WikiNode } from "@/types";
-import { getAllArticles, findParentHeading, mockWikiTree } from "@/lib/mock-data";
+import { getAllArticles, findParentHeading } from "@/lib/api";
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -121,7 +121,7 @@ export default function SearchModal({
             </div>
           )}
           {results.map((article) => {
-            const parent = findParentHeading(mockWikiTree, article.id);
+            const parent = findParentHeading(nodes, article.id);
             return (
               <button
                 key={article.id}
