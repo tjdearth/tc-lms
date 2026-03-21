@@ -186,39 +186,6 @@ export default function WikiTree({
         </div>
       </div>
 
-      {/* ALL WIKIS section */}
-      <div className="px-4 pb-1">
-        <span className="text-[10px] font-semibold tracking-[0.12em] uppercase" style={{ color: "#8a9bb0" }}>
-          All Wikis
-        </span>
-      </div>
-      <div className="px-3 pb-2">
-        {["Across Mexico", "All Users", "Salesforce Academy"].map((name) => (
-          <button
-            key={name}
-            className="w-full text-left flex items-center gap-1 py-[7px] px-3 text-[13px] rounded-md transition-colors"
-            style={{ color: "#4a5568" }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f7f8f9"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
-          >
-            <span className="w-5 flex-shrink-0 inline-flex items-center justify-center text-[11px]" style={{ color: "#9ca3af" }}>
-              &#x203A;
-            </span>
-            {name}
-          </button>
-        ))}
-      </div>
-
-      {/* Divider */}
-      <div className="mx-4 mb-3" style={{ borderBottom: "1px solid #e2e8f0" }} />
-
-      {/* SALESFORCE ACADEMY section label */}
-      <div className="px-4 pb-2">
-        <span className="text-[10px] font-semibold tracking-[0.12em] uppercase" style={{ color: "#8a9bb0" }}>
-          Salesforce Academy
-        </span>
-      </div>
-
       {/* Tree */}
       <div className="flex-1 overflow-y-auto px-2 pb-4 wiki-tree-scroll">
         {filteredNodes.map((node) => (
