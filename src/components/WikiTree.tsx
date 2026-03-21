@@ -41,9 +41,10 @@ function TreeNode({
         style={{
           paddingLeft: `${depth * 14 + 12}px`,
           paddingRight: "12px",
-          backgroundColor: isActive ? "#27a28c" : "transparent",
-          color: isActive ? "#fff" : isHeading ? "#1a2a3a" : "#4a5568",
+          backgroundColor: isActive ? "rgba(39,162,140,0.13)" : "transparent",
+          color: isActive ? "#1a6b5c" : isHeading ? "#1a2a3a" : "#4a5568",
           fontWeight: isActive ? 600 : isHeading ? 600 : 400,
+          borderLeft: isActive ? "3px solid #27a28c" : "3px solid transparent",
         }}
         onMouseEnter={(e) => {
           if (!isActive) {
@@ -59,7 +60,7 @@ function TreeNode({
         {hasChildren ? (
           <span
             className="w-5 flex-shrink-0 inline-flex items-center justify-center text-[11px]"
-            style={{ color: isActive ? "#fff" : "#9ca3af", transition: "transform 150ms ease", transform: expanded ? "rotate(90deg)" : "rotate(0deg)" }}
+            style={{ color: isActive ? "#27a28c" : "#9ca3af", transition: "transform 150ms ease", transform: expanded ? "rotate(90deg)" : "rotate(0deg)" }}
           >
             &#x203A;
           </span>
