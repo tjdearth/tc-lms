@@ -4,8 +4,49 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Underline from "@tiptap/extension-underline";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Color from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
 import VideoEmbed from "./VideoEmbed";
 import { useEffect, useCallback, useRef, useState } from "react";
+
+const BRAND_COLORS = [
+  // TC core
+  { label: "TC Navy", color: "#304256" },
+  { label: "TC Accent", color: "#27a28c" },
+  // DMC brands
+  { label: "Italy", color: "#C6B356" },
+  { label: "Spain", color: "#7C1137" },
+  { label: "East Africa", color: "#4F9E2D" },
+  { label: "France", color: "#58392E" },
+  { label: "UK", color: "#6D7581" },
+  { label: "Indonesia", color: "#ADA263" },
+  { label: "Japan", color: "#E9395E" },
+  { label: "UAE", color: "#B28A72" },
+  { label: "Mexico", color: "#E56456" },
+  { label: "Australia", color: "#B04D32" },
+  { label: "Colombia", color: "#FEE9A8" },
+  { label: "Greece", color: "#0E1952" },
+  { label: "Thailand", color: "#636218" },
+  { label: "Peru", color: "#95AFA2" },
+  { label: "Turkey", color: "#247F82" },
+  { label: "Morocco", color: "#F56A23" },
+  // Common extras
+  { label: "Black", color: "#000000" },
+  { label: "Dark Gray", color: "#374151" },
+  { label: "Gray", color: "#6b7280" },
+  { label: "Red", color: "#dc2626" },
+  { label: "White", color: "#ffffff" },
+];
+
+const HIGHLIGHT_COLORS = [
+  { label: "Yellow", color: "#fef08a" },
+  { label: "Green", color: "#bbf7d0" },
+  { label: "Blue", color: "#bfdbfe" },
+  { label: "Pink", color: "#fbcfe8" },
+  { label: "Orange", color: "#fed7aa" },
+  { label: "TC Accent", color: "#ccfbf1" },
+];
 
 interface BlockEditorProps {
   content: string;
@@ -75,6 +116,98 @@ function Divider() {
   return <div className="w-px h-5 bg-gray-200 mx-0.5" />;
 }
 
+function ColorDropdown({
+  colors,
+  activeColor,
+  onSelect,
+  onClear,
+  title,
+  icon,
+}: {
+  colors: { label: string; color: string }[];
+  activeColor: string | undefined;
+  onSelect: (color: string) => void;
+  onClear: () => void;
+  title: string;
+  icon: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    if (open) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        title={title}
+        className={`p-1.5 rounded text-xs font-medium transition-colors flex items-center gap-0.5 ${
+          activeColor
+            ? "bg-accent/15 text-accent"
+            : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+        }`}
+      >
+        {icon}
+        <svg width="8" height="8" viewBox="0 0 12 12" fill="currentColor" className="opacity-50">
+          <path d="M2 4l4 4 4-4" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-2 w-[220px]">
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {colors.map((c) => (
+              <button
+                key={c.color}
+                type="button"
+                onClick={() => {
+                  onSelect(c.color);
+                  setOpen(false);
+                }}
+                title={c.label}
+                className="w-6 h-6 rounded border border-gray-200 hover:scale-110 transition-transform relative"
+                style={{ backgroundColor: c.color }}
+              >
+                {activeColor === c.color && (
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={c.color === "#ffffff" || c.color === "#FEE9A8" || c.color === "#fef08a" ? "#374151" : "#ffffff"}
+                    strokeWidth="3"
+                    className="absolute inset-0 m-auto"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              onClear();
+              setOpen(false);
+            }}
+            className="w-full text-left text-[11px] text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+          >
+            Remove color
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function BlockEditor({ content, onChange }: BlockEditorProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
@@ -107,6 +240,9 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
       }),
       Image.configure({ inline: false }),
       Underline,
+      TextStyle,
+      Color,
+      Highlight.configure({ multicolor: true }),
       VideoEmbed,
     ],
     content,
@@ -472,6 +608,40 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
         >
           <span className="line-through">S</span>
         </ToolbarButton>
+
+        {/* Text color */}
+        <ColorDropdown
+          colors={BRAND_COLORS}
+          activeColor={editor.getAttributes("textStyle").color}
+          onSelect={(color) => editor.chain().focus().setColor(color).run()}
+          onClear={() => editor.chain().focus().unsetColor().run()}
+          title="Text color"
+          icon={
+            <span className="relative font-bold text-xs leading-none">
+              A
+              <span
+                className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full"
+                style={{ backgroundColor: editor.getAttributes("textStyle").color || "#374151" }}
+              />
+            </span>
+          }
+        />
+
+        {/* Highlight */}
+        <ColorDropdown
+          colors={HIGHLIGHT_COLORS}
+          activeColor={editor.getAttributes("highlight").color}
+          onSelect={(color) =>
+            editor.chain().focus().toggleHighlight({ color }).run()
+          }
+          onClear={() => editor.chain().focus().unsetHighlight().run()}
+          title="Highlight"
+          icon={
+            <span className="relative font-bold text-xs leading-none px-0.5 rounded-sm" style={{ backgroundColor: editor.getAttributes("highlight").color || "#fef08a" }}>
+              H
+            </span>
+          }
+        />
 
         <Divider />
 
