@@ -37,7 +37,7 @@ function TreeNode({
             onSelectArticle(node);
           }
         }}
-        className={`text-left flex items-center gap-1 py-[7px] text-[13px] transition-colors ${isActive ? "" : "w-full"}`}
+        className={`text-left flex items-center gap-1 py-[3px] text-[13px] transition-colors ${isActive ? "" : "w-full"}`}
         style={{
           paddingRight: "12px",
           borderRadius: isActive ? "0 999px 999px 0" : "6px",
