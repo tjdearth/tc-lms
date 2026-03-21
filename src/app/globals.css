@@ -288,44 +288,68 @@ body {
   color: #134e4a;
 }
 
-/* ---- Tips ---- */
+/* ---- Tips (standalone, NOT inside .scribe-step) ---- */
 
-.scribe-content .scribe-tip,
-.scribe-content .scribe-step-tip {
-  background: #eff6ff;
-  border-left: 4px solid #3b82f6;
-  border-radius: 0 0.5rem 0.5rem 0;
-  padding: 1rem 1.25rem;
+.scribe-content > .scribe-tip,
+.scribe-content > .scribe-step-tip {
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-radius: 0.75rem;
+  padding: 1.5rem 1.5rem 1.5rem 3.5rem;
   margin: 1rem 0;
-  color: #1e40af;
+  color: #134e4a;
   font-size: 0.9375rem;
   line-height: 1.6;
+  position: relative;
 }
 
-.scribe-content .scribe-tip strong,
-.scribe-content .scribe-step-tip strong {
-  color: #1e40af;
+.scribe-content > .scribe-tip::before,
+.scribe-content > .scribe-step-tip::before {
+  content: "ℹ";
+  position: absolute;
+  left: 1.25rem;
+  top: 1.5rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #14b8a6;
 }
 
-/* ---- Warnings ---- */
+.scribe-content > .scribe-tip strong,
+.scribe-content > .scribe-step-tip strong {
+  color: #134e4a;
+}
 
-.scribe-content .scribe-warning,
-.scribe-content .scribe-step-warning,
-.scribe-content .scribe-step-alert {
-  background: #fffbeb;
-  border-left: 4px solid #f59e0b;
-  border-radius: 0 0.5rem 0.5rem 0;
-  padding: 1rem 1.25rem;
+/* ---- Warnings (standalone, NOT inside .scribe-step) ---- */
+
+.scribe-content > .scribe-warning,
+.scribe-content > .scribe-step-warning,
+.scribe-content > .scribe-step-alert {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.75rem;
+  padding: 1.5rem 1.5rem 1.5rem 3.5rem;
   margin: 1rem 0;
-  color: #92400e;
+  color: #7f1d1d;
   font-size: 0.9375rem;
   line-height: 1.6;
+  position: relative;
 }
 
-.scribe-content .scribe-warning strong,
-.scribe-content .scribe-step-warning strong,
-.scribe-content .scribe-step-alert strong {
-  color: #92400e;
+.scribe-content > .scribe-warning::before,
+.scribe-content > .scribe-step-warning::before,
+.scribe-content > .scribe-step-alert::before {
+  content: "⚠";
+  position: absolute;
+  left: 1.25rem;
+  top: 1.5rem;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.scribe-content > .scribe-warning strong,
+.scribe-content > .scribe-step-warning strong,
+.scribe-content > .scribe-step-alert strong {
+  color: #7f1d1d;
 }
 
 /* ---- Scribe step text (outside of step cards) ---- */
