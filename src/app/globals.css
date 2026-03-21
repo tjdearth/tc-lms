@@ -96,7 +96,7 @@ body {
   color: #1e40af;
 }
 
-/* ---- Step cards (seed format: .step-number + .step-content) ---- */
+/* ---- Step cards (Scribe export format) ---- */
 
 .scribe-content .scribe-step {
   background: white;
@@ -104,6 +104,22 @@ body {
   border-radius: 0.75rem;
   padding: 1.25rem 1.5rem;
   margin-bottom: 1rem;
+}
+
+.scribe-content .scribe-step .scribe-step-text {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: #1f2937;
+  margin: 0;
+}
+
+.scribe-content .scribe-step .scribe-step-text strong {
+  color: #304256;
+  font-weight: 600;
+}
+
+/* Step cards (seed format: .step-number + .step-content) */
+.scribe-content .scribe-step:has(.step-number) {
   display: flex;
   gap: 1rem;
   align-items: flex-start;
@@ -158,6 +174,21 @@ body {
   margin-bottom: 0.125rem;
 }
 
+/* Screenshots */
+.scribe-content .scribe-screenshot-container {
+  margin: 0.75rem 0 1rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.scribe-content .scribe-screenshot-container img,
+.scribe-content .scribe-screenshot-container .scribe-screenshot {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 /* Screenshot placeholders (inline-styled in seed data) */
 .scribe-content .screenshot-placeholder {
   margin: 0.75rem 0 0.25rem;
@@ -168,18 +199,20 @@ body {
   font-size: 0.8125rem;
 }
 
-/* Screenshots (real images) */
-.scribe-content .scribe-screenshot-container {
-  margin-top: 0.75rem;
-  border-radius: 0.5rem;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
+/* Author line */
+.scribe-content .scribe-author {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
 }
 
-.scribe-content .scribe-screenshot-container img {
-  width: 100%;
-  height: auto;
-  display: block;
+.scribe-content .scribe-author a {
+  color: #27a28c;
+  text-decoration: none;
+}
+
+.scribe-content .scribe-author a:hover {
+  text-decoration: underline;
 }
 
 /* ---- Tips ---- */
@@ -222,46 +255,15 @@ body {
   color: #92400e;
 }
 
-/* ---- Legacy mock-data format (counter-based steps) ---- */
+/* ---- Scribe step text (outside of step cards) ---- */
 
-.scribe-content .scribe-steps-container {
-  counter-reset: step-counter;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.scribe-content .scribe-steps-container .scribe-step {
-  padding-left: 4rem;
-  position: relative;
-  counter-increment: step-counter;
-  display: block;
-}
-
-.scribe-content .scribe-steps-container .scribe-step::before {
-  content: counter(step-counter);
-  position: absolute;
-  left: 1.25rem;
-  top: 1.25rem;
-  width: 2rem;
-  height: 2rem;
-  background: #27a28c;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-.scribe-content .scribe-step-text {
+.scribe-content > .scribe-step-text {
   font-size: 0.9375rem;
   line-height: 1.7;
   color: #1f2937;
 }
 
-.scribe-content .scribe-step-text strong {
+.scribe-content > .scribe-step-text strong {
   color: #304256;
   font-weight: 600;
 }
@@ -298,6 +300,9 @@ body {
 @media (max-width: 767px) {
   .scribe-content .scribe-step {
     padding: 1rem;
+  }
+
+  .scribe-content .scribe-step:has(.step-number) {
     gap: 0.75rem;
   }
 
@@ -305,19 +310,6 @@ body {
     width: 1.5rem;
     height: 1.5rem;
     min-width: 1.5rem;
-    font-size: 0.75rem;
-  }
-
-  .scribe-content .scribe-steps-container .scribe-step {
-    padding: 1rem;
-    padding-left: 3rem;
-  }
-
-  .scribe-content .scribe-steps-container .scribe-step::before {
-    left: 0.75rem;
-    top: 1rem;
-    width: 1.5rem;
-    height: 1.5rem;
     font-size: 0.75rem;
   }
 
