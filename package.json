@@ -26,6 +26,7 @@
     "next-auth": "^4.24.13",
     "react": "^18",
     "react-dom": "^18",
+    "react-simple-maps": "^3.0.0",
     "resend": "^6.9.4"
   },
   "devDependencies": {
