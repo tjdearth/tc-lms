@@ -379,6 +379,7 @@ export default function CompanyPage() {
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [, setTick] = useState(0);
   const [selectedDmc, setSelectedDmc] = useState(0);
+  const [showAllTeam, setShowAllTeam] = useState(false);
   const [teamByBrand, setTeamByBrand] = useState<Record<string, BrandTeam>>({});
 
   // Fetch team members
@@ -610,32 +611,45 @@ export default function CompanyPage() {
           const brandData = teamByBrand[brand.name];
           const gm = brandData?.gm || null;
           const team = brandData?.team || [];
+          const visibleTeam = showAllTeam ? team : team.slice(0, 12);
+          const hasMore = team.length > 12;
 
           return (
             <div>
-              {/* Brand selector strip */}
-              <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
-                {DMC_BRANDS_INFO.map((b, i) => (
-                  <button
-                    key={b.name}
-                    onClick={() => setSelectedDmc(i)}
-                    className={`group flex-shrink-0 flex items-center gap-2.5 px-4 py-2.5 rounded-full border transition-all duration-200 ${
-                      selectedDmc === i
-                        ? "border-transparent text-white shadow-lg"
-                        : "border-[#E8ECF1] bg-white text-gray-500 hover:border-gray-300 hover:shadow-sm"
-                    }`}
-                    style={selectedDmc === i ? { backgroundColor: b.color } : undefined}
+              {/* Brand selector — dropdown + prev/next */}
+              <div className="flex items-center gap-3 mb-6">
+                <button
+                  onClick={() => { setSelectedDmc(selectedDmc === 0 ? DMC_BRANDS_INFO.length - 1 : selectedDmc - 1); setShowAllTeam(false); }}
+                  className="p-2 rounded-lg border border-[#E8ECF1] bg-white hover:bg-gray-50 transition-colors text-gray-400 hover:text-[#304256]"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                </button>
+
+                <div className="relative flex-1 max-w-xs">
+                  <select
+                    value={selectedDmc}
+                    onChange={(e) => { setSelectedDmc(Number(e.target.value)); setShowAllTeam(false); }}
+                    className="w-full appearance-none bg-white border border-[#E8ECF1] rounded-lg pl-4 pr-10 py-2.5 text-sm font-medium text-[#304256] focus:outline-none focus:border-[#27a28c] focus:ring-1 focus:ring-[#27a28c]/30 cursor-pointer"
                   >
-                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${selectedDmc === i ? "bg-white/40" : ""}`}
-                      style={selectedDmc !== i ? { backgroundColor: b.color } : undefined}
-                    />
-                    <span className="text-xs font-medium whitespace-nowrap">{b.name}</span>
-                  </button>
-                ))}
+                    {DMC_BRANDS_INFO.map((b, i) => (
+                      <option key={b.name} value={i}>{b.name}</option>
+                    ))}
+                  </select>
+                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                </div>
+
+                <button
+                  onClick={() => { setSelectedDmc(selectedDmc === DMC_BRANDS_INFO.length - 1 ? 0 : selectedDmc + 1); setShowAllTeam(false); }}
+                  className="p-2 rounded-lg border border-[#E8ECF1] bg-white hover:bg-gray-50 transition-colors text-gray-400 hover:text-[#304256]"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                </button>
+
+                <span className="text-[11px] text-gray-300 tabular-nums ml-1">{selectedDmc + 1} / {DMC_BRANDS_INFO.length}</span>
               </div>
 
               {/* Hero showcase card */}
-              <div className="rounded-2xl overflow-hidden shadow-sm border border-[#E8ECF1]" style={{ backgroundColor: brand.color + "08" }}>
+              <div className="rounded-2xl overflow-hidden shadow-sm border border-[#E8ECF1]">
                 <div className="grid grid-cols-1 lg:grid-cols-5">
                   {/* Photo — takes 2/5 */}
                   <div className="relative lg:col-span-2 h-64 lg:h-auto min-h-[360px]">
@@ -646,9 +660,7 @@ export default function CompanyPage() {
                         <p className="text-sm text-gray-400">Photo coming soon</p>
                       </div>
                     )}
-                    {/* Gradient overlay at bottom for elegance */}
                     <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/30 to-transparent lg:hidden" />
-                    {/* Brand color accent bar */}
                     <div className="absolute top-0 left-0 w-full h-1 lg:w-1 lg:h-full lg:right-auto" style={{ backgroundColor: brand.color }} />
                   </div>
 
@@ -706,55 +718,53 @@ export default function CompanyPage() {
                       )}
                     </div>
 
-                    {/* Team */}
+                    {/* Team — avatar grid for large teams */}
                     <div>
                       <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.12em] mb-3">
                         Team {team.length > 0 && <span className="text-gray-300 font-normal ml-1">({team.length})</span>}
                       </h4>
                       {team.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                          {team.map((m) => (
-                            <div key={m.email} className="flex items-center gap-2 border border-[#E8ECF1] rounded-full pl-1 pr-3 py-1 hover:shadow-sm transition-shadow bg-white">
-                              {m.avatar_url ? (
-                                <img src={m.avatar_url} alt={m.name} className="w-7 h-7 rounded-full object-cover" />
-                              ) : (
-                                <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white" style={{ backgroundColor: brand.color }}>
-                                  {m.name.charAt(0).toUpperCase()}
+                        <>
+                          <div className="flex flex-wrap gap-1.5">
+                            {visibleTeam.map((m) => (
+                              <div key={m.email} className="group/avatar relative" title={m.name}>
+                                {m.avatar_url ? (
+                                  <img src={m.avatar_url} alt={m.name} className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm hover:shadow-md hover:scale-110 transition-all cursor-default" />
+                                ) : (
+                                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-semibold text-white border-2 border-white shadow-sm hover:shadow-md hover:scale-110 transition-all cursor-default" style={{ backgroundColor: brand.color }}>
+                                    {m.name.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                                {/* Tooltip */}
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 bg-[#304256] text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover/avatar:opacity-100 transition-opacity pointer-events-none z-10">
+                                  {m.name}
                                 </div>
-                              )}
-                              <span className="text-xs font-medium text-[#304256]">{m.name}</span>
-                            </div>
-                          ))}
-                        </div>
+                              </div>
+                            ))}
+                            {!showAllTeam && hasMore && (
+                              <button
+                                onClick={() => setShowAllTeam(true)}
+                                className="w-9 h-9 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-[10px] font-medium text-gray-500 hover:bg-gray-200 transition-colors"
+                              >
+                                +{team.length - 12}
+                              </button>
+                            )}
+                          </div>
+                          {showAllTeam && hasMore && (
+                            <button
+                              onClick={() => setShowAllTeam(false)}
+                              className="text-[11px] text-gray-400 hover:text-[#304256] mt-2 transition-colors"
+                            >
+                              Show less
+                            </button>
+                          )}
+                        </>
                       ) : (
                         <p className="text-xs text-gray-300 italic">No team members registered yet</p>
                       )}
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Navigation arrows */}
-              <div className="flex items-center justify-between mt-4">
-                <button
-                  onClick={() => setSelectedDmc(selectedDmc === 0 ? DMC_BRANDS_INFO.length - 1 : selectedDmc - 1)}
-                  className="flex items-center gap-2 text-xs text-gray-400 hover:text-[#304256] transition-colors group"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform">
-                    <polyline points="15 18 9 12 15 6" />
-                  </svg>
-                  {DMC_BRANDS_INFO[selectedDmc === 0 ? DMC_BRANDS_INFO.length - 1 : selectedDmc - 1].name}
-                </button>
-                <span className="text-[11px] text-gray-300 tabular-nums">{selectedDmc + 1} / {DMC_BRANDS_INFO.length}</span>
-                <button
-                  onClick={() => setSelectedDmc(selectedDmc === DMC_BRANDS_INFO.length - 1 ? 0 : selectedDmc + 1)}
-                  className="flex items-center gap-2 text-xs text-gray-400 hover:text-[#304256] transition-colors group"
-                >
-                  {DMC_BRANDS_INFO[selectedDmc === DMC_BRANDS_INFO.length - 1 ? 0 : selectedDmc + 1].name}
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </button>
               </div>
             </div>
           );
