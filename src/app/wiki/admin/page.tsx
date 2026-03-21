@@ -60,10 +60,12 @@ function parseScribeHtml(html: string): {
   title: string;
   content: string;
 } {
-  const h1Match = html.match(/<h1[^>]*>([\d.]+)\s+(.*?)<\/h1>/i);
+  const h1Match = html.match(/<h1[^>]*>([\d.]+)\.?\s+(.*?)<\/h1>/i);
   if (h1Match) {
+    // Strip any trailing dots from numbering (e.g. "2." → "2")
+    const numbering = h1Match[1].replace(/\.$/, "");
     return {
-      numbering: h1Match[1],
+      numbering,
       title: h1Match[2].trim(),
       content: html,
     };
@@ -474,13 +476,36 @@ export default function WikiAdminPage() {
         ? `${parsed.numbering} ${parsed.title}`
         : parsed.title;
 
-      // Check if an article already exists at this position — if so, update it (re-import)
-      const existing = flatNodes.find(
-        (n) =>
-          n.sort_order === sortOrder &&
-          n.parent_id === parentId &&
-          n.node_type === "article"
-      );
+      // Check if a bare heading exists with this exact numbering (e.g. "2" placeholder)
+      // If so, update it with the full title and content instead of creating a duplicate
+      const bareHeading = parsed.numbering
+        ? flatNodes.find((n) => {
+            const { numbering } = extractNumbering(n.title);
+            return numbering === parsed.numbering && n.node_type === "heading" && !extractNumbering(n.title).name;
+          })
+        : null;
+
+      if (bareHeading) {
+        await apiUpdate({
+          id: bareHeading.id,
+          title: fullTitle,
+          html_content: parsed.content,
+        });
+        setStatusMsg(`✓ "${parsed.title}" updated (existing heading)`);
+        setImportCount((c) => c + 1);
+        setPastedHtml("");
+        await fetchNodes();
+        setSaving(false);
+        return;
+      }
+
+      // Check if an article already exists with this numbering — if so, update it (re-import)
+      const existing = parsed.numbering
+        ? flatNodes.find((n) => {
+            const { numbering } = extractNumbering(n.title);
+            return numbering === parsed.numbering;
+          })
+        : null;
 
       if (existing) {
         // Update existing article with new content
