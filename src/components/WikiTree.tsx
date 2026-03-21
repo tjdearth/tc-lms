@@ -57,19 +57,11 @@ function TreeNode({
         }}
       >
         {hasChildren ? (
-          <span className="w-5 flex-shrink-0 inline-flex items-center justify-center" style={{ color: isActive ? "#fff" : "#9ca3af" }}>
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 10 10"
-              fill="currentColor"
-              style={{
-                transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
-                transition: "transform 150ms ease",
-              }}
-            >
-              <path d="M3 1.5L7 5L3 8.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+          <span
+            className="w-5 flex-shrink-0 inline-flex items-center justify-center text-[11px]"
+            style={{ color: isActive ? "#fff" : "#9ca3af", transition: "transform 150ms ease", transform: expanded ? "rotate(90deg)" : "rotate(0deg)" }}
+          >
+            &#x203A;
           </span>
         ) : (
           <span className="w-5 flex-shrink-0" />
@@ -200,10 +192,8 @@ export default function WikiTree({
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f7f8f9"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
           >
-            <span className="w-5 flex-shrink-0 inline-flex items-center justify-center" style={{ color: "#9ca3af" }}>
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 1.5L7 5L3 8.5" />
-              </svg>
+            <span className="w-5 flex-shrink-0 inline-flex items-center justify-center text-[11px]" style={{ color: "#9ca3af" }}>
+              &#x203A;
             </span>
             {name}
           </button>
