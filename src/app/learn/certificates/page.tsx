@@ -76,6 +76,7 @@ export default function CertificatesPage() {
                     key={enrollment.id}
                     courseName={course.title}
                     completedAt={enrollment.completed_at!}
+                    category={course.category}
                   />
                 );
               })}
