@@ -215,6 +215,55 @@ body {
   text-decoration: underline;
 }
 
+/* ---- Step cards that contain warnings/alerts → override to warning style ---- */
+
+.scribe-content .scribe-step:has(.scribe-step-warning),
+.scribe-content .scribe-step:has(.scribe-step-alert) {
+  background: #fffbeb;
+  border: none;
+  border-left: 4px solid #f59e0b;
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: #92400e;
+}
+
+.scribe-content .scribe-step:has(.scribe-step-warning) .scribe-step-text,
+.scribe-content .scribe-step:has(.scribe-step-alert) .scribe-step-text {
+  color: #92400e;
+}
+
+.scribe-content .scribe-step:has(.scribe-step-warning) strong,
+.scribe-content .scribe-step:has(.scribe-step-alert) strong {
+  color: #92400e;
+}
+
+.scribe-content .scribe-step:has(.scribe-step-warning) ul,
+.scribe-content .scribe-step:has(.scribe-step-warning) ol,
+.scribe-content .scribe-step:has(.scribe-step-alert) ul,
+.scribe-content .scribe-step:has(.scribe-step-alert) ol {
+  color: #92400e;
+}
+
+.scribe-content .scribe-step:has(.scribe-step-warning) li,
+.scribe-content .scribe-step:has(.scribe-step-alert) li {
+  color: #92400e;
+}
+
+/* ---- Step cards that contain tips → override to tip style ---- */
+
+.scribe-content .scribe-step:has(.scribe-step-tip) {
+  background: #eff6ff;
+  border: none;
+  border-left: 4px solid #3b82f6;
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: #1e40af;
+}
+
+.scribe-content .scribe-step:has(.scribe-step-tip) .scribe-step-text,
+.scribe-content .scribe-step:has(.scribe-step-tip) strong,
+.scribe-content .scribe-step:has(.scribe-step-tip) li {
+  color: #1e40af;
+}
+
 /* ---- Tips ---- */
 
 .scribe-content .scribe-tip,
