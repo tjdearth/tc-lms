@@ -1,0 +1,281 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import AppShell from "@/components/AppShell";
+import CourseCard from "@/components/CourseCard";
+import type { LmsUser, Course, Enrollment } from "@/types";
+
+export default function LearnDashboard() {
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  const [user, setUser] = useState<LmsUser | null>(null);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        // Fetch user
+        const userRes = await fetch("/api/learn/users");
+        const userData: LmsUser = await userRes.json();
+        setUser(userData);
+
+        // Redirect to onboarding if not onboarded
+        if (!userData.onboarded_at) {
+          router.push("/learn/onboarding");
+          return;
+        }
+
+        // Fetch courses and enrollments
+        const [coursesRes, enrollmentsRes] = await Promise.all([
+          fetch("/api/learn/courses"),
+          fetch("/api/learn/enroll"),
+        ]);
+        const coursesData: Course[] = await coursesRes.json();
+        const enrollmentsData: Enrollment[] = await enrollmentsRes.json();
+
+        setCourses(coursesData.filter((c) => c.is_published));
+        setEnrollments(enrollmentsData);
+      } catch (err) {
+        console.error("Dashboard load error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="min-h-screen bg-[#eeeeee] flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-[#27a28c]/30 border-t-[#27a28c] rounded-full animate-spin" />
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!user) return null;
+
+  const enrollmentMap = new Map(enrollments.map((e) => [e.course_id, e]));
+
+  const enrolledCourses = courses.filter((c) => enrollmentMap.has(c.id));
+
+  // Required: enrolled but not completed, sorted by due date (urgent first)
+  const requiredCourses = enrolledCourses
+    .filter((c) => {
+      const e = enrollmentMap.get(c.id)!;
+      return e.status !== "completed" && e.due_date;
+    })
+    .sort((a, b) => {
+      const aDue = enrollmentMap.get(a.id)!.due_date || "";
+      const bDue = enrollmentMap.get(b.id)!.due_date || "";
+      return aDue.localeCompare(bDue);
+    });
+
+  // Continue: in progress courses
+  const continueCourses = enrolledCourses.filter(
+    (c) => enrollmentMap.get(c.id)!.status === "in_progress"
+  );
+
+  // Completed count
+  const completedCount = enrolledCourses.filter(
+    (c) => enrollmentMap.get(c.id)!.status === "completed"
+  ).length;
+
+  // Suggested: published courses not enrolled, matching user track
+  const suggestedCourses = courses
+    .filter(
+      (c) =>
+        !enrollmentMap.has(c.id) &&
+        user.track &&
+        c.tracks.includes(user.track)
+    )
+    .slice(0, 4);
+
+  const today = new Date().toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  function getDueBadge(enrollment: Enrollment) {
+    if (!enrollment.due_date) return null;
+    const now = new Date();
+    const due = new Date(enrollment.due_date);
+    const diffDays = Math.ceil(
+      (due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (diffDays < 0)
+      return (
+        <span className="px-2 py-0.5 text-[10px] font-medium bg-red-100 text-red-700 rounded-full">
+          Overdue
+        </span>
+      );
+    if (diffDays <= 7)
+      return (
+        <span className="px-2 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700 rounded-full">
+          Due soon
+        </span>
+      );
+    return (
+      <span className="px-2 py-0.5 text-[10px] font-medium bg-green-100 text-green-700 rounded-full">
+        On track
+      </span>
+    );
+  }
+
+  return (
+    <AppShell>
+      <div className="min-h-screen bg-[#eeeeee]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+          {/* Greeting */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-[#304256]">
+              Welcome back, {user.name || session?.user?.name || "Learner"}
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">{today}</p>
+          </div>
+
+          {/* Required Learning */}
+          {requiredCourses.length > 0 && (
+            <section className="mb-10">
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-base font-semibold text-[#304256]">
+                  Required Learning
+                </h2>
+                <span className="px-2 py-0.5 text-[10px] font-medium bg-red-100 text-red-700 rounded-full">
+                  {requiredCourses.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {requiredCourses.map((course) => {
+                  const enrollment = enrollmentMap.get(course.id)!;
+                  return (
+                    <div key={course.id} className="relative">
+                      <div className="absolute top-2 right-2 z-10">
+                        {getDueBadge(enrollment)}
+                      </div>
+                      <CourseCard
+                        course={course}
+                        enrollment={enrollment}
+                        progressPct={course.progress_pct}
+                        onClick={() =>
+                          router.push(`/learn/course/${course.id}`)
+                        }
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Continue Learning */}
+          {continueCourses.length > 0 && (
+            <section className="mb-10">
+              <h2 className="text-base font-semibold text-[#304256] mb-4">
+                Continue Learning
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {continueCourses.map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    enrollment={enrollmentMap.get(course.id)}
+                    progressPct={course.progress_pct}
+                    onClick={() =>
+                      router.push(`/learn/course/${course.id}`)
+                    }
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Suggested Courses */}
+          {suggestedCourses.length > 0 && (
+            <section className="mb-10">
+              <h2 className="text-base font-semibold text-[#304256] mb-4">
+                Suggested for You
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {suggestedCourses.map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    onClick={() =>
+                      router.push(`/learn/course/${course.id}`)
+                    }
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Your Achievements */}
+          {completedCount > 0 && (
+            <section className="mb-10">
+              <h2 className="text-base font-semibold text-[#304256] mb-4">
+                Your Achievements
+              </h2>
+              <div className="bg-white border border-[#E8ECF1] rounded-xl shadow-sm p-6 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-[#27a28c]/10 flex items-center justify-center">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#27a28c"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="8" r="7" />
+                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#304256]">
+                    {completedCount}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    course{completedCount !== 1 ? "s" : ""} completed
+                  </p>
+                </div>
+                <button
+                  onClick={() => router.push("/learn/certificates")}
+                  className="ml-auto px-4 py-2 text-xs font-medium text-[#27a28c] border border-[#27a28c] rounded-lg hover:bg-[#27a28c]/5 transition-colors"
+                >
+                  View Certificates
+                </button>
+              </div>
+            </section>
+          )}
+
+          {/* Quick links */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push("/learn/courses")}
+              className="px-4 py-2 text-xs font-medium text-white bg-[#304256] rounded-lg hover:bg-[#304256]/90 transition-colors"
+            >
+              Browse All Courses
+            </button>
+            <button
+              onClick={() => router.push("/learn/certificates")}
+              className="px-4 py-2 text-xs font-medium text-[#304256] border border-[#E8ECF1] rounded-lg hover:bg-white transition-colors"
+            >
+              My Certificates
+            </button>
+          </div>
+        </div>
+      </div>
+    </AppShell>
+  );
+}

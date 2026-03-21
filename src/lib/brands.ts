@@ -92,3 +92,29 @@ export const BRAND_NAMES = Object.keys(DMC_BRANDS).sort();
 export function getBrandColor(brand: string): string {
   return DMC_BRANDS[brand]?.hex || "#304256";
 }
+
+export const EMAIL_DOMAIN_TO_BRAND: Record<string, string> = {
+  "travelcollection.co": "Travel Collection",
+  "travelcollection.com": "Travel Collection",
+  "authenticusitaly.it": "Authenticus Italy",
+  "unboxspainandportugal.com": "Unbox Spain & Portugal",
+  "trulyswahili.com": "Truly Swahili",
+  "crownjourney.com": "Crown Journey",
+  "oshinobitravel.com": "Oshinobi Travel",
+  "majlisretreats.com": "Majlis Retreats",
+  "kembaliindonesia.com": "Kembali Indonesia",
+  "acrossmexico.com": "Across Mexico",
+  "essentiallyfrench.com": "Essentially French",
+  "eluraaustralia.com": "Elura Australia",
+  "nirathailand.com": "Nira Thailand",
+  "sarturkiye.com": "Sar Turkiye",
+  "nostosgreece.com": "Nostos Greece",
+  "vistacolombia.com": "Vista Colombia",
+  "awakenperu.com": "Awaken Peru",
+  "experiencemorocco.com": "Experience Morocco",
+};
+
+export function brandFromEmail(email: string): string | null {
+  const domain = email.split("@")[1]?.toLowerCase();
+  return domain ? EMAIL_DOMAIN_TO_BRAND[domain] ?? null : null;
+}

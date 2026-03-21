@@ -533,3 +533,70 @@ body {
     font-size: 0.8125rem;
   }
 }
+
+/* LMS Learn Feature Styles */
+.prose-lesson {
+  max-width: 65ch;
+  line-height: 1.75;
+}
+.prose-lesson h1, .prose-lesson h2, .prose-lesson h3 {
+  color: #304256;
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+.prose-lesson p { margin-bottom: 1em; }
+.prose-lesson ul, .prose-lesson ol { margin-bottom: 1em; padding-left: 1.5em; }
+.prose-lesson li { margin-bottom: 0.25em; }
+.prose-lesson img { max-width: 100%; border-radius: 8px; margin: 1em 0; }
+.prose-lesson a { color: #27a28c; text-decoration: underline; }
+.prose-lesson blockquote {
+  border-left: 3px solid #27a28c;
+  padding-left: 1em;
+  color: #5a6b7d;
+  font-style: italic;
+}
+
+/* Quiz styles */
+.quiz-option {
+  border: 2px solid #E8ECF1;
+  border-radius: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.quiz-option:hover { border-color: #27a28c; background: #f0faf8; }
+.quiz-option.selected { border-color: #27a28c; background: #e6f7f4; }
+.quiz-option.correct { border-color: #22c55e; background: #f0fdf4; }
+.quiz-option.incorrect { border-color: #ef4444; background: #fef2f2; }
+
+/* Progress ring animation */
+@keyframes progress-ring {
+  from { stroke-dashoffset: var(--circumference); }
+}
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.5s ease;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Course card hover */
+.course-card {
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.course-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+
+/* Lesson sidebar */
+.lesson-sidebar-item {
+  transition: background-color 0.15s;
+}
+.lesson-sidebar-item:hover {
+  background-color: rgba(39, 162, 140, 0.08);
+}
+.lesson-sidebar-item.active {
+  background-color: rgba(39, 162, 140, 0.12);
+  border-right: 3px solid #27a28c;
+}

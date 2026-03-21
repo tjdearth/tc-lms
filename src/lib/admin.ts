@@ -10,3 +10,13 @@ export function isAdmin(email: string | null | undefined): boolean {
   if (!email) return false;
   return ADMIN_EMAILS.includes(email.toLowerCase());
 }
+
+export const COURSE_CREATOR_EMAILS: string[] = [
+  "giulia@travelcollection.co",
+];
+
+export function isCourseCreator(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const e = email.toLowerCase();
+  return ADMIN_EMAILS.includes(e) || COURSE_CREATOR_EMAILS.includes(e);
+}
