@@ -9,6 +9,7 @@ interface WikiTreeProps {
   onSelectArticle: (article: WikiNode) => void;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
+  desktopWidth?: number;
 }
 
 function TreeNode({
@@ -100,6 +101,7 @@ export default function WikiTree({
   onSelectArticle,
   mobileOpen,
   onMobileClose,
+  desktopWidth,
 }: WikiTreeProps) {
   const [search, setSearch] = useState("");
 
@@ -207,7 +209,10 @@ export default function WikiTree({
   return (
     <>
       {/* Desktop: standard sidebar panel */}
-      <div className="hidden md:flex w-[300px] bg-white border-r border-gray-200 flex-col h-full flex-shrink-0">
+      <div
+        className="hidden md:flex bg-white border-r border-gray-200 flex-col h-full flex-shrink-0"
+        style={{ width: desktopWidth ? `${desktopWidth}px` : "300px" }}
+      >
         {treeContent}
       </div>
 

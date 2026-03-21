@@ -16,6 +16,10 @@ function WikiContent() {
   const [wikiTree, setWikiTree] = useState<WikiNode[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Resizable panel
+  const [panelWidth, setPanelWidth] = useState(300);
+  const [isResizing, setIsResizing] = useState(false);
+
   useEffect(() => {
     fetchWikiTree().then((tree) => {
       setWikiTree(tree);
@@ -29,6 +33,26 @@ function WikiContent() {
       if (found) setActiveArticle(found);
     }
   }, [articleParam, wikiTree]);
+
+  // Panel resize handlers
+  useEffect(() => {
+    if (!isResizing) return;
+    const onMouseMove = (e: MouseEvent) => {
+      const newWidth = Math.min(Math.max(e.clientX, 220), 500);
+      setPanelWidth(newWidth);
+    };
+    const onMouseUp = () => setIsResizing(false);
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    return () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isResizing]);
 
   const handleSelectArticle = (article: WikiNode) => {
     setActiveArticle(article);
@@ -55,6 +79,13 @@ function WikiContent() {
         onSelectArticle={handleSelectArticle}
         mobileOpen={treeOpen}
         onMobileClose={() => setTreeOpen(false)}
+        desktopWidth={panelWidth}
+      />
+      {/* Resize handle (desktop only) */}
+      <div
+        onMouseDown={() => setIsResizing(true)}
+        className="hidden md:block w-1 hover:w-1.5 bg-transparent hover:bg-accent/30 cursor-col-resize flex-shrink-0 transition-all"
+        style={{ marginLeft: "-2px", marginRight: "-2px", zIndex: 10 }}
       />
       <ArticleViewer
         article={activeArticle}
