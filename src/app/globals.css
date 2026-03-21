@@ -456,6 +456,25 @@ body {
   font-size: 0.8125rem;
 }
 
+/* ---- Video embeds ---- */
+
+.scribe-content .video-embed-wrapper {
+  margin: 1rem 0;
+}
+
+.scribe-content .video-embed-wrapper iframe,
+.scribe-content .video-embed-wrapper video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.scribe-content .video-embed-wrapper video {
+  aspect-ratio: unset;
+  max-height: 500px;
+}
+
 /* ---- Block editor editable area ---- */
 
 .block-editor-content {

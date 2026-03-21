@@ -4,11 +4,24 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Underline from "@tiptap/extension-underline";
-import { useEffect } from "react";
+import VideoEmbed from "./VideoEmbed";
+import { useEffect, useCallback, useRef, useState } from "react";
 
 interface BlockEditorProps {
   content: string;
   onChange: (html: string) => void;
+}
+
+async function uploadImage(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch("/api/wiki/upload", { method: "POST", body: formData });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Upload failed");
+  }
+  const data = await res.json();
+  return data.url;
 }
 
 function ToolbarButton({
@@ -43,6 +56,25 @@ function Divider() {
 }
 
 export default function BlockEditor({ content, onChange }: BlockEditorProps) {
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = useCallback(
+    async (file: File, editorInstance: ReturnType<typeof useEditor>) => {
+      if (!editorInstance) return;
+      setUploading(true);
+      try {
+        const url = await uploadImage(file);
+        editorInstance.chain().focus().setImage({ src: url }).run();
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "Image upload failed");
+      } finally {
+        setUploading(false);
+      }
+    },
+    []
+  );
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -50,11 +82,72 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
       }),
       Image.configure({ inline: false }),
       Underline,
+      VideoEmbed,
     ],
     content,
     editorProps: {
       attributes: {
         class: "block-editor-content scribe-content outline-none min-h-[300px] p-4",
+      },
+      handlePaste: (view, event) => {
+        const items = event.clipboardData?.items;
+        if (!items) return false;
+        for (const item of Array.from(items)) {
+          if (item.type.startsWith("image/")) {
+            event.preventDefault();
+            const file = item.getAsFile();
+            if (file) {
+              // We need to get the editor from the view
+              setUploading(true);
+              uploadImage(file)
+                .then((url) => {
+                  const { tr } = view.state;
+                  const node = view.state.schema.nodes.image.create({ src: url });
+                  const transaction = tr.replaceSelectionWith(node);
+                  view.dispatch(transaction);
+                })
+                .catch((err) => {
+                  alert(err instanceof Error ? err.message : "Image upload failed");
+                })
+                .finally(() => {
+                  setUploading(false);
+                });
+            }
+            return true;
+          }
+        }
+        return false;
+      },
+      handleDrop: (view, event, _slice, moved) => {
+        if (moved) return false;
+        const files = event.dataTransfer?.files;
+        if (!files || files.length === 0) return false;
+        const file = files[0];
+        if (!file.type.startsWith("image/")) return false;
+        event.preventDefault();
+        setUploading(true);
+        const coordinates = view.posAtCoords({
+          left: event.clientX,
+          top: event.clientY,
+        });
+        uploadImage(file)
+          .then((url) => {
+            const node = view.state.schema.nodes.image.create({ src: url });
+            if (coordinates) {
+              const transaction = view.state.tr.insert(coordinates.pos, node);
+              view.dispatch(transaction);
+            } else {
+              const transaction = view.state.tr.replaceSelectionWith(node);
+              view.dispatch(transaction);
+            }
+          })
+          .catch((err) => {
+            alert(err instanceof Error ? err.message : "Image upload failed");
+          })
+          .finally(() => {
+            setUploading(false);
+          });
+        return true;
       },
     },
     onUpdate: ({ editor }) => {
@@ -72,15 +165,57 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
 
   if (!editor) return null;
 
-  const addImage = () => {
+  const addImageFromUrl = () => {
     const url = prompt("Image URL:");
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
     }
   };
 
+  const addVideo = () => {
+    const url = prompt("Video URL (YouTube, Vimeo, Loom, Google Drive, or direct .mp4):");
+    if (url) {
+      editor.chain().focus().setVideoEmbed({ src: url }).run();
+    }
+  };
+
+  const addImageFromFile = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file, editor);
+    }
+    // Reset so the same file can be selected again
+    e.target.value = "";
+  };
+
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white relative">
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+
+      {/* Upload overlay */}
+      {uploading && (
+        <div className="absolute inset-0 bg-white/80 z-50 flex items-center justify-center">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            Uploading image...
+          </div>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-gray-200 bg-gray-50 flex-wrap">
         {/* Text style */}
@@ -186,11 +321,26 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
             <polyline points="8 6 2 12 8 18" />
           </svg>
         </ToolbarButton>
-        <ToolbarButton onClick={addImage} title="Insert image">
+
+        {/* Image dropdown with upload + URL options */}
+        <div className="relative group">
+          <ToolbarButton onClick={addImageFromFile} title="Upload image">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
+            </svg>
+          </ToolbarButton>
+          <ToolbarButton onClick={addImageFromUrl} title="Image from URL">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            </svg>
+          </ToolbarButton>
+        </div>
+        <ToolbarButton onClick={addVideo} title="Embed video">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <polyline points="21 15 16 10 5 21" />
+            <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
         </ToolbarButton>
 
