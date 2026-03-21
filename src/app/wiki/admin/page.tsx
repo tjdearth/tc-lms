@@ -50,8 +50,8 @@ function numberingToSortOrder(numbering: string): number {
 
 /** Extract numbering prefix and plain name from a title like "3.2.1.5 Creating a Combo" */
 function extractNumbering(title: string): { numbering: string; name: string } {
-  const match = title.match(/^([\d.]+)\s+(.*)/);
-  if (match) return { numbering: match[1], name: match[2] };
+  const match = title.match(/^([\d.]+)(?:\s+(.*))?$/);
+  if (match) return { numbering: match[1], name: match[2] || "" };
   return { numbering: "", name: title };
 }
 
