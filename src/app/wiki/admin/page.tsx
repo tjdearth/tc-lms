@@ -406,6 +406,10 @@ export default function WikiAdminPage() {
   const [addTitle, setAddTitle] = useState("");
   const [addType, setAddType] = useState<"heading" | "article">("heading");
 
+  // Resizable panel
+  const [panelWidth, setPanelWidth] = useState(360);
+  const [isResizing, setIsResizing] = useState(false);
+
   const fetchNodes = useCallback(async () => {
     const { data } = await supabase
       .from("wiki_nodes")
@@ -421,6 +425,26 @@ export default function WikiAdminPage() {
   useEffect(() => {
     fetchNodes();
   }, [fetchNodes]);
+
+  // Panel resize handlers
+  useEffect(() => {
+    if (!isResizing) return;
+    const onMouseMove = (e: MouseEvent) => {
+      const newWidth = Math.min(Math.max(e.clientX, 240), 600);
+      setPanelWidth(newWidth);
+    };
+    const onMouseUp = () => setIsResizing(false);
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    return () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isResizing]);
 
   // Parse pasted HTML
   useEffect(() => {
@@ -749,7 +773,7 @@ export default function WikiAdminPage() {
     <AppShell>
       <div className="flex h-[calc(100vh-3.5rem)] md:h-screen" style={{ marginLeft: 0 }}>
         {/* ── Left: Tree Panel ── */}
-        <div className="w-[360px] bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+        <div className="bg-white border-r border-gray-200 flex flex-col flex-shrink-0" style={{ width: `${panelWidth}px` }}>
           <div className="px-4 pt-5 pb-3 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-navy">Wiki Tree</h2>
@@ -803,6 +827,13 @@ export default function WikiAdminPage() {
             </button>
           </div>
         </div>
+
+        {/* Resize handle */}
+        <div
+          onMouseDown={() => setIsResizing(true)}
+          className="w-1 hover:w-1.5 bg-transparent hover:bg-accent/30 cursor-col-resize flex-shrink-0 transition-all"
+          style={{ marginLeft: "-2px", marginRight: "-2px", zIndex: 10 }}
+        />
 
         {/* ── Right: Import / Edit Panel ── */}
         <div className="flex-1 overflow-y-auto bg-background">
