@@ -12,6 +12,7 @@ const categories = [
   { key: "General Onboarding", label: "General Onboarding" },
   { key: "Salesforce Academy", label: "Salesforce Academy" },
   { key: "Travel Advisors", label: "Travel Advisors" },
+  { key: "Operations", label: "Operations" },
   { key: "Best Practices", label: "Best Practices" },
 ];
 

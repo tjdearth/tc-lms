@@ -15,6 +15,7 @@ const CATEGORIES = [
   { value: "General Onboarding", label: "General Onboarding" },
   { value: "Salesforce Academy", label: "Salesforce Academy" },
   { value: "Travel Advisors", label: "Travel Advisors" },
+  { value: "Operations", label: "Operations" },
   { value: "Best Practices", label: "Best Practices" },
 ];
 
