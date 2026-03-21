@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { CalendarEvent } from "@/types";
 import { BRAND_NAMES, getBrandColor } from "@/lib/brands";
 
@@ -31,12 +31,101 @@ const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const allBrands = BRAND_NAMES;
 
+// Popover for showing event details on click
+function EventPopover({
+  events,
+  anchorRect,
+  onClose,
+}: {
+  events: CalendarEvent[];
+  anchorRect: { top: number; left: number; width: number; bottom: number };
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleEsc);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [onClose]);
+
+  // Position popover below the anchor, centered
+  const style: React.CSSProperties = {
+    position: "fixed",
+    top: anchorRect.bottom + 4,
+    left: Math.max(8, anchorRect.left + anchorRect.width / 2 - 160),
+    width: 320,
+    zIndex: 100,
+  };
+
+  return (
+    <div
+      ref={ref}
+      className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden"
+      style={style}
+    >
+      <div className="max-h-[300px] overflow-y-auto">
+        {events.map((ev) => {
+          const colors = EVENT_TYPE_COLORS[ev.event_type] || EVENT_TYPE_COLORS.custom;
+          const startDate = new Date(ev.date_start);
+          const formattedDate = startDate.toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+          });
+          return (
+            <div key={ev.id} className="px-4 py-3 border-b border-gray-100 last:border-b-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h4 className="text-sm font-medium text-gray-800">{ev.title}</h4>
+                <span className={`inline-block px-1.5 py-0.5 text-[10px] rounded-full ${colors.bg} ${colors.text}`}>
+                  {EVENT_TYPE_LABELS[ev.event_type]}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+                <span
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: getBrandColor(ev.brand) }}
+                />
+                <span>{ev.brand}</span>
+                {ev.country && (
+                  <>
+                    <span>|</span>
+                    <span>{ev.country}</span>
+                  </>
+                )}
+                <span>|</span>
+                <span>{formattedDate}</span>
+              </div>
+              {ev.impact_notes && (
+                <p className="text-[11px] text-amber-700 bg-amber-50 rounded px-1.5 py-0.5 mt-1.5 inline-block">
+                  {ev.impact_notes}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function CalendarView({ events }: { events: CalendarEvent[] }) {
   const [viewMode, setViewMode] = useState<"calendar" | "list">("list");
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [currentMonth, setCurrentMonth] = useState(2); // March (0-indexed)
   const [currentYear] = useState(2026);
   const [isMobile, setIsMobile] = useState(false);
+  const [popover, setPopover] = useState<{ events: CalendarEvent[]; rect: { top: number; left: number; width: number; bottom: number } } | null>(null);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -70,6 +159,14 @@ export default function CalendarView({ events }: { events: CalendarEvent[] }) {
         return e.date_start <= dateStr && e.date_end >= dateStr;
       }
       return false;
+    });
+  };
+
+  const handleEventClick = (eventsToShow: CalendarEvent[], e: React.MouseEvent) => {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setPopover({
+      events: eventsToShow,
+      rect: { top: rect.top, left: rect.left, width: rect.width, bottom: rect.bottom },
     });
   };
 
@@ -283,19 +380,22 @@ export default function CalendarView({ events }: { events: CalendarEvent[] }) {
                         EVENT_TYPE_COLORS[ev.event_type] ||
                         EVENT_TYPE_COLORS.custom;
                       return (
-                        <div
+                        <button
                           key={ev.id}
-                          className={`text-[10px] truncate px-1 rounded ${colors.bg} ${colors.text}`}
-                          title={`${ev.title} (${ev.brand})`}
+                          onClick={(e) => handleEventClick([ev], e)}
+                          className={`w-full text-left text-[10px] truncate px-1 rounded cursor-pointer hover:opacity-80 transition-opacity ${colors.bg} ${colors.text}`}
                         >
                           {ev.title}
-                        </div>
+                        </button>
                       );
                     })}
                     {dayEvents.length > 2 && (
-                      <div className="text-[10px] text-gray-400 px-1">
+                      <button
+                        onClick={(e) => handleEventClick(dayEvents, e)}
+                        className="text-[10px] text-gray-400 px-1 hover:text-gray-600 cursor-pointer"
+                      >
                         +{dayEvents.length - 2} more
-                      </div>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -303,6 +403,15 @@ export default function CalendarView({ events }: { events: CalendarEvent[] }) {
             })}
           </div>
         </div>
+      )}
+
+      {/* Event detail popover */}
+      {popover && (
+        <EventPopover
+          events={popover.events}
+          anchorRect={popover.rect}
+          onClose={() => setPopover(null)}
+        />
       )}
     </div>
   );
