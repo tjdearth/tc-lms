@@ -665,10 +665,7 @@ export default function WikiAdminPage() {
     if (!selectedNode) return;
     setEditSaving(true);
     try {
-      const updates: Record<string, unknown> = { id: selectedNode.id, title: editTitle };
-      if (selectedNode.node_type === "article") {
-        updates.html_content = editHtml;
-      }
+      const updates: Record<string, unknown> = { id: selectedNode.id, title: editTitle, html_content: editHtml };
       await apiUpdate(updates);
       setStatusMsg(`✓ "${editTitle}" updated`);
       await fetchNodes();
@@ -1187,9 +1184,8 @@ export default function WikiAdminPage() {
                       />
                     </div>
 
-                    {/* Content editor (articles only) */}
-                    {selectedNode.node_type === "article" && (
-                      <div className="bg-white rounded-xl border border-gray-200 p-5">
+                    {/* Content editor */}
+                    <div className="bg-white rounded-xl border border-gray-200 p-5">
                         <div className="flex items-center justify-between mb-3">
                           <label className="text-xs text-gray-400">Content</label>
                           <div className="flex gap-0.5 bg-gray-100 rounded-md p-0.5">
@@ -1240,7 +1236,6 @@ export default function WikiAdminPage() {
                           </>
                         )}
                       </div>
-                    )}
 
                     {/* Save / Delete */}
                     <div className="flex gap-3">
