@@ -41,10 +41,9 @@ function TreeNode({
         style={{
           paddingLeft: `${depth * 14 + 12}px`,
           paddingRight: "12px",
-          backgroundColor: isActive ? "rgba(39,162,140,0.13)" : "transparent",
+          backgroundColor: isActive ? "rgba(39,162,140,0.18)" : "transparent",
           color: isActive ? "#1a6b5c" : isHeading ? "#1a2a3a" : "#4a5568",
           fontWeight: isActive ? 600 : isHeading ? 600 : 400,
-          borderLeft: isActive ? "3px solid #27a28c" : "3px solid transparent",
         }}
         onMouseEnter={(e) => {
           if (!isActive) {
