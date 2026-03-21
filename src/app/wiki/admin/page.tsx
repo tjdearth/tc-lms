@@ -54,12 +54,6 @@ function extractNumbering(title: string): { numbering: string; name: string } {
   return { numbering: "", name: title };
 }
 
-/** Build a new title by replacing the numbering prefix */
-function rebuildTitle(title: string, newNumbering: string): string {
-  const { name } = extractNumbering(title);
-  return newNumbering ? `${newNumbering} ${name}` : name;
-}
-
 function parseScribeHtml(html: string): {
   numbering: string;
   title: string;
