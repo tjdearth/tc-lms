@@ -970,6 +970,36 @@ export default function WikiAdminPage() {
                     {importCount} article{importCount !== 1 ? "s" : ""} imported this session
                   </span>
                 )}
+
+                {/* Bulk re-transform existing articles */}
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={async () => {
+                      setSaving(true);
+                      setStatusMsg("");
+                      try {
+                        const res = await fetch("/api/wiki", { method: "PUT" });
+                        const data = await res.json();
+                        if (res.ok) {
+                          setStatusMsg(`✓ Re-transformed ${data.updated} of ${data.total} articles`);
+                          await fetchNodes();
+                        } else {
+                          setStatusMsg(`✗ Error: ${data.error}`);
+                        }
+                      } catch {
+                        setStatusMsg("✗ Failed to re-transform");
+                      }
+                      setSaving(false);
+                    }}
+                    disabled={saving}
+                    className="px-4 py-2 text-xs font-medium rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Re-transform all existing articles
+                  </button>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Applies the styled card format to previously imported articles
+                  </p>
+                </div>
               </div>
             )}
 

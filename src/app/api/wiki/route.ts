@@ -114,6 +114,73 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
+// PUT — bulk re-transform all article HTML content
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function PUT(_req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
+  try {
+    const { data: articles, error: fetchErr } = await supabaseAdmin
+      .from("wiki_nodes")
+      .select("id, html_content")
+      .eq("node_type", "article")
+      .not("html_content", "is", null);
+
+    if (fetchErr) {
+      return NextResponse.json({ error: fetchErr.message }, { status: 500 });
+    }
+
+    let updated = 0;
+    for (const article of articles || []) {
+      const html = article.html_content as string;
+      // Skip if already transformed (has .step-number)
+      if (html.includes('class="step-number"')) continue;
+      // Skip if no scribe steps to transform
+      if (!html.includes('class="scribe-step"')) continue;
+
+      const transformed = transformScribeHtml(html);
+      if (transformed !== html) {
+        await supabaseAdmin
+          .from("wiki_nodes")
+          .update({
+            html_content: transformed,
+            search_text: stripHtmlForSearch(transformed),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", article.id);
+        updated++;
+      }
+    }
+
+    return NextResponse.json({ success: true, updated, total: articles?.length || 0 });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+function transformScribeHtml(html: string): string {
+  let result = html;
+  result = result.replace(/<p class="scribe-author">[\s\S]*?<\/p>/gi, "");
+  result = result.replace(/^(\s*<br\s*\/?>\s*)+/gi, "");
+  result = result.replace(/(<\/p>)\s*(<br\s*\/?>\s*)+/gi, "$1");
+  result = result.replace(
+    /<div class="scribe-step">\s*<p class="scribe-step-text">\s*(\d+)\.\s*([\s\S]*?)<\/p>\s*<\/div>(\s*<p class="scribe-screenshot-container">[\s\S]*?<\/p>)?/gi,
+    (_, num, text, screenshot) => {
+      const screenshotHtml = screenshot
+        ? screenshot.replace(/<p class="scribe-screenshot-container">/gi, '<div class="scribe-screenshot-container">').replace(/<\/p>$/i, "</div>")
+        : "";
+      return `<div class="scribe-step"><div class="step-number">${num}</div><div class="step-content"><p>${text.trim()}</p>${screenshotHtml}</div></div>`;
+    }
+  );
+  result = result.replace(
+    /<p class="scribe-screenshot-container">([\s\S]*?)<\/p>/gi,
+    '<div class="scribe-screenshot-container">$1</div>'
+  );
+  return result;
+}
+
 // DELETE — delete a wiki node
 export async function DELETE(req: NextRequest) {
   const denied = await requireAdmin();
