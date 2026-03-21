@@ -31,7 +31,7 @@ BEGIN
   -- TCL1 - Travel Collection Overview
   c_tcl1 := gen_random_uuid();
   INSERT INTO courses (id, code, title, description, category, tracks, estimated_minutes, is_published, is_sequential, completion_rule, sort_order)
-  VALUES (c_tcl1, 'TCL1', 'Travel Collection Overview', 'General onboarding for all staff.', 'General Onboarding', '{general,travel_advisor,operations,both}', 30, true, true, 'all_lessons', 1);
+  VALUES (c_tcl1, 'TCL1', '1. TCL General Onboarding', 'General onboarding for all Travel Collection staff.', 'General Onboarding', '{general,travel_advisor,operations,both}', 30, true, true, 'all_lessons', 1);
 
   m_id := gen_random_uuid();
   INSERT INTO modules (id, course_id, title, sort_order) VALUES (m_id, c_tcl1, 'Main Content', 1);
@@ -56,7 +56,7 @@ BEGIN
   -- TCL2 - DMC Brand Training
   c_tcl2 := gen_random_uuid();
   INSERT INTO courses (id, code, title, description, category, tracks, estimated_minutes, is_published, is_sequential, completion_rule, sort_order)
-  VALUES (c_tcl2, 'TCL2', 'DMC Brand Training', 'Understanding our 16 DMC brands.', 'General Onboarding', '{general,travel_advisor,operations,both}', 45, true, true, 'all_lessons', 2);
+  VALUES (c_tcl2, 'TCL2', '2. Travel Advisors and Operations', 'Understanding travel advisor and operations roles at TC.', 'General Onboarding', '{general,travel_advisor,operations,both}', 45, true, true, 'all_lessons', 2);
 
   m_id := gen_random_uuid();
   INSERT INTO modules (id, course_id, title, sort_order) VALUES (m_id, c_tcl2, 'Main Content', 1);
@@ -85,7 +85,7 @@ BEGIN
   -- SFAC01 - Salesforce Fundamentals
   c_sfac01 := gen_random_uuid();
   INSERT INTO courses (id, code, title, description, category, tracks, estimated_minutes, is_published, is_sequential, completion_rule, sort_order)
-  VALUES (c_sfac01, 'SFAC01', 'Salesforce Fundamentals', 'Basic Salesforce navigation and concepts.', 'Salesforce Academy', '{travel_advisor,operations,both}', 60, true, true, 'all_lessons', 1);
+  VALUES (c_sfac01, 'SFAC01', '1. Introduction to Salesforce', 'Basic Salesforce navigation and core concepts.', 'Salesforce Academy', '{travel_advisor,operations,both}', 60, true, true, 'all_lessons', 1);
 
   m_id := gen_random_uuid();
   INSERT INTO modules (id, course_id, title, sort_order) VALUES (m_id, c_sfac01, 'Main Content', 1);
@@ -110,7 +110,7 @@ BEGIN
   -- SFAC02 - Salesforce Data Management
   c_sfac02 := gen_random_uuid();
   INSERT INTO courses (id, code, title, description, category, tracks, estimated_minutes, is_published, is_sequential, completion_rule, sort_order)
-  VALUES (c_sfac02, 'SFAC02', 'Salesforce Data Management', 'Managing records and data quality.', 'Salesforce Academy', '{travel_advisor,operations,both}', 45, true, true, 'all_lessons', 2);
+  VALUES (c_sfac02, 'SFAC02', '2. Setting Up Salesforce', 'Configuring your Salesforce environment and managing data.', 'Salesforce Academy', '{travel_advisor,operations,both}', 45, true, true, 'all_lessons', 2);
 
   m_id := gen_random_uuid();
   INSERT INTO modules (id, course_id, title, sort_order) VALUES (m_id, c_sfac02, 'Main Content', 1);
@@ -135,7 +135,7 @@ BEGIN
   -- SFAC03 - Salesforce Advisor Cloud
   c_sfac03 := gen_random_uuid();
   INSERT INTO courses (id, code, title, description, category, tracks, estimated_minutes, is_published, is_sequential, completion_rule, sort_order)
-  VALUES (c_sfac03, 'SFAC03', 'Salesforce Advisor Cloud', 'Advisory-specific SF features.', 'Salesforce Academy', '{travel_advisor,both}', 60, true, true, 'all_lessons', 3);
+  VALUES (c_sfac03, 'SFAC03', '3. Core Salesforce - Advisor Cloud', 'Salesforce features for client-facing travel advisors.', 'Salesforce Academy', '{travel_advisor,both}', 60, true, true, 'all_lessons', 3);
 
   m_id := gen_random_uuid();
   INSERT INTO modules (id, course_id, title, sort_order) VALUES (m_id, c_sfac03, 'Main Content', 1);
@@ -160,7 +160,7 @@ BEGIN
   -- SFAC04 - Advanced Advisor Workflows
   c_sfac04 := gen_random_uuid();
   INSERT INTO courses (id, code, title, description, category, tracks, estimated_minutes, is_published, is_sequential, completion_rule, sort_order)
-  VALUES (c_sfac04, 'SFAC04', 'Advanced Advisor Workflows', 'Complex advisor automations.', 'Salesforce Academy', '{travel_advisor,both}', 45, true, true, 'all_lessons', 4);
+  VALUES (c_sfac04, 'SFAC04', '4. Practicising Using Salesforce for Travel Advisors', 'Hands-on Salesforce exercises for travel advisors.', 'Salesforce Academy', '{travel_advisor,both}', 45, true, true, 'all_lessons', 4);
 
   m_id := gen_random_uuid();
   INSERT INTO modules (id, course_id, title, sort_order) VALUES (m_id, c_sfac04, 'Main Content', 1);
@@ -185,7 +185,7 @@ BEGIN
   -- SFAC05 - Salesforce Operations Cloud
   c_sfac05 := gen_random_uuid();
   INSERT INTO courses (id, code, title, description, category, tracks, estimated_minutes, is_published, is_sequential, completion_rule, sort_order)
-  VALUES (c_sfac05, 'SFAC05', 'Salesforce Operations Cloud', 'Ops-specific SF features.', 'Salesforce Academy', '{operations,both}', 60, true, true, 'all_lessons', 5);
+  VALUES (c_sfac05, 'SFAC05', '5. Core Salesforce - Operations Cloud', 'Salesforce features for operations and back-office staff.', 'Salesforce Academy', '{operations,both}', 60, true, true, 'all_lessons', 5);
 
   m_id := gen_random_uuid();
   INSERT INTO modules (id, course_id, title, sort_order) VALUES (m_id, c_sfac05, 'Main Content', 1);
@@ -210,7 +210,7 @@ BEGIN
   -- SFAC06 - Advanced Operations Workflows
   c_sfac06 := gen_random_uuid();
   INSERT INTO courses (id, code, title, description, category, tracks, estimated_minutes, is_published, is_sequential, completion_rule, sort_order)
-  VALUES (c_sfac06, 'SFAC06', 'Advanced Operations Workflows', 'Complex ops automations.', 'Salesforce Academy', '{operations,both}', 45, true, true, 'all_lessons', 6);
+  VALUES (c_sfac06, 'SFAC06', '6. Practicising Using Salesforce for Operations Specialists', 'Hands-on Salesforce exercises for operations specialists.', 'Salesforce Academy', '{operations,both}', 45, true, true, 'all_lessons', 6);
 
   m_id := gen_random_uuid();
   INSERT INTO modules (id, course_id, title, sort_order) VALUES (m_id, c_sfac06, 'Main Content', 1);
@@ -239,7 +239,7 @@ BEGIN
   -- TraAdv2 - Client Consultation Skills
   c_tradv2 := gen_random_uuid();
   INSERT INTO courses (id, code, title, description, category, tracks, estimated_minutes, is_published, is_sequential, completion_rule, sort_order)
-  VALUES (c_tradv2, 'TraAdv2', 'Client Consultation Skills', 'How to conduct client consultations.', 'Travel Advisors', '{travel_advisor,both}', 30, true, true, 'all_lessons', 1);
+  VALUES (c_tradv2, 'TraAdv2', 'Building Success in B2C Online Channels', 'Strategies for building success in B2C online channels.', 'Travel Advisors', '{travel_advisor,both}', 30, true, true, 'all_lessons', 1);
 
   m_id := gen_random_uuid();
   INSERT INTO modules (id, course_id, title, sort_order) VALUES (m_id, c_tradv2, 'Main Content', 1);
@@ -264,7 +264,7 @@ BEGIN
   -- TraAdv3 - Destination Expertise
   c_tradv3 := gen_random_uuid();
   INSERT INTO courses (id, code, title, description, category, tracks, estimated_minutes, is_published, is_sequential, completion_rule, sort_order)
-  VALUES (c_tradv3, 'TraAdv3', 'Destination Expertise', 'Building destination knowledge.', 'Travel Advisors', '{travel_advisor,both}', 40, true, true, 'all_lessons', 2);
+  VALUES (c_tradv3, 'TraAdv3', 'Sales Boosters: Core Training for Travel Advisors', 'Core sales training techniques for travel advisors.', 'Travel Advisors', '{travel_advisor,both}', 40, true, true, 'all_lessons', 2);
 
   m_id := gen_random_uuid();
   INSERT INTO modules (id, course_id, title, sort_order) VALUES (m_id, c_tradv3, 'Main Content', 1);
@@ -293,7 +293,7 @@ BEGIN
   -- BPG02 - Best Practices Guide
   c_bpg02 := gen_random_uuid();
   INSERT INTO courses (id, code, title, description, category, tracks, estimated_minutes, is_published, is_sequential, completion_rule, sort_order)
-  VALUES (c_bpg02, 'BPG02', 'Best Practices Guide', 'Company-wide best practices.', 'Best Practices', '{general,travel_advisor,operations,both}', 20, true, true, 'all_lessons', 1);
+  VALUES (c_bpg02, 'BPG02', 'Multi-Country Trips Knowledge Assessment', 'Assessment on multi-country trip planning best practices.', 'Best Practices', '{general,travel_advisor,operations,both}', 20, true, true, 'all_lessons', 1);
 
   m_id := gen_random_uuid();
   INSERT INTO modules (id, course_id, title, sort_order) VALUES (m_id, c_bpg02, 'Main Content', 1);
