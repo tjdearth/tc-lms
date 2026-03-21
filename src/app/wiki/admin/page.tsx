@@ -831,9 +831,12 @@ export default function WikiAdminPage() {
         {/* Resize handle */}
         <div
           onMouseDown={() => setIsResizing(true)}
-          className="w-1 hover:w-1.5 bg-transparent hover:bg-accent/30 cursor-col-resize flex-shrink-0 transition-all"
-          style={{ marginLeft: "-2px", marginRight: "-2px", zIndex: 10 }}
-        />
+          className="group relative w-0 flex-shrink-0 cursor-col-resize"
+          style={{ zIndex: 10 }}
+        >
+          <div className="absolute inset-y-0 -left-2 w-4 group-hover:bg-accent/20" />
+          <div className="absolute inset-y-0 left-0 w-px bg-gray-200 group-hover:bg-accent/60" />
+        </div>
 
         {/* ── Right: Import / Edit Panel ── */}
         <div className="flex-1 overflow-y-auto bg-background">
