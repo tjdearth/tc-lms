@@ -292,6 +292,7 @@ export default function WikiAdminPage() {
   const [mode, setMode] = useState<"import" | "edit">("import");
 
   // Import state
+  const [importRootId, setImportRootId] = useState<string | null>(null);
   const [pastedHtml, setPastedHtml] = useState("");
   const [parsedTitle, setParsedTitle] = useState("");
   const [parsedNumbering, setParsedNumbering] = useState("");
@@ -408,10 +409,11 @@ export default function WikiAdminPage() {
   // Find or create parent headings for a numbering like "3.2.1.1"
   async function ensureParentHeadings(
     numbering: string,
-    brand: string
+    brand: string,
+    rootParentId: string | null
   ): Promise<string | null> {
     const parts = numbering.split(".");
-    if (parts.length <= 1) return null;
+    if (parts.length <= 1) return rootParentId;
 
     const ancestorNumberings: string[] = [];
     for (let i = 1; i < parts.length; i++) {
@@ -432,7 +434,8 @@ export default function WikiAdminPage() {
       }
     }
 
-    let parentId: string | null = null;
+    // First ancestor's parent is the import root (e.g. "Salesforce Academy")
+    let parentId: string | null = rootParentId;
 
     for (const ancestorNum of ancestorNumberings) {
       const existingId = nodesByNumbering.get(ancestorNum);
@@ -468,7 +471,7 @@ export default function WikiAdminPage() {
       let sortOrder = 0;
 
       if (parsed.numbering) {
-        parentId = await ensureParentHeadings(parsed.numbering, "tc");
+        parentId = await ensureParentHeadings(parsed.numbering, "tc", importRootId);
         sortOrder = numberingToSortOrder(parsed.numbering);
       }
 
@@ -818,6 +821,24 @@ export default function WikiAdminPage() {
             {mode === "import" && (
               <div>
                 <div className="bg-white rounded-xl border border-gray-200 p-5 mb-5">
+                  <label className="block text-sm font-semibold text-navy mb-1">
+                    Import into
+                  </label>
+                  <select
+                    value={importRootId || ""}
+                    onChange={(e) => setImportRootId(e.target.value || null)}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:border-accent mb-4"
+                  >
+                    <option value="">Top level (no parent)</option>
+                    {flatNodes
+                      .filter((n) => n.node_type === "heading")
+                      .map((n) => (
+                        <option key={n.id} value={n.id}>
+                          {n.title}
+                        </option>
+                      ))}
+                  </select>
+
                   <h3 className="text-sm font-semibold text-navy mb-1">
                     Paste Scribe HTML
                   </h3>
