@@ -37,9 +37,9 @@ export default function CertificatesPage() {
   }, []);
 
   const courseMap = new Map(courses.map((c) => [c.id, c]));
-  const completedEnrollments = enrollments.filter(
-    (e) => e.status === "completed" && e.completed_at
-  );
+  const completedEnrollments = enrollments
+    .filter((e) => e.status === "completed" && e.completed_at)
+    .sort((a, b) => new Date(b.completed_at!).getTime() - new Date(a.completed_at!).getTime());
 
   if (loading) {
     return (
