@@ -37,12 +37,12 @@ function TreeNode({
             onSelectArticle(node);
           }
         }}
-        className={`w-full text-left flex items-center gap-1.5 py-1.5 px-2 rounded-md text-sm transition-colors ${
+        className={`w-full text-left flex items-center gap-1.5 py-2 px-2 rounded-lg text-sm transition-colors ${
           isActive
-            ? "bg-accent/15 text-accent font-medium"
+            ? "bg-accent text-white font-medium shadow-sm"
             : isHeading
             ? "text-navy font-semibold hover:bg-gray-100"
-            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
         }`}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
       >
