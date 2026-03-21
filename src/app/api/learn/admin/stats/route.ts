@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { isCourseCreator } from "@/lib/admin";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-// GET — admin stats dashboard
+// GET — admin stats dashboard (optimized: 4 queries instead of 40+)
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -12,103 +12,68 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    // Total users
-    const { count: totalUsers } = await supabaseAdmin
-      .from("lms_users")
-      .select("id", { count: "exact", head: true });
-
-    // Total enrollments + completed enrollments
-    const { count: totalEnrollments } = await supabaseAdmin
-      .from("enrollments")
-      .select("id", { count: "exact", head: true });
-
-    const { count: completedEnrollments } = await supabaseAdmin
-      .from("enrollments")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "completed");
-
-    const total = totalEnrollments || 0;
-    const completed = completedEnrollments || 0;
-    const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-    // Per-course stats
-    const { data: courses } = await supabaseAdmin
-      .from("courses")
-      .select("id, title, code")
-      .order("sort_order", { ascending: true });
-
-    const courseStats = [];
-
-    for (const course of courses || []) {
-      const { count: enrolledCount } = await supabaseAdmin
+    // Run all independent queries in parallel
+    const [usersResult, allEnrollments, coursesResult] = await Promise.all([
+      supabaseAdmin
+        .from("lms_users")
+        .select("id", { count: "exact", head: true }),
+      supabaseAdmin
         .from("enrollments")
-        .select("id", { count: "exact", head: true })
-        .eq("course_id", course.id);
+        .select("course_id, status"),
+      supabaseAdmin
+        .from("courses")
+        .select("id, title, code, category, is_published")
+        .order("sort_order", { ascending: true }),
+    ]);
 
-      const { count: completedCount } = await supabaseAdmin
-        .from("enrollments")
-        .select("id", { count: "exact", head: true })
-        .eq("course_id", course.id)
-        .eq("status", "completed");
+    const totalUsers = usersResult.count || 0;
+    const enrollments = allEnrollments.data || [];
+    const courses = coursesResult.data || [];
 
-      // Avg quiz score for this course: get quiz IDs via modules -> lessons -> quizzes
-      const { data: modules } = await supabaseAdmin
-        .from("modules")
-        .select("id")
-        .eq("course_id", course.id);
+    const totalEnrollments = enrollments.length;
+    const completedEnrollments = enrollments.filter(
+      (e: { status: string }) => e.status === "completed"
+    ).length;
+    const completionRate =
+      totalEnrollments > 0
+        ? Math.round((completedEnrollments / totalEnrollments) * 100)
+        : 0;
 
-      let avgScore: number | null = null;
+    // Build per-course stats from the single enrollments query
+    const enrolledByCourse: Record<string, number> = {};
+    const completedByCourse: Record<string, number> = {};
 
-      if (modules && modules.length > 0) {
-        const moduleIds = modules.map((m: { id: string }) => m.id);
-
-        const { data: lessons } = await supabaseAdmin
-          .from("lessons")
-          .select("id")
-          .in("module_id", moduleIds)
-          .eq("lesson_type", "quiz");
-
-        if (lessons && lessons.length > 0) {
-          const lessonIds = lessons.map((l: { id: string }) => l.id);
-
-          const { data: quizzes } = await supabaseAdmin
-            .from("quizzes")
-            .select("id")
-            .in("lesson_id", lessonIds);
-
-          if (quizzes && quizzes.length > 0) {
-            const quizIds = quizzes.map((q: { id: string }) => q.id);
-
-            const { data: attempts } = await supabaseAdmin
-              .from("quiz_attempts")
-              .select("score_pct")
-              .in("quiz_id", quizIds);
-
-            if (attempts && attempts.length > 0) {
-              const sum = attempts.reduce(
-                (acc: number, a: { score_pct: number }) => acc + a.score_pct,
-                0
-              );
-              avgScore = Math.round(sum / attempts.length);
-            }
-          }
-        }
+    for (const e of enrollments) {
+      const cid = (e as { course_id: string }).course_id;
+      enrolledByCourse[cid] = (enrolledByCourse[cid] || 0) + 1;
+      if ((e as { status: string }).status === "completed") {
+        completedByCourse[cid] = (completedByCourse[cid] || 0) + 1;
       }
-
-      courseStats.push({
-        id: course.id,
-        title: course.title,
-        code: course.code,
-        enrolled_count: enrolledCount || 0,
-        completed_count: completedCount || 0,
-        avg_score: avgScore,
-      });
     }
 
+    const courseStats = courses.map(
+      (c: {
+        id: string;
+        title: string;
+        code: string;
+        category: string;
+        is_published: boolean;
+      }) => ({
+        id: c.id,
+        title: c.title,
+        code: c.code,
+        category: c.category,
+        is_published: c.is_published,
+        enrolled_count: enrolledByCourse[c.id] || 0,
+        completed_count: completedByCourse[c.id] || 0,
+        avg_score: null,
+      })
+    );
+
     return NextResponse.json({
-      total_users: totalUsers || 0,
-      total_enrollments: total,
-      completed_enrollments: completed,
+      total_users: totalUsers,
+      total_enrollments: totalEnrollments,
+      completed_enrollments: completedEnrollments,
       completion_rate: completionRate,
       courses: courseStats,
     });

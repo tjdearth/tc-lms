@@ -36,10 +36,19 @@ export default function LearnAdminPage() {
 
   useEffect(() => {
     if (!hasAccess) { setLoading(false); return; }
-    fetch("/api/learn/admin/stats")
-      .then((r) => r.json())
-      .then((d) => { setStats(d); setLoading(false); })
-      .catch(() => setLoading(false));
+    async function load() {
+      try {
+        const r = await fetch("/api/learn/admin/stats");
+        if (r.ok) {
+          setStats(await r.json());
+        }
+      } catch {
+        // Network error — stats will remain null
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
   }, [hasAccess]);
 
   if (!hasAccess) {
