@@ -15,10 +15,40 @@ const EVENT_TYPE_COLORS: Record<string, { dot: string }> = {
   custom: { dot: "bg-amber-500" },
 };
 
+const TRAVEL_QUOTES = [
+  { text: "Traveling — it leaves you speechless, then turns you into a storyteller.", author: "Ibn Battuta" },
+  { text: "The world is a book, and those who do not travel read only one page.", author: "Saint Augustine" },
+  { text: "Travel is fatal to prejudice, bigotry, and narrow-mindedness.", author: "Mark Twain" },
+  { text: "If you reject the food, ignore the customs, fear the religion, and avoid the people, you might better stay home.", author: "James Michener" },
+  { text: "To travel is to discover that everyone is wrong about other countries.", author: "Aldous Huxley" },
+  { text: "Travel isn't always pretty. It isn't always comfortable. But that's okay. The journey changes you.", author: "Anthony Bourdain" },
+  { text: "A journey of a thousand miles begins with a single step.", author: "Lao Tzu" },
+  { text: "Not all those who wander are lost.", author: "J.R.R. Tolkien" },
+  { text: "The real voyage of discovery consists not in seeking new landscapes, but in having new eyes.", author: "Marcel Proust" },
+  { text: "Once a year, go someplace you've never been before.", author: "Dalai Lama" },
+  { text: "Travel makes one modest. You see what a tiny place you occupy in the world.", author: "Gustave Flaubert" },
+  { text: "Life is either a daring adventure or nothing at all.", author: "Helen Keller" },
+  { text: "We travel not to escape life, but for life not to escape us.", author: "Anonymous" },
+  { text: "I haven't been everywhere, but it's on my list.", author: "Susan Sontag" },
+  { text: "The gladdest moment in human life is a departure into unknown lands.", author: "Sir Richard Burton" },
+  { text: "One's destination is never a place, but a new way of seeing things.", author: "Henry Miller" },
+  { text: "To move, to breathe, to fly, to float, to roam the roads of lands remote.", author: "John Keats" },
+  { text: "Surely, of all the wonders of the world, the horizon is the greatest.", author: "Freya Stark" },
+  { text: "Own only what you can always carry with you: know languages, know countries, know people.", author: "Aleksandr Solzhenitsyn" },
+  { text: "Adventure is worthwhile in itself.", author: "Amelia Earhart" },
+];
+
+function getRandomQuote() {
+  const today = new Date();
+  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+  return TRAVEL_QUOTES[seed % TRAVEL_QUOTES.length];
+}
+
 export default function DashboardPage() {
   const [wikiTree, setWikiTree] = useState<WikiNode[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [quote] = useState(getRandomQuote);
 
   useEffect(() => {
     Promise.all([fetchWikiTree(), fetchCalendarEvents()]).then(
@@ -66,6 +96,25 @@ export default function DashboardPage() {
           <p className="text-gray-500">
             Your hub for Travel Collection knowledge, processes, skills, and continuous learning.
           </p>
+        </div>
+
+        {/* Travel Quote */}
+        <div className="mb-8 px-6 py-8 bg-gradient-to-br from-[#304256] via-[#1e3044] to-[#0F1923] rounded-xl relative overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.03]" style={{
+            backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
+            backgroundSize: "24px 24px",
+          }} />
+          <div className="relative">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="mb-4 opacity-30">
+              <path d="M3 21c3-3 4-8 4-14h4c0 6-1 11-4 14H3zm10 0c3-3 4-8 4-14h4c0 6-1 11-4 14h-4z" fill="white" />
+            </svg>
+            <p className="text-white/90 text-lg md:text-xl leading-relaxed tracking-wide" style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic" }}>
+              {quote.text}
+            </p>
+            <p className="mt-4 text-white/40 text-sm tracking-[0.15em] uppercase text-right" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+              — {quote.author}
+            </p>
+          </div>
         </div>
 
         {/* Stats */}
