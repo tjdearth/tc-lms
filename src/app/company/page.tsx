@@ -189,7 +189,8 @@ function WeatherIcon({ code, isDay, size = 32 }: { code: number; isDay: boolean;
 }
 
 export default function CompanyPage() {
-  const [activeTab, setActiveTab] = useState<"map" | "weather">("map");
+  const [activeTab, setActiveTab] = useState<"map" | "weather" | "fx">("map");
+  const [fxTarget, setFxTarget] = useState("EUR");
   const [weather, setWeather] = useState<Record<string, WeatherData>>({});
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string>("");
@@ -285,6 +286,20 @@ export default function CompanyPage() {
               <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
             </svg>
             Office Weather
+          </button>
+          <button
+            onClick={() => setActiveTab("fx")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              activeTab === "fx"
+                ? "border-[#27a28c] text-[#304256]"
+                : "border-transparent text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            FX Rates
           </button>
         </div>
 
@@ -394,6 +409,76 @@ export default function CompanyPage() {
           </div>
         )}
           </>
+        )}
+
+        {/* FX Rates */}
+        {activeTab === "fx" && (
+          <div className="bg-white rounded-xl border border-[#E8ECF1] shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#E8ECF1] flex items-center justify-between">
+              <h2 className="text-base font-semibold text-[#304256]">
+                USD Exchange Rates
+              </h2>
+              <span className="text-[11px] text-gray-400">
+                Powered by Wise
+              </span>
+            </div>
+            <div className="flex flex-col lg:flex-row">
+              {/* Rate Table */}
+              <div className="flex-1 flex justify-center p-4 border-b lg:border-b-0 lg:border-r border-[#E8ECF1]">
+                <iframe
+                  title="FX Rate Table"
+                  src="https://wise.com/gb/currency-converter/fx-widget/table?sourceCurrency=USD&targetCurrencies=EUR%2CMXN%2CJPY%2CAED%2CMAD%2CIDR%2CGBP%2CAUD%2CPEN%2CCOP%2CTRY%2CTHB"
+                  height={870}
+                  width={340}
+                  frameBorder={0}
+                  style={{ border: "none", maxWidth: "100%" }}
+                />
+              </div>
+              {/* Chart */}
+              <div className="flex-1 p-4">
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
+                  <span className="text-xs text-gray-500 font-medium">USD →</span>
+                  {[
+                    { code: "EUR", label: "EUR" },
+                    { code: "GBP", label: "GBP" },
+                    { code: "AED", label: "AED" },
+                    { code: "MXN", label: "MXN" },
+                    { code: "JPY", label: "JPY" },
+                    { code: "AUD", label: "AUD" },
+                    { code: "THB", label: "THB" },
+                    { code: "MAD", label: "MAD" },
+                    { code: "TRY", label: "TRY" },
+                    { code: "IDR", label: "IDR" },
+                    { code: "PEN", label: "PEN" },
+                    { code: "COP", label: "COP" },
+                  ].map((c) => (
+                    <button
+                      key={c.code}
+                      onClick={() => setFxTarget(c.code)}
+                      className={`px-2.5 py-1 text-[11px] font-medium rounded-full transition-colors ${
+                        fxTarget === c.code
+                          ? "bg-[#27a28c] text-white"
+                          : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                      }`}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex justify-center">
+                  <iframe
+                    key={fxTarget}
+                    title={`FX Chart USD to ${fxTarget}`}
+                    src={`https://wise.com/gb/currency-converter/fx-widget/chart?sourceCurrency=USD&targetCurrency=${fxTarget}`}
+                    height={870}
+                    width={370}
+                    frameBorder={0}
+                    style={{ border: "none", maxWidth: "100%" }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </AppShell>
