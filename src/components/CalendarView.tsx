@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { mockCalendarEvents } from "@/lib/mock-data";
+import { BRAND_NAMES, getBrandColor } from "@/lib/brands";
 
 const EVENT_TYPE_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
   public_holiday: { bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-500" },
@@ -28,7 +29,7 @@ const MONTHS = [
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const allBrands = Array.from(new Set(mockCalendarEvents.map((e) => e.brand))).sort();
+const allBrands = BRAND_NAMES;
 
 export default function CalendarView() {
   const [viewMode, setViewMode] = useState<"calendar" | "list">("list");
@@ -82,7 +83,7 @@ export default function CalendarView() {
           onChange={(e) => setSelectedBrand(e.target.value)}
           className="w-full sm:w-auto px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
         >
-          <option value="all">All Brands</option>
+          <option value="all">All Brands (16)</option>
           {allBrands.map((brand) => (
             <option key={brand} value={brand}>
               {brand}
@@ -179,7 +180,13 @@ export default function CalendarView() {
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs text-gray-400 mb-1">
-                    <span>{event.brand}</span>
+                    <span className="flex items-center gap-1.5">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: getBrandColor(event.brand) }}
+                      />
+                      {event.brand}
+                    </span>
                     {event.country && (
                       <>
                         <span>|</span>
