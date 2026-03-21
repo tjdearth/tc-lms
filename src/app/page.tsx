@@ -84,7 +84,7 @@ export default function DashboardPage() {
 
   const stats = [
     { label: "Wiki Articles", value: allArticles.length },
-    { label: "DMC Brands & Countries", value: "16 brands · 22 countries" },
+    { label: "DMC Brands", value: 16 },
     { label: "Learn Courses", value: courseCount },
     { label: "Calendar Events", value: calendarEvents.length },
   ];
