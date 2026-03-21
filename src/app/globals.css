@@ -393,6 +393,87 @@ body {
   background: #f9fafb;
 }
 
+/* ---- Blockquote / Callout (from block editor) ---- */
+
+.scribe-content blockquote {
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-left: 4px solid #14b8a6;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  color: #134e4a;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+.scribe-content blockquote p {
+  color: #134e4a;
+  margin-bottom: 0.5rem;
+}
+
+.scribe-content blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.scribe-content blockquote strong {
+  color: #134e4a;
+}
+
+/* ---- Horizontal rule ---- */
+
+.scribe-content hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 1.5rem 0;
+}
+
+/* ---- Standalone images (from block editor) ---- */
+
+.scribe-content img:not(.scribe-screenshot) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  margin: 1rem 0;
+}
+
+/* ---- Code blocks ---- */
+
+.scribe-content pre {
+  background: #1f2937;
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.scribe-content pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #e5e7eb;
+  font-size: 0.8125rem;
+}
+
+/* ---- Block editor editable area ---- */
+
+.block-editor-content {
+  cursor: text;
+}
+
+.block-editor-content:focus {
+  outline: none;
+}
+
+.block-editor-content p.is-editor-empty:first-child::before {
+  color: #9ca3af;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
 /* ---- Mobile responsive ---- */
 @media (max-width: 767px) {
   .scribe-content .scribe-step {
