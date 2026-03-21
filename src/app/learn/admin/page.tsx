@@ -143,6 +143,7 @@ export default function LearnAdminPage() {
                         <th className="px-6 py-3">Category</th>
                         <th className="px-6 py-3 text-center">Enrolled</th>
                         <th className="px-6 py-3 text-center">Completed</th>
+                        <th className="px-6 py-3 text-center">% Complete</th>
                         <th className="px-6 py-3 text-center">Published</th>
                         <th className="px-6 py-3 text-right">Actions</th>
                       </tr>
@@ -155,6 +156,7 @@ export default function LearnAdminPage() {
                           <td className="px-6 py-3 text-gray-500">{c.category}</td>
                           <td className="px-6 py-3 text-center">{c.enrolled_count}</td>
                           <td className="px-6 py-3 text-center">{c.completed_count}</td>
+                          <td className="px-6 py-3 text-center text-gray-500">{c.enrolled_count > 0 ? Math.round((c.completed_count / c.enrolled_count) * 100) : 0}%</td>
                           <td className="px-6 py-3 text-center">
                             <button onClick={() => handleTogglePublish(c.id, c.is_published)} className={'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ' + (c.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500')}>
                               {c.is_published ? "Published" : "Draft"}
