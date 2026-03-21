@@ -171,7 +171,7 @@ export default function DmcWorldMap() {
           height={440}
           style={{ width: "100%", height: "auto" }}
         >
-          <ZoomableGroup zoom={2} center={[20, 20]}>
+          <ZoomableGroup zoom={1.5} center={[20, 20]}>
             <Geographies geography={GEO_URL}>
               {({ geographies }) =>
                 geographies.map((geo) => {
