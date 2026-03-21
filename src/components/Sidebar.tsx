@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 
 const TC_LOGO_URL =
   "https://lh7-rt.googleusercontent.com/docsz/AD_4nXcuZ3fOJUGrPHzT0Tu5n3IyhjOPWYUjkhaEcBcNhdpt2I5hcRLGyL_Sj635ZffMbHWB3xfPa8vnDZ06Pfl0ez9vedO8hDGzYaZxhKsj7yyVeyk-sUcbBz4G6KXjTCvXUgo48Y2n?key=5z7x5EJrcuoubrabZrlshg";
@@ -62,6 +64,11 @@ interface SidebarProps {
 
 export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  const userName = session?.user?.name || session?.user?.email?.split("@")[0] || "User";
+  const userInitial = userName.charAt(0).toUpperCase();
+  const userImage = session?.user?.image;
 
   const handleNavClick = () => {
     if (onMobileClose) onMobileClose();
@@ -164,14 +171,51 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
         })}
       </nav>
 
-      {/* Bottom */}
+      {/* User */}
       <div
         className="px-4 py-4"
         style={{ borderTop: "1px solid #2A3F52" }}
       >
-        <span className="text-[10px] tracking-wide" style={{ color: "rgba(232,237,242,0.3)" }}>
-          Travel Collection
-        </span>
+        {session?.user ? (
+          <div className="flex items-center gap-2.5">
+            {userImage ? (
+              <Image src={userImage} alt={userName} width={32} height={32} className="rounded-full" />
+            ) : (
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold"
+                style={{ backgroundColor: "#304256", color: "#E8EDF2" }}
+              >
+                {userInitial}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <span className="text-[13px] font-semibold truncate block" style={{ color: "#E8EDF2" }}>
+                {userName}
+              </span>
+              <span className="text-[11px] truncate block" style={{ color: "#8A9BB0" }}>
+                Admin &middot; Travel Collection HQ
+              </span>
+            </div>
+            <button
+              onClick={async () => { await signOut({ redirect: false }); window.location.href = "/login"; }}
+              className="cursor-pointer flex-shrink-0"
+              style={{ color: "#8A9BB0" }}
+              title="Sign out"
+              onMouseEnter={(e) => { e.currentTarget.style.color = "#E8EDF2"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "#8A9BB0"; }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
+          </div>
+        ) : (
+          <span className="text-[10px] tracking-wide" style={{ color: "rgba(232,237,242,0.3)" }}>
+            Travel Collection
+          </span>
+        )}
       </div>
     </>
   );

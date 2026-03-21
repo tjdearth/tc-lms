@@ -22,7 +22,7 @@ function TreeNode({
   activeArticleId: string | null;
   onSelectArticle: (article: WikiNode) => void;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(depth < 3);
   const hasChildren = node.children && node.children.length > 0;
   const isHeading = node.node_type === "heading";
   const isActive = node.id === activeArticleId;
@@ -37,24 +37,44 @@ function TreeNode({
             onSelectArticle(node);
           }
         }}
-        className={`w-full text-left flex items-center gap-1.5 py-2 px-2 rounded-lg text-sm transition-colors ${
-          isActive
-            ? "bg-accent text-white font-medium shadow-sm"
-            : isHeading
-            ? "text-navy font-semibold hover:bg-gray-100"
-            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-        }`}
-        style={{ paddingLeft: `${depth * 16 + 8}px` }}
+        className="w-full text-left flex items-center gap-1 py-[7px] text-[13px] transition-colors rounded-md"
+        style={{
+          paddingLeft: `${depth * 14 + 12}px`,
+          paddingRight: "12px",
+          backgroundColor: isActive ? "#27a28c" : "transparent",
+          color: isActive ? "#fff" : isHeading ? "#1a2a3a" : "#4a5568",
+          fontWeight: isActive ? 600 : isHeading ? 600 : 400,
+        }}
+        onMouseEnter={(e) => {
+          if (!isActive) {
+            e.currentTarget.style.backgroundColor = "#f7f8f9";
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isActive) {
+            e.currentTarget.style.backgroundColor = "transparent";
+          }
+        }}
       >
-        {hasChildren && (
-          <span className="text-gray-400 text-xs w-4 flex-shrink-0 inline-flex items-center justify-center">
-            {expanded ? "\u25BE" : "\u25B8"}
+        {hasChildren ? (
+          <span className="w-5 flex-shrink-0 inline-flex items-center justify-center" style={{ color: isActive ? "#fff" : "#9ca3af" }}>
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 10 10"
+              fill="currentColor"
+              style={{
+                transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
+                transition: "transform 150ms ease",
+              }}
+            >
+              <path d="M3 1.5L7 5L3 8.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </span>
+        ) : (
+          <span className="w-5 flex-shrink-0" />
         )}
-        {!hasChildren && !isHeading && (
-          <span className="w-4 flex-shrink-0" />
-        )}
-        <span className="truncate">{node.title}</span>
+        <span className={isActive ? "" : ""}>{node.title}</span>
       </button>
       {hasChildren && expanded && (
         <div>
@@ -111,13 +131,16 @@ export default function WikiTree({
   };
 
   const treeContent = (
-    <>
-      {/* Section label */}
-      <div className="px-4 pt-5 pb-2 flex items-center justify-between">
-        <h2 className="text-[11px] font-semibold text-navy tracking-widest uppercase">
-          Salesforce Academy
-        </h2>
-        {/* Mobile close button */}
+    <div className="flex flex-col h-full">
+      {/* Header: Wikis title + close button */}
+      <div className="px-4 pt-5 pb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#304256" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          <h1 className="text-lg font-bold" style={{ color: "#1a2a3a" }}>Wikis</h1>
+        </div>
         <button
           onClick={onMobileClose}
           className="md:hidden text-gray-400 hover:text-gray-600 p-1"
@@ -131,10 +154,11 @@ export default function WikiTree({
       </div>
 
       {/* Search */}
-      <div className="px-3 pb-3">
+      <div className="px-4 pb-4">
         <div className="relative">
           <svg
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2"
+            style={{ color: "#9ca3af" }}
             width="14"
             height="14"
             viewBox="0 0 24 24"
@@ -149,12 +173,51 @@ export default function WikiTree({
           </svg>
           <input
             type="text"
-            placeholder="Search wiki..."
+            placeholder="Search in Wikis..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md bg-gray-50 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 placeholder:text-gray-400"
+            className="w-full pl-9 pr-3 py-2 text-[13px] rounded-lg focus:outline-none placeholder:text-gray-400"
+            style={{
+              border: "1px solid #e2e8f0",
+              backgroundColor: "#f8f9fb",
+            }}
           />
         </div>
+      </div>
+
+      {/* ALL WIKIS section */}
+      <div className="px-4 pb-1">
+        <span className="text-[10px] font-semibold tracking-[0.12em] uppercase" style={{ color: "#8a9bb0" }}>
+          All Wikis
+        </span>
+      </div>
+      <div className="px-3 pb-2">
+        {["Across Mexico", "All Users", "Salesforce Academy"].map((name) => (
+          <button
+            key={name}
+            className="w-full text-left flex items-center gap-1 py-[7px] px-3 text-[13px] rounded-md transition-colors"
+            style={{ color: "#4a5568" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f7f8f9"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+          >
+            <span className="w-5 flex-shrink-0 inline-flex items-center justify-center" style={{ color: "#9ca3af" }}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 1.5L7 5L3 8.5" />
+              </svg>
+            </span>
+            {name}
+          </button>
+        ))}
+      </div>
+
+      {/* Divider */}
+      <div className="mx-4 mb-3" style={{ borderBottom: "1px solid #e2e8f0" }} />
+
+      {/* SALESFORCE ACADEMY section label */}
+      <div className="px-4 pb-2">
+        <span className="text-[10px] font-semibold tracking-[0.12em] uppercase" style={{ color: "#8a9bb0" }}>
+          Salesforce Academy
+        </span>
       </div>
 
       {/* Tree */}
@@ -172,13 +235,13 @@ export default function WikiTree({
           <p className="text-sm text-gray-400 px-3 py-4">No results found.</p>
         )}
       </div>
-    </>
+    </div>
   );
 
   return (
     <>
       {/* Desktop: standard sidebar panel */}
-      <div className="hidden md:flex w-[280px] bg-white border-r border-gray-200 flex-col h-full flex-shrink-0">
+      <div className="hidden md:flex w-[300px] bg-white border-r border-gray-200 flex-col h-full flex-shrink-0">
         {treeContent}
       </div>
 
