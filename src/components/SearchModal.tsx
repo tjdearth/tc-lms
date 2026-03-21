@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { WikiNode } from "@/types";
 import { getAllArticles, buildBreadcrumb } from "@/lib/api";
 
@@ -11,6 +11,53 @@ interface SearchModalProps {
   nodes: WikiNode[];
 }
 
+function highlightMatch(text: string, query: string): React.ReactNode {
+  if (!query.trim()) return text;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <span className="bg-yellow-100 text-yellow-900 rounded-sm px-0.5">
+        {text.slice(idx, idx + query.length)}
+      </span>
+      {text.slice(idx + query.length)}
+    </>
+  );
+}
+
+function getSnippet(searchText: string, query: string): string | null {
+  if (!searchText || !query.trim()) return null;
+  const lower = searchText.toLowerCase();
+  const qLower = query.toLowerCase();
+  const idx = lower.indexOf(qLower);
+  if (idx === -1) return null;
+  const start = Math.max(0, idx - 40);
+  const end = Math.min(searchText.length, idx + query.length + 80);
+  let snippet = searchText.slice(start, end).trim();
+  if (start > 0) snippet = "..." + snippet;
+  if (end < searchText.length) snippet = snippet + "...";
+  return snippet;
+}
+
+function ResultIcon({ type }: { type: string }) {
+  if (type === "heading") {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 text-gray-400">
+        <path d="M4 12h8" /><path d="M4 18V6" /><path d="M12 18V6" /><path d="M17 10l3 3-3 3" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 text-gray-400">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+    </svg>
+  );
+}
+
 export default function SearchModal({
   isOpen,
   onClose,
@@ -18,52 +65,113 @@ export default function SearchModal({
   nodes,
 }: SearchModalProps) {
   const [query, setQuery] = useState("");
+  const [selectedIdx, setSelectedIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const allArticles = getAllArticles(nodes);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const allArticles = useMemo(() => getAllArticles(nodes), [nodes]);
+
+  // Recent articles (last 6 with content, sorted by updated_at)
+  const recentArticles = useMemo(() => {
+    return [...allArticles]
+      .filter((a) => a.html_content)
+      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+      .slice(0, 6);
+  }, [allArticles]);
 
   useEffect(() => {
     if (isOpen) {
       setQuery("");
+      setSelectedIdx(0);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [isOpen]);
 
+  const results = useMemo(() => {
+    if (!query.trim()) return [];
+    const lower = query.toLowerCase();
+    return allArticles
+      .map((a) => {
+        const titleMatch = a.title.toLowerCase().includes(lower);
+        const contentMatch = a.search_text?.toLowerCase().includes(lower) ?? false;
+        if (!titleMatch && !contentMatch) return null;
+        // Score: title matches rank higher
+        const score = titleMatch ? 2 : 1;
+        return { article: a, score, titleMatch, contentMatch };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b!.score - a!.score) as Array<{
+      article: WikiNode;
+      score: number;
+      titleMatch: boolean;
+      contentMatch: boolean;
+    }>;
+  }, [query, allArticles]);
+
+  // Reset selection when results change
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    setSelectedIdx(0);
+  }, [results]);
+
+  // Scroll selected item into view
+  useEffect(() => {
+    if (!resultsRef.current) return;
+    const selected = resultsRef.current.querySelector("[data-selected='true']");
+    if (selected) {
+      selected.scrollIntoView({ block: "nearest" });
+    }
+  }, [selectedIdx]);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
-        if (isOpen) {
-          onClose();
-        }
+        if (isOpen) onClose();
       }
       if (e.key === "Escape" && isOpen) {
         onClose();
       }
-    };
+      if (!isOpen) return;
+
+      const list = query.trim() ? results : recentArticles.map((a) => ({ article: a }));
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIdx((prev) => Math.min(prev + 1, list.length - 1));
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIdx((prev) => Math.max(prev - 1, 0));
+      }
+      if (e.key === "Enter" && list.length > 0) {
+        e.preventDefault();
+        const item = list[selectedIdx];
+        if (item) {
+          onSelectArticle(item.article);
+          onClose();
+        }
+      }
+    },
+    [isOpen, onClose, query, results, recentArticles, selectedIdx, onSelectArticle]
+  );
+
+  useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [handleKeyDown]);
 
   if (!isOpen) return null;
-
-  const results = query.trim()
-    ? allArticles.filter((a) => {
-        const lower = query.toLowerCase();
-        return (
-          a.title.toLowerCase().includes(lower) ||
-          (a.search_text && a.search_text.toLowerCase().includes(lower))
-        );
-      })
-    : [];
 
   const handleSelect = (article: WikiNode) => {
     onSelectArticle(article);
     onClose();
   };
 
+  const showRecent = !query.trim();
+  const showResults = query.trim() && results.length > 0;
+  const showEmpty = query.trim() && results.length === 0;
+
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] md:pt-[15vh] px-4"
+      className="fixed inset-0 z-[100] flex items-start justify-center pt-[8vh] md:pt-[12vh] px-4"
       onClick={onClose}
     >
       {/* Backdrop */}
@@ -71,18 +179,18 @@ export default function SearchModal({
 
       {/* Modal */}
       <div
-        className="relative bg-white rounded-xl shadow-2xl w-full max-w-[640px] overflow-hidden"
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-[640px] overflow-hidden border border-gray-200/50"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search input */}
-        <div className="flex items-center gap-3 px-4 md:px-5 py-3.5 md:py-4 border-b border-gray-200">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
           <svg
-            width="18"
-            height="18"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#9ca3af"
-            strokeWidth="2"
+            stroke="#27a28c"
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
             className="flex-shrink-0"
@@ -93,12 +201,25 @@ export default function SearchModal({
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search wiki articles..."
+            placeholder="Search articles, topics, guides..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 text-base outline-none placeholder:text-gray-400 min-w-0"
+            className="flex-1 text-[15px] outline-none placeholder:text-gray-400 min-w-0"
           />
-          <kbd className="hidden md:inline text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">
+          {query && (
+            <button
+              onClick={() => setQuery("")}
+              className="text-gray-300 hover:text-gray-500 p-0.5"
+              aria-label="Clear"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+            </button>
+          )}
+          <kbd className="hidden md:inline text-[10px] text-gray-400 border border-gray-200 rounded px-1.5 py-0.5 font-mono">
             ESC
           </kbd>
           <button
@@ -106,51 +227,152 @@ export default function SearchModal({
             className="md:hidden text-gray-400 hover:text-gray-600 p-1"
             aria-label="Close"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
 
-        {/* Results */}
-        <div className="max-h-[60vh] md:max-h-[400px] overflow-y-auto">
-          {query.trim() && results.length === 0 && (
-            <div className="px-5 py-8 text-center text-gray-400 text-sm">
-              No articles found for &ldquo;{query}&rdquo;
+        {/* Results area */}
+        <div ref={resultsRef} className="max-h-[60vh] md:max-h-[420px] overflow-y-auto">
+          {/* Recent articles (shown when no query) */}
+          {showRecent && recentArticles.length > 0 && (
+            <div className="py-2">
+              <p className="px-5 py-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                Recently updated
+              </p>
+              {recentArticles.map((article, idx) => {
+                const crumbs = buildBreadcrumb(nodes, article.id);
+                const parentPath = crumbs.slice(0, -1).join(" / ");
+                const isSelected = idx === selectedIdx;
+                return (
+                  <button
+                    key={article.id}
+                    data-selected={isSelected}
+                    onClick={() => handleSelect(article)}
+                    className={`w-full text-left px-5 py-2.5 flex items-start gap-3 transition-colors ${
+                      isSelected ? "bg-accent/5" : "hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="mt-0.5">
+                      <ResultIcon type={article.node_type} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm font-medium truncate ${isSelected ? "text-accent" : "text-gray-800"}`}>
+                        {article.title}
+                      </p>
+                      {parentPath && (
+                        <p className="text-[11px] text-gray-400 mt-0.5 truncate">
+                          {parentPath}
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-gray-300 mt-0.5 flex-shrink-0">
+                      {new Date(article.updated_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           )}
-          {results.map((article) => {
-            const crumbs = buildBreadcrumb(nodes, article.id);
-            // Remove the last crumb (it's the article itself)
-            const parentPath = crumbs.slice(0, -1).join(" / ");
-            return (
-              <button
-                key={article.id}
-                onClick={() => handleSelect(article)}
-                className="w-full text-left px-4 md:px-5 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
-              >
-                <p className="text-sm font-medium text-gray-800">
-                  {article.title}
-                </p>
-                {parentPath && (
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {parentPath}
-                  </p>
-                )}
-                {article.search_text && (
-                  <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-                    {article.search_text}
-                  </p>
-                )}
-              </button>
-            );
-          })}
-          {!query.trim() && (
-            <div className="px-5 py-8 text-center text-gray-400 text-sm">
-              Start typing to search across all wiki articles
+
+          {showRecent && recentArticles.length === 0 && (
+            <div className="px-5 py-10 text-center">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5" className="mx-auto mb-3">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <p className="text-sm text-gray-400">
+                Search across all wiki content
+              </p>
             </div>
           )}
+
+          {/* Search results */}
+          {showResults && (
+            <div className="py-2">
+              <p className="px-5 py-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                {results.length} result{results.length !== 1 ? "s" : ""}
+              </p>
+              {results.map((result, idx) => {
+                const { article, titleMatch, contentMatch } = result;
+                const crumbs = buildBreadcrumb(nodes, article.id);
+                const parentPath = crumbs.slice(0, -1).join(" / ");
+                const snippet = contentMatch
+                  ? getSnippet(article.search_text || "", query)
+                  : null;
+                const isSelected = idx === selectedIdx;
+                return (
+                  <button
+                    key={article.id}
+                    data-selected={isSelected}
+                    onClick={() => handleSelect(article)}
+                    className={`w-full text-left px-5 py-2.5 flex items-start gap-3 transition-colors ${
+                      isSelected ? "bg-accent/5" : "hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="mt-0.5">
+                      <ResultIcon type={article.node_type} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm font-medium ${isSelected ? "text-accent" : "text-gray-800"}`}>
+                        {titleMatch
+                          ? highlightMatch(article.title, query)
+                          : article.title}
+                      </p>
+                      {parentPath && (
+                        <p className="text-[11px] text-gray-400 mt-0.5 truncate">
+                          {parentPath}
+                        </p>
+                      )}
+                      {snippet && (
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">
+                          {highlightMatch(snippet, query)}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* No results */}
+          {showEmpty && (
+            <div className="px-5 py-10 text-center">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5" className="mx-auto mb-3">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <p className="text-sm text-gray-500">
+                No results for &ldquo;<span className="font-medium">{query}</span>&rdquo;
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                Try different keywords or check spelling
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer with keyboard hints */}
+        <div className="hidden md:flex items-center gap-4 px-5 py-2.5 border-t border-gray-100 bg-gray-50/50">
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+            <kbd className="border border-gray-200 rounded px-1 py-0.5 font-mono text-[10px] bg-white">↑</kbd>
+            <kbd className="border border-gray-200 rounded px-1 py-0.5 font-mono text-[10px] bg-white">↓</kbd>
+            <span>navigate</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+            <kbd className="border border-gray-200 rounded px-1 py-0.5 font-mono text-[10px] bg-white">↵</kbd>
+            <span>open</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+            <kbd className="border border-gray-200 rounded px-1 py-0.5 font-mono text-[10px] bg-white">esc</kbd>
+            <span>close</span>
+          </div>
         </div>
       </div>
     </div>
