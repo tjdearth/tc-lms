@@ -55,11 +55,49 @@ function extractNumbering(title: string): { numbering: string; name: string } {
   return { numbering: "", name: title };
 }
 
+/**
+ * Transform raw Scribe HTML into our styled format:
+ * - Extract step numbers into teal circles (.step-number + .step-content)
+ * - Move screenshots inside their preceding step card
+ * - Remove author line
+ */
+function transformScribeHtml(html: string): string {
+  let result = html;
+
+  // Remove author paragraph
+  result = result.replace(/<p class="scribe-author">[\s\S]*?<\/p>/gi, "");
+
+  // Remove extra <br/> tags at the top (Scribe adds them after author)
+  result = result.replace(/^(\s*<br\s*\/?>\s*)+/gi, "");
+  result = result.replace(/(<\/p>)\s*(<br\s*\/?>\s*)+/gi, "$1");
+
+  // Transform each scribe-step: extract number, restructure with .step-number + .step-content
+  // Also absorb any immediately following screenshot containers into the step
+  result = result.replace(
+    /<div class="scribe-step">\s*<p class="scribe-step-text">\s*(\d+)\.\s*([\s\S]*?)<\/p>\s*<\/div>(\s*<p class="scribe-screenshot-container">[\s\S]*?<\/p>)?/gi,
+    (_, num, text, screenshot) => {
+      const screenshotHtml = screenshot
+        ? screenshot.replace(/<p class="scribe-screenshot-container">/gi, '<div class="scribe-screenshot-container">').replace(/<\/p>$/i, "</div>")
+        : "";
+      return `<div class="scribe-step"><div class="step-number">${num}</div><div class="step-content"><p>${text.trim()}</p>${screenshotHtml}</div></div>`;
+    }
+  );
+
+  // Handle any remaining standalone screenshot containers (not preceded by a step)
+  result = result.replace(
+    /<p class="scribe-screenshot-container">([\s\S]*?)<\/p>/gi,
+    '<div class="scribe-screenshot-container">$1</div>'
+  );
+
+  return result;
+}
+
 function parseScribeHtml(html: string): {
   numbering: string;
   title: string;
   content: string;
 } {
+  const transformed = transformScribeHtml(html);
   const h1Match = html.match(/<h1[^>]*>([\d.]+)\.?\s+(.*?)<\/h1>/i);
   if (h1Match) {
     // Strip any trailing dots from numbering (e.g. "2." → "2")
@@ -67,14 +105,14 @@ function parseScribeHtml(html: string): {
     return {
       numbering,
       title: h1Match[2].trim(),
-      content: html,
+      content: transformed,
     };
   }
   const titleOnly = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
   return {
     numbering: "",
     title: titleOnly ? titleOnly[1].trim() : "Untitled",
-    content: html,
+    content: transformed,
   };
 }
 
