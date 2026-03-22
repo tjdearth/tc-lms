@@ -385,16 +385,11 @@ export default function CourseOverview() {
                             <p className="text-sm text-[#304256] truncate">
                               {lesson.title}
                             </p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[10px] text-gray-400 capitalize">
-                                {lesson.lesson_type.replace(/_/g, " ")}
+                            {lesson.estimated_minutes > 0 && (
+                              <span className="text-[10px] text-gray-400 mt-0.5">
+                                {lesson.estimated_minutes} min
                               </span>
-                              {lesson.estimated_minutes > 0 && (
-                                <span className="text-[10px] text-gray-400">
-                                  {lesson.estimated_minutes} min
-                                </span>
-                              )}
-                            </div>
+                            )}
                           </div>
                         </button>
                       ))}
