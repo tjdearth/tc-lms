@@ -54,6 +54,7 @@ export default function CourseBuilderPage() {
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [uploadingThumb, setUploadingThumb] = useState(false);
   const [category, setCategory] = useState("General Onboarding");
   const [tracks, setTracks] = useState<LmsTrack[]>(["general"]);
   const [estimatedMinutes, setEstimatedMinutes] = useState(0);
@@ -339,18 +340,54 @@ export default function CourseBuilderPage() {
                 />
               </div>
 
-              {/* Thumbnail URL */}
+              {/* Thumbnail */}
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5">
-                  Thumbnail URL
+                  Thumbnail
                 </label>
-                <input
-                  type="text"
-                  value={thumbnailUrl}
-                  onChange={(e) => setThumbnailUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2.5 text-sm border border-[#E8ECF1] rounded-lg outline-none focus:border-[#27a28c]"
-                />
+                <div className="flex gap-3 items-start">
+                  {thumbnailUrl && (
+                    <img src={thumbnailUrl} alt="Thumbnail" className="w-20 h-14 object-cover rounded-lg border border-[#E8ECF1] flex-shrink-0" />
+                  )}
+                  <div className="flex-1 space-y-2">
+                    <div className="flex gap-2">
+                      <label className={`px-3 py-2 text-xs font-medium rounded-lg cursor-pointer transition-colors ${uploadingThumb ? "bg-gray-100 text-gray-400" : "bg-[#27a28c] text-white hover:bg-[#27a28c]/90"}`}>
+                        {uploadingThumb ? "Uploading..." : "Upload Image"}
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp,image/gif"
+                          className="hidden"
+                          disabled={uploadingThumb}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setUploadingThumb(true);
+                            try {
+                              const formData = new FormData();
+                              formData.append("file", file);
+                              const res = await fetch("/api/wiki/upload", { method: "POST", body: formData });
+                              if (res.ok) {
+                                const { url } = await res.json();
+                                setThumbnailUrl(url);
+                              }
+                            } catch { /* ignore */ } finally {
+                              setUploadingThumb(false);
+                              e.target.value = "";
+                            }
+                          }}
+                        />
+                      </label>
+                      <span className="text-[11px] text-gray-300 self-center">or</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={thumbnailUrl}
+                      onChange={(e) => setThumbnailUrl(e.target.value)}
+                      placeholder="Paste image URL..."
+                      className="w-full px-3 py-2 text-sm border border-[#E8ECF1] rounded-lg outline-none focus:border-[#27a28c]"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Category */}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { isAdmin } from "@/lib/admin";
+import { isCourseCreator } from "@/lib/admin";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { randomUUID } from "crypto";
 
@@ -11,7 +11,7 @@ const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp", "im
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email || !isAdmin(session.user.email)) {
+  if (!session?.user?.email || !isCourseCreator(session.user.email)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
   return null;
