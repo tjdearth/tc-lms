@@ -150,8 +150,13 @@ export default function CalendarPage() {
             className="flex items-center gap-2 px-4 py-2 bg-[#304256] text-white text-sm font-medium rounded-lg hover:bg-[#3d5570] transition-colors whitespace-nowrap"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 16v-4M12 8h.01" />
+              <path d="M9.5 2a2.5 2.5 0 0 1 2.5 2.5v.5a2.5 2.5 0 0 1-2.5 2.5h-.5a2.5 2.5 0 0 1-2.5-2.5V4.5A2.5 2.5 0 0 1 9 2" />
+              <path d="M15 2a2.5 2.5 0 0 0-2.5 2.5v.5A2.5 2.5 0 0 0 15 7.5h.5A2.5 2.5 0 0 0 18 5V4.5A2.5 2.5 0 0 0 15.5 2" />
+              <path d="M6.5 7a2.5 2.5 0 0 0-2.5 2.5v.5a2.5 2.5 0 0 0 2.5 2.5h.5A2.5 2.5 0 0 0 9.5 10V9.5A2.5 2.5 0 0 0 7 7" />
+              <path d="M17.5 7a2.5 2.5 0 0 1 2.5 2.5v.5a2.5 2.5 0 0 1-2.5 2.5h-.5A2.5 2.5 0 0 1 14.5 10V9.5A2.5 2.5 0 0 1 17 7" />
+              <path d="M8 12.5a2.5 2.5 0 0 0-2.5 2.5v.5A2.5 2.5 0 0 0 8 18h.5a2.5 2.5 0 0 0 2.5-2.5v-.5A2.5 2.5 0 0 0 8.5 12.5" />
+              <path d="M16 12.5a2.5 2.5 0 0 1 2.5 2.5v.5A2.5 2.5 0 0 1 16 18h-.5a2.5 2.5 0 0 1-2.5-2.5v-.5a2.5 2.5 0 0 1 2.5-2.5" />
+              <path d="M10 18a2.5 2.5 0 0 0-2.5 2.5A2.5 2.5 0 0 0 10 23h4a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 14 18" />
             </svg>
             AI Event Discovery
           </button>
@@ -163,12 +168,16 @@ export default function CalendarPage() {
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#304256] to-[#27a28c] flex items-center justify-center">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  <path d="M9.5 2a2.5 2.5 0 0 1 2.5 2.5v.5a2.5 2.5 0 0 1-2.5 2.5h-.5a2.5 2.5 0 0 1-2.5-2.5V4.5A2.5 2.5 0 0 1 9 2" />
+                  <path d="M15 2a2.5 2.5 0 0 0-2.5 2.5v.5A2.5 2.5 0 0 0 15 7.5h.5A2.5 2.5 0 0 0 18 5V4.5A2.5 2.5 0 0 0 15.5 2" />
+                  <path d="M6.5 7a2.5 2.5 0 0 0-2.5 2.5v.5a2.5 2.5 0 0 0 2.5 2.5h.5A2.5 2.5 0 0 0 9.5 10V9.5A2.5 2.5 0 0 0 7 7" />
+                  <path d="M17.5 7a2.5 2.5 0 0 1 2.5 2.5v.5a2.5 2.5 0 0 1-2.5 2.5h-.5A2.5 2.5 0 0 1 14.5 10V9.5A2.5 2.5 0 0 1 17 7" />
+                  <path d="M12 12v10" />
                 </svg>
               </div>
               <div>
                 <h3 className="text-[15px] font-semibold text-[#304256]">AI Event Discovery</h3>
-                <p className="text-xs text-gray-400">Research festivals, holidays, and travel-impacting events by brand</p>
+                <p className="text-xs text-gray-400">Uses AI to deeply research your destination — surfacing local festivals, national holidays, peak travel seasons, cultural events, and anything that could impact bookings, pricing, or operations. Select what matters and add it to your calendar.</p>
               </div>
             </div>
 
