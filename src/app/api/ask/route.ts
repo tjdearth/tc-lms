@@ -26,13 +26,13 @@ export async function POST(req: NextRequest) {
     const [wikiResult, coursesResult, calendarResult] = await Promise.all([
       supabaseAdmin
         .from("wiki_nodes")
-        .select("title, html_content")
+        .select("id, title, html_content")
         .eq("is_published", true)
         .eq("node_type", "article")
         .limit(100),
       supabaseAdmin
         .from("courses")
-        .select("title, description, category")
+        .select("id, title, description, category")
         .eq("is_published", true),
       supabaseAdmin
         .from("calendar_events")
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       for (const article of wikiArticles) {
         const content = article.html_content ? stripHtml(article.html_content).slice(0, 500) : "";
         if (content) {
-          context += `### ${article.title}\n${content}\n\n`;
+          context += `### ${article.title} [WIKI_ID:${article.id}]\n${content}\n\n`;
         }
       }
     }
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     if (courses.length > 0) {
       context += "## Available Courses\n\n";
       for (const course of courses) {
-        context += `- **${course.title}** (${course.category}): ${course.description || "No description"}\n`;
+        context += `- **${course.title}** [COURSE_ID:${course.id}] (${course.category}): ${course.description || "No description"}\n`;
       }
       context += "\n";
     }
@@ -85,7 +85,9 @@ Your personality: helpful, professional, and knowledgeable. You speak concisely 
 
 The user's email is "${email}".
 
-Use the following Atlas knowledge base to answer questions. If the answer is in the knowledge base, reference the relevant source. If you cannot find a specific answer, say so honestly and suggest where they might find it.
+Use the following Atlas knowledge base to answer questions. If the answer is in the knowledge base, reference the relevant source with a hyperlink.
+
+IMPORTANT: When referencing wiki articles, link to them using this format: [Article Title](/wiki?article=ARTICLE_ID) — replace ARTICLE_ID with the ID shown in brackets like [WIKI_ID:xxx]. When referencing courses, link using: [Course Title](/learn/course/COURSE_ID). Always prefer linking to sources rather than just naming them.
 
 Be concise and use markdown formatting. Only introduce yourself if it seems like a first message.
 

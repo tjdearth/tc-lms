@@ -12,7 +12,10 @@ const components = {
   ol: ({ children }: any) => <ol className="ml-4 list-decimal text-[13px] leading-relaxed my-3">{children}</ol>,
   li: ({ children }: any) => <li className="text-[13px] leading-relaxed mb-1">{children}</li>,
   p: ({ children }: any) => <p className="text-[13px] text-gray-600 leading-relaxed mb-3">{children}</p>,
-  a: ({ href, children }: any) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#27a28c] hover:underline">{children}</a>,
+  a: ({ href, children }: any) => {
+    const isInternal = href?.startsWith("/");
+    return <a href={href} {...(isInternal ? {} : { target: "_blank", rel: "noopener noreferrer" })} className="text-[#27a28c] hover:underline font-medium">{children}</a>;
+  },
   code: ({ children }: any) => <code className="px-1.5 py-0.5 rounded bg-gray-100 border border-gray-200 text-[12px] font-mono text-gray-800">{children}</code>,
   blockquote: ({ children }: any) => <blockquote className="border-l-2 border-[#27a28c] pl-3 my-2 text-gray-600 italic">{children}</blockquote>,
   hr: () => <hr className="border-gray-200 my-4" />,
