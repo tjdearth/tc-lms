@@ -25,11 +25,41 @@ interface Stats {
   courses: CourseStats[];
 }
 
+type SortKey = "title" | "code" | "category" | "enrolled_count" | "completed_count" | "pct" | "is_published";
+
+function extractNumber(title: string): number {
+  const match = title.match(/^(\d+)/);
+  return match ? parseInt(match[1], 10) : 999;
+}
+
+function sortCourses(courses: CourseStats[], sortKey: SortKey, sortDir: "asc" | "desc"): CourseStats[] {
+  return [...courses].sort((a, b) => {
+    let cmp = 0;
+    if (sortKey === "pct") {
+      const pctA = a.enrolled_count > 0 ? a.completed_count / a.enrolled_count : 0;
+      const pctB = b.enrolled_count > 0 ? b.completed_count / b.enrolled_count : 0;
+      cmp = pctA - pctB;
+    } else if (sortKey === "enrolled_count" || sortKey === "completed_count") {
+      cmp = a[sortKey] - b[sortKey];
+    } else if (sortKey === "is_published") {
+      cmp = (a.is_published ? 1 : 0) - (b.is_published ? 1 : 0);
+    } else if (sortKey === "category") {
+      cmp = a.category.localeCompare(b.category);
+      if (cmp === 0) cmp = extractNumber(a.title) - extractNumber(b.title);
+    } else {
+      cmp = a[sortKey].localeCompare(b[sortKey]);
+    }
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+}
+
 export default function LearnAdminPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sortKey, setSortKey] = useState<SortKey>("category");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const userEmail = session?.user?.email || "";
   const hasAccess = isCourseCreator(userEmail);
@@ -138,37 +168,64 @@ export default function LearnAdminPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wider">
-                        <th className="px-6 py-3">Title</th>
-                        <th className="px-6 py-3">Code</th>
-                        <th className="px-6 py-3">Category</th>
-                        <th className="px-6 py-3 text-center">Enrolled</th>
-                        <th className="px-6 py-3 text-center">Completed</th>
-                        <th className="px-6 py-3 text-center">% Complete</th>
-                        <th className="px-6 py-3 text-center">Published</th>
+                        {([
+                          { key: "title" as SortKey, label: "Title", align: "text-left" },
+                          { key: "code" as SortKey, label: "Code", align: "text-left" },
+                          { key: "category" as SortKey, label: "Category", align: "text-left" },
+                          { key: "enrolled_count" as SortKey, label: "Enrolled", align: "text-center" },
+                          { key: "completed_count" as SortKey, label: "Completed", align: "text-center" },
+                          { key: "pct" as SortKey, label: "Complete", align: "text-center" },
+                          { key: "is_published" as SortKey, label: "Status", align: "text-center" },
+                        ]).map((col) => (
+                          <th
+                            key={col.key}
+                            className={`px-6 py-3 ${col.align} cursor-pointer hover:text-[#304256] select-none transition-colors`}
+                            onClick={() => {
+                              if (sortKey === col.key) setSortDir(sortDir === "asc" ? "desc" : "asc");
+                              else { setSortKey(col.key); setSortDir("asc"); }
+                            }}
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              {col.label}
+                              {sortKey === col.key && (
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                  {sortDir === "asc" ? <polyline points="18 15 12 9 6 15" /> : <polyline points="6 9 12 15 18 9" />}
+                                </svg>
+                              )}
+                            </span>
+                          </th>
+                        ))}
                         <th className="px-6 py-3 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#E8ECF1]">
-                      {(stats.courses || []).map((c) => (
-                        <tr key={c.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-3 font-medium text-[#304256]">{c.title}</td>
-                          <td className="px-6 py-3 text-gray-500">{c.code}</td>
-                          <td className="px-6 py-3 text-gray-500">{c.category}</td>
-                          <td className="px-6 py-3 text-center">{c.enrolled_count}</td>
-                          <td className="px-6 py-3 text-center">{c.completed_count}</td>
-                          <td className="px-6 py-3 text-center text-gray-500">{c.enrolled_count > 0 ? Math.round((c.completed_count / c.enrolled_count) * 100) : 0}%</td>
-                          <td className="px-6 py-3 text-center">
-                            <button onClick={() => handleTogglePublish(c.id, c.is_published)} className={'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ' + (c.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500')}>
-                              {c.is_published ? "Published" : "Draft"}
-                            </button>
-                          </td>
-                          <td className="px-6 py-3 text-right space-x-2">
-                            <button onClick={() => router.push('/learn/admin/course/' + c.id)} className="text-[#27a28c] hover:underline text-xs">Edit</button>
-                            <button onClick={() => handleClone(c.id)} className="text-[#304256] hover:underline text-xs">Clone</button>
-                            <button onClick={() => handleDelete(c.id, c.title)} className="text-red-500 hover:underline text-xs">Delete</button>
-                          </td>
-                        </tr>
-                      ))}
+                      {sortCourses(stats.courses || [], sortKey, sortDir).map((c) => {
+                        const pct = c.enrolled_count > 0 ? Math.round((c.completed_count / c.enrolled_count) * 100) : 0;
+                        return (
+                          <tr key={c.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-3.5 font-medium text-[#304256]">{c.title}</td>
+                            <td className="px-6 py-3.5 text-gray-400 font-mono text-xs">{c.code}</td>
+                            <td className="px-6 py-3.5 text-gray-500">{c.category}</td>
+                            <td className="px-6 py-3.5 text-center tabular-nums">{c.enrolled_count}</td>
+                            <td className="px-6 py-3.5 text-center tabular-nums">{c.completed_count}</td>
+                            <td className="px-6 py-3.5 text-center tabular-nums">
+                              <span className={`font-semibold ${pct >= 70 ? "text-emerald-600" : pct >= 40 ? "text-amber-600" : "text-red-500"}`}>{pct}%</span>
+                            </td>
+                            <td className="px-6 py-3.5 text-center">
+                              <button onClick={() => handleTogglePublish(c.id, c.is_published)} className={'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ' + (c.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500')}>
+                                {c.is_published ? "Published" : "Draft"}
+                              </button>
+                            </td>
+                            <td className="px-6 py-3.5 text-right">
+                              <div className="flex items-center justify-end gap-3">
+                                <button onClick={() => router.push('/learn/admin/course/' + c.id)} className="text-[#27a28c] hover:underline text-xs font-medium">Edit</button>
+                                <button onClick={() => handleClone(c.id)} className="text-[#304256] hover:underline text-xs font-medium">Clone</button>
+                                <button onClick={() => handleDelete(c.id, c.title)} className="text-red-500 hover:underline text-xs font-medium">Delete</button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
