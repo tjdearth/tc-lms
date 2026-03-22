@@ -6,6 +6,7 @@ import AppShell from "@/components/AppShell";
 import Link from "next/link";
 import { fetchWikiTree, fetchCalendarEvents, getAllArticles } from "@/lib/api";
 import { WikiNode, CalendarEvent, Course, Enrollment } from "@/types";
+import { brandFromEmail } from "@/lib/brands";
 
 const EVENT_TYPE_COLORS: Record<string, { dot: string }> = {
   public_holiday: { dot: "bg-blue-500" },
@@ -65,6 +66,7 @@ export default function DashboardPage() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [quote] = useState(getRandomQuote);
+  const [showAllEvents, setShowAllEvents] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -83,6 +85,7 @@ export default function DashboardPage() {
 
   const allArticles = getAllArticles(wikiTree);
   const firstName = session?.user?.name?.split(" ")[0] || "there";
+  const userBrand = session?.user?.email ? brandFromEmail(session.user.email) : null;
 
   // Enrollment stats
   const inProgress = enrollments.filter((e) => e.status === "in_progress" || e.status === "enrolled").length;
@@ -303,45 +306,72 @@ export default function DashboardPage() {
           {/* Upcoming events */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-navy">Upcoming Events</h2>
-              <Link href="/calendar" className="text-sm text-accent hover:underline">
-                View calendar
-              </Link>
+              <div>
+                <h2 className="font-semibold text-navy">
+                  {showAllEvents || !userBrand ? "Upcoming Events" : `Upcoming — ${userBrand}`}
+                </h2>
+              </div>
+              <div className="flex items-center gap-3">
+                {userBrand && (
+                  <button
+                    onClick={() => setShowAllEvents(!showAllEvents)}
+                    className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showAllEvents ? `${userBrand} only` : "All brands"}
+                  </button>
+                )}
+                <Link href="/calendar" className="text-sm text-accent hover:underline">
+                  View calendar
+                </Link>
+              </div>
             </div>
             <div className="space-y-2">
               {loading ? (
                 <p className="text-sm text-gray-400 py-4 text-center">Loading...</p>
-              ) : upcomingEvents.length === 0 ? (
-                <p className="text-sm text-gray-400 py-4 text-center">No upcoming events in the next 30 days.</p>
-              ) : (
-                upcomingEvents.slice(0, 8).map((event) => {
-                  const colors = EVENT_TYPE_COLORS[event.event_type] || EVENT_TYPE_COLORS.custom;
-                  const date = new Date(event.date_start);
-                  return (
-                    <div key={event.id} className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex-shrink-0 mt-1">
-                        <span className={`block w-2.5 h-2.5 rounded-full ${colors.dot}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800">{event.title}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs text-gray-400">
-                            {date.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                          </span>
-                          <span className="text-xs text-gray-300">|</span>
-                          <span className="text-xs text-gray-400">{event.brand}</span>
-                          {event.country && (
-                            <>
-                              <span className="text-xs text-gray-300">|</span>
-                              <span className="text-xs text-gray-400">{event.country}</span>
-                            </>
-                          )}
+              ) : (() => {
+                const displayEvents = (showAllEvents || !userBrand)
+                  ? upcomingEvents
+                  : upcomingEvents.filter((e) => e.brand === userBrand);
+                return displayEvents.length === 0 ? (
+                  <p className="text-sm text-gray-400 py-4 text-center">
+                    {userBrand && !showAllEvents
+                      ? `No upcoming ${userBrand} events in the next 30 days.`
+                      : "No upcoming events in the next 30 days."}
+                  </p>
+                ) : (
+                  displayEvents.slice(0, 8).map((event) => {
+                    const colors = EVENT_TYPE_COLORS[event.event_type] || EVENT_TYPE_COLORS.custom;
+                    const date = new Date(event.date_start);
+                    return (
+                      <div key={event.id} className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex-shrink-0 mt-1">
+                          <span className={`block w-2.5 h-2.5 rounded-full ${colors.dot}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800">{event.title}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs text-gray-400">
+                              {date.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                            </span>
+                            {(showAllEvents || !userBrand) && (
+                              <>
+                                <span className="text-xs text-gray-300">|</span>
+                                <span className="text-xs text-gray-400">{event.brand}</span>
+                              </>
+                            )}
+                            {event.country && (
+                              <>
+                                <span className="text-xs text-gray-300">|</span>
+                                <span className="text-xs text-gray-400">{event.country}</span>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
-              )}
+                    );
+                  })
+                );
+              })()}
             </div>
           </div>
         </div>
