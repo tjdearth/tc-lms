@@ -125,6 +125,7 @@ export default function CalendarView({ events }: { events: CalendarEvent[] }) {
   const [currentMonth, setCurrentMonth] = useState(2); // March (0-indexed)
   const [currentYear] = useState(2026);
   const [isMobile, setIsMobile] = useState(false);
+  const [showPast, setShowPast] = useState(false);
   const [popover, setPopover] = useState<{ events: CalendarEvent[]; rect: { top: number; left: number; width: number; bottom: number } } | null>(null);
 
   useEffect(() => {
@@ -227,93 +228,152 @@ export default function CalendarView({ events }: { events: CalendarEvent[] }) {
       </div>
 
       {effectiveViewMode === "list" ? (
-        /* List View */
-        <div className="space-y-3">
-          {filteredEvents.length === 0 && (
-            <p className="text-gray-400 text-sm py-8 text-center">
-              No events found.
-            </p>
-          )}
-          {filteredEvents.map((event) => {
+        /* List View — grouped by month, past collapsed */
+        (() => {
+          if (filteredEvents.length === 0) {
+            return <p className="text-gray-400 text-sm py-8 text-center">No events found.</p>;
+          }
+
+          const now = new Date();
+          now.setHours(0, 0, 0, 0);
+          const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+          // Group events by YYYY-MM
+          const grouped: Record<string, CalendarEvent[]> = {};
+          filteredEvents.forEach((e) => {
+            const key = e.date_start.slice(0, 7); // "YYYY-MM"
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push(e);
+          });
+          const monthKeys = Object.keys(grouped).sort();
+
+          const pastKeys = monthKeys.filter((k) => k < currentMonthKey);
+          const currentAndFutureKeys = monthKeys.filter((k) => k >= currentMonthKey);
+          const totalPastEvents = pastKeys.reduce((sum, k) => sum + grouped[k].length, 0);
+
+          const renderEvent = (event: CalendarEvent, isPast: boolean) => {
             const colors = EVENT_TYPE_COLORS[event.event_type] || EVENT_TYPE_COLORS.custom;
             const startDate = new Date(event.date_start);
-            const formattedDate = startDate.toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            });
-            const endDate = event.date_end
-              ? new Date(event.date_end).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "short",
-                })
+            const dateStr = startDate.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+            const endDateStr = event.date_end
+              ? new Date(event.date_end).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
               : null;
 
             return (
               <div
                 key={event.id}
-                className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col sm:flex-row gap-3 sm:gap-4 hover:shadow-sm transition-shadow"
+                className={`flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors ${isPast ? "opacity-50" : ""}`}
               >
-                {/* Date block */}
-                <div className="flex-shrink-0 flex sm:block items-center gap-2 sm:w-16 sm:text-center">
-                  <div className="text-xl sm:text-2xl font-bold text-navy">
-                    {startDate.getDate()}
-                  </div>
-                  <div className="text-xs text-gray-400 uppercase">
-                    {startDate.toLocaleDateString("en-GB", { month: "short" })}
-                  </div>
+                {/* Type dot + date */}
+                <div className="flex items-center gap-2 flex-shrink-0 w-24">
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${colors.dot}`} />
+                  <span className="text-xs text-gray-500 tabular-nums">{dateStr}</span>
+                  {endDateStr && <span className="text-[10px] text-gray-300">– {endDateStr}</span>}
                 </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <h3 className="font-medium text-gray-800">
-                      {event.title}
-                    </h3>
-                    <span
-                      className={`inline-block px-2 py-0.5 text-xs rounded-full ${colors.bg} ${colors.text}`}
-                    >
-                      {EVENT_TYPE_LABELS[event.event_type]}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs text-gray-400 mb-1">
-                    <span className="flex items-center gap-1.5">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: getBrandColor(event.brand) }}
-                      />
-                      {event.brand}
-                    </span>
-                    {event.country && (
-                      <>
-                        <span>|</span>
-                        <span>{event.country}</span>
-                      </>
-                    )}
-                    {endDate && (
-                      <>
-                        <span>|</span>
-                        <span>
-                          {formattedDate} - {endDate}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  {event.description && (
-                    <p className="text-sm text-gray-500 mb-1">
-                      {event.description}
-                    </p>
+                {/* Title + brand */}
+                <div className="flex-1 min-w-0 flex items-center gap-3">
+                  <span className="text-sm font-medium text-gray-800 truncate">{event.title}</span>
+                  <span className={`flex-shrink-0 px-1.5 py-0.5 text-[10px] rounded-full ${colors.bg} ${colors.text}`}>
+                    {EVENT_TYPE_LABELS[event.event_type]}
+                  </span>
+                </div>
+                {/* Brand + country */}
+                <div className="hidden sm:flex items-center gap-2 flex-shrink-0 text-xs text-gray-400">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getBrandColor(event.brand) }} />
+                  <span className="truncate max-w-[120px]">{event.brand}</span>
+                  {event.country && (
+                    <>
+                      <span className="text-gray-300">|</span>
+                      <span>{event.country}</span>
+                    </>
                   )}
-                  {event.impact_notes && (
-                    <p className="text-xs text-amber-700 bg-amber-50 rounded-md px-2 py-1 inline-block mt-1">
+                </div>
+                {/* Impact */}
+                {event.impact_notes && (
+                  <div className="hidden lg:block flex-shrink-0">
+                    <span className="text-[10px] text-amber-700 bg-amber-50 rounded px-1.5 py-0.5 max-w-[200px] truncate inline-block">
                       {event.impact_notes}
-                    </p>
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          };
+
+          const renderMonthGroup = (monthKey: string, events: CalendarEvent[], isPast: boolean) => {
+            const [y, m] = monthKey.split("-").map(Number);
+            const monthLabel = `${MONTHS[m - 1]} ${y}`;
+            const isCurrentMonth = monthKey === currentMonthKey;
+
+            // Split current month at today
+            let beforeToday: CalendarEvent[] = [];
+            let afterToday: CalendarEvent[] = [];
+            if (isCurrentMonth) {
+              const todayStr = now.toISOString().slice(0, 10);
+              beforeToday = events.filter((e) => e.date_start < todayStr);
+              afterToday = events.filter((e) => e.date_start >= todayStr);
+            }
+
+            return (
+              <div key={monthKey} className="mb-4">
+                {/* Month header */}
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className={`text-sm font-semibold ${isPast ? "text-gray-400" : "text-navy"}`}>{monthLabel}</h3>
+                  <span className="text-[10px] text-gray-300 bg-gray-100 rounded-full px-2 py-0.5">{events.length}</span>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  {isCurrentMonth ? (
+                    <>
+                      {beforeToday.map((e) => renderEvent(e, true))}
+                      {/* Today divider */}
+                      <div className="flex items-center gap-3 px-4 py-1.5 bg-[#27a28c]/5">
+                        <div className="w-2 h-2 rounded-full bg-[#27a28c]" />
+                        <span className="text-[11px] font-semibold text-[#27a28c]">
+                          Today — {now.toLocaleDateString("en-GB", { day: "numeric", month: "long" })}
+                        </span>
+                        <div className="flex-1 border-t border-[#27a28c]/20" />
+                      </div>
+                      {afterToday.map((e) => renderEvent(e, false))}
+                    </>
+                  ) : (
+                    events.map((e) => renderEvent(e, isPast))
                   )}
                 </div>
               </div>
             );
-          })}
-        </div>
+          };
+
+          return (
+            <div>
+              {/* Past events toggle */}
+              {totalPastEvents > 0 && (
+                <div className="mb-4">
+                  <button
+                    onClick={() => setShowPast(!showPast)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors w-full"
+                  >
+                    <svg
+                      width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      className={`transition-transform ${showPast ? "rotate-90" : ""}`}
+                    >
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                    <span>Past Events</span>
+                    <span className="text-[10px] text-gray-300 bg-white rounded-full px-2 py-0.5 border border-gray-200">{totalPastEvents}</span>
+                  </button>
+                  {showPast && (
+                    <div className="mt-3 space-y-0">
+                      {pastKeys.map((k) => renderMonthGroup(k, grouped[k], true))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Current + future months */}
+              {currentAndFutureKeys.map((k) => renderMonthGroup(k, grouped[k], false))}
+            </div>
+          );
+        })()
       ) : (
         /* Calendar Grid View */
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
