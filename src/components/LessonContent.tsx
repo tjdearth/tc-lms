@@ -140,7 +140,7 @@ export default function LessonContent({ lesson, onComplete }: LessonContentProps
           <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
         <p className="text-sm font-medium text-[#304256]">
-          This lesson contains a quiz
+          This chapter contains a quiz
         </p>
         <p className="text-xs text-gray-500 mt-1 mb-4">
           Complete the quiz below to continue.

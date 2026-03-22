@@ -223,7 +223,7 @@ export default function CourseOverview() {
                 </p>
                 <div className="flex items-center gap-4 text-xs text-white/50">
                   <span>{course.estimated_minutes} min</span>
-                  <span>{totalLessons} lessons</span>
+                  <span>{totalLessons} chapters</span>
                   <span>
                     {(course.modules || []).length} module
                     {(course.modules || []).length !== 1 ? "s" : ""}
@@ -344,7 +344,7 @@ export default function CourseOverview() {
                           {mod.title}
                         </p>
                         <p className="text-[11px] text-gray-400">
-                          {completedLessons}/{lessonCount} lessons completed
+                          {completedLessons}/{lessonCount} chapters completed
                         </p>
                       </div>
                     </div>

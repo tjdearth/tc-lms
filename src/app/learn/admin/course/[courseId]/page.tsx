@@ -27,7 +27,7 @@ const TRACKS: { value: LmsTrack; label: string }[] = [
 ];
 
 const COMPLETION_RULES: { value: CompletionRule; label: string }[] = [
-  { value: "all_lessons", label: "All Lessons Completed" },
+  { value: "all_lessons", label: "All Chapters Completed" },
   { value: "all_quizzes", label: "All Quizzes Passed" },
   { value: "min_score", label: "Minimum Quiz Score" },
   { value: "manual", label: "Manual Completion" },

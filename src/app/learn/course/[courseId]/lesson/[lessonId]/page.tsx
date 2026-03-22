@@ -119,7 +119,7 @@ export default function LessonViewer() {
     return (
       <AppShell>
         <div className="min-h-screen bg-[#eeeeee] flex items-center justify-center">
-          <p className="text-sm text-gray-500">Lesson not found.</p>
+          <p className="text-sm text-gray-500">Chapter not found.</p>
         </div>
       </AppShell>
     );

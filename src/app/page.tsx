@@ -167,7 +167,7 @@ export default function DashboardPage() {
             Welcome back, {firstName}
           </h1>
           <p className="text-gray-500">
-            Your hub for Travel Collection knowledge, processes, and learning.
+            Your hub for Travel Collection knowledge, processes, skills and continuous learning.
           </p>
         </div>
 
