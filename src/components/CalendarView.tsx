@@ -420,16 +420,17 @@ export default function CalendarView({ events }: { events: CalendarEvent[] }) {
             {Array.from({ length: daysInMonth }).map((_, i) => {
               const day = i + 1;
               const dayEvents = getEventsForDay(day);
+              const now = new Date();
               const isToday =
-                day === 21 && currentMonth === 2 && currentYear === 2026;
+                day === now.getDate() && currentMonth === now.getMonth() && currentYear === now.getFullYear();
               return (
                 <div
                   key={day}
-                  className="h-24 border-b border-r border-gray-100 p-1"
+                  className={`h-24 border-b border-r border-gray-100 p-1 ${isToday ? "bg-[#27a28c]/[0.06]" : ""}`}
                 >
                   <div
-                    className={`text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full ${
-                      isToday ? "bg-accent text-white" : "text-gray-600"
+                    className={`text-xs font-semibold mb-1 pl-1 ${
+                      isToday ? "text-[#27a28c]" : "text-gray-600"
                     }`}
                   >
                     {day}
