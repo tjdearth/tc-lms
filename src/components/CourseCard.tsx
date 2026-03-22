@@ -158,11 +158,6 @@ export default function CourseCard({
                   ? "Completed"
                   : `${pct}% complete`}
               </span>
-              {enrollment.status === "completed" && (
-                <span className="text-[11px] font-medium text-[#27a28c]">
-                  Done
-                </span>
-              )}
             </div>
             <div className="w-full h-1.5 bg-[#E8ECF1] rounded-full overflow-hidden">
               <div
