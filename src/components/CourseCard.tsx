@@ -37,7 +37,8 @@ export default function CourseCard({
     (acc, m) => acc + (m.lessons?.length || 0),
     0
   );
-  const pct = progressPct ?? course.progress_pct ?? 0;
+  const rawPct = progressPct ?? course.progress_pct ?? 0;
+  const pct = enrollment?.status === "completed" ? 100 : rawPct;
 
   const statusLabel =
     enrollment?.status === "completed"
