@@ -109,7 +109,7 @@ export default function CourseCard({
         </h3>
 
         {/* Description */}
-        <p className="text-xs text-gray-500 line-clamp-2 mb-3 flex-1">
+        <p className="text-xs text-gray-500 line-clamp-2 mb-3 flex-1" title={course.description || ""}>
           {course.description || "No description"}
         </p>
 
