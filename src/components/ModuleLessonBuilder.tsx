@@ -80,7 +80,6 @@ export default function ModuleLessonBuilder({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: moduleId, title }),
       });
-      onRefresh();
     } finally {
       setSaving(false);
       setEditingTitle(null);
@@ -152,7 +151,7 @@ export default function ModuleLessonBuilder({
     }
   };
 
-  const updateLesson = async (lessonId: string, updates: Partial<Lesson>) => {
+  const updateLesson = async (lessonId: string, updates: Partial<Lesson>, refresh = false) => {
     setSaving(true);
     try {
       await fetch("/api/learn/lessons", {
@@ -160,7 +159,7 @@ export default function ModuleLessonBuilder({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: lessonId, ...updates }),
       });
-      onRefresh();
+      if (refresh) onRefresh();
     } finally {
       setSaving(false);
     }
@@ -429,7 +428,7 @@ export default function ModuleLessonBuilder({
                         onChange={(e) =>
                           updateLesson(lesson.id, {
                             lesson_type: e.target.value as LessonType,
-                          })
+                          }, true)
                         }
                         className="px-2 py-1 text-xs border border-[#E8ECF1] rounded-lg outline-none focus:border-[#27a28c] bg-white"
                       >
