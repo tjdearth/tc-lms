@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import AppShell from "@/components/AppShell";
 import Link from "next/link";
 import { fetchWikiTree, fetchCalendarEvents, getAllArticles } from "@/lib/api";
-import { WikiNode, CalendarEvent, Course } from "@/types";
+import { WikiNode, CalendarEvent, Course, Enrollment } from "@/types";
 
 const EVENT_TYPE_COLORS: Record<string, { dot: string }> = {
   public_holiday: { dot: "bg-blue-500" },
@@ -44,10 +45,24 @@ function getRandomQuote() {
   return TRAVEL_QUOTES[seed % TRAVEL_QUOTES.length];
 }
 
+function getDueStatus(enrollment: Enrollment): { label: string; color: string; bgColor: string } {
+  if (enrollment.status === "completed") return { label: "Completed", color: "text-emerald-600", bgColor: "bg-emerald-50" };
+  if (!enrollment.due_date) return { label: "On Track", color: "text-emerald-600", bgColor: "bg-emerald-50" };
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const due = new Date(enrollment.due_date);
+  const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return { label: "Overdue", color: "text-red-600", bgColor: "bg-red-50" };
+  if (diffDays <= 7) return { label: "Due Soon", color: "text-amber-600", bgColor: "bg-amber-50" };
+  return { label: "On Track", color: "text-emerald-600", bgColor: "bg-emerald-50" };
+}
+
 export default function DashboardPage() {
+  const { data: session } = useSession();
   const [wikiTree, setWikiTree] = useState<WikiNode[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [courseCount, setCourseCount] = useState(0);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [quote] = useState(getRandomQuote);
 
@@ -56,37 +71,88 @@ export default function DashboardPage() {
       fetchWikiTree(),
       fetchCalendarEvents(),
       fetch("/api/learn/courses").then((r) => r.ok ? r.json() : []),
-    ]).then(([tree, events, courses]) => {
+      fetch("/api/learn/enroll").then((r) => r.ok ? r.json() : []),
+    ]).then(([tree, events, coursesData, enrollData]) => {
       setWikiTree(tree);
       setCalendarEvents(events);
-      setCourseCount((courses as Course[]).length);
+      setCourses(Array.isArray(coursesData) ? coursesData : []);
+      setEnrollments(Array.isArray(enrollData) ? enrollData : []);
       setLoading(false);
     });
   }, []);
 
   const allArticles = getAllArticles(wikiTree);
+  const firstName = session?.user?.name?.split(" ")[0] || "there";
 
-  // Upcoming events (next 30 days from today)
+  // Enrollment stats
+  const inProgress = enrollments.filter((e) => e.status === "in_progress" || e.status === "enrolled").length;
+  const completed = enrollments.filter((e) => e.status === "completed").length;
+
+  // Active enrollments with course info (not completed, max 4)
+  const activeEnrollments = enrollments
+    .filter((e) => e.status !== "completed")
+    .slice(0, 4)
+    .map((e) => {
+      const course = courses.find((c) => c.id === e.course_id);
+      return { ...e, courseTitle: course?.title || "Untitled Course", courseCategory: course?.category || "" };
+    });
+
+  // Upcoming events (next 30 days)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const thirtyDaysLater = new Date(today);
   thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
-
   const upcomingEvents = calendarEvents
     .filter((e) => {
       const start = new Date(e.date_start);
       return start >= today && start <= thirtyDaysLater;
     })
-    .sort(
-      (a, b) =>
-        new Date(a.date_start).getTime() - new Date(b.date_start).getTime()
-    );
+    .sort((a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime());
 
   const stats = [
-    { label: "Wiki Articles", value: allArticles.length },
-    { label: "DMC Brands", value: 16 },
-    { label: "Learn Courses", value: courseCount },
-    { label: "Calendar Events", value: calendarEvents.length },
+    { label: "In Progress", value: inProgress, icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27a28c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5" />
+      </svg>
+    )},
+    { label: "Completed", value: completed, icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27a28c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+    )},
+    { label: "Wiki Articles", value: allArticles.length, icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27a28c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+      </svg>
+    )},
+    { label: "Upcoming Events", value: upcomingEvents.length, icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27a28c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    )},
+  ];
+
+  const quickActions = [
+    { label: "Browse Courses", href: "/learn/courses", icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#304256" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5" />
+      </svg>
+    )},
+    { label: "Knowledge Base", href: "/wiki", icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#304256" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+      </svg>
+    )},
+    { label: "Calendar", href: "/calendar", icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#304256" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    )},
+    { label: "Company", href: "/company", icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#304256" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      </svg>
+    )},
   ];
 
   return (
@@ -95,10 +161,10 @@ export default function DashboardPage() {
         {/* Welcome */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-navy mb-1">
-            Welcome to Atlas
+            Welcome back, {firstName}
           </h1>
           <p className="text-gray-500">
-            Your hub for Travel Collection knowledge, processes, skills, and continuous learning.
+            Your hub for Travel Collection knowledge, processes, and learning.
           </p>
         </div>
 
@@ -124,27 +190,91 @@ export default function DashboardPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="bg-white rounded-xl border border-gray-200 p-5"
-            >
-              <div className={`font-bold text-navy ${typeof stat.value === "string" ? "text-sm mt-1" : "text-2xl"}`}>
+            <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-5">
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-9 h-9 rounded-lg bg-[#27a28c]/10 flex items-center justify-center">
+                  {stat.icon}
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-navy">
                 {loading ? "—" : stat.value}
               </div>
-              <div className="text-sm text-gray-400 mt-1">{stat.label}</div>
+              <div className="text-sm text-gray-400 mt-0.5">{stat.label}</div>
             </div>
           ))}
         </div>
 
+        {/* Your Learning */}
+        {!loading && activeEnrollments.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-navy">Your Learning</h2>
+              <Link href="/learn/courses" className="text-sm text-accent hover:underline">
+                Browse All &rarr;
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {activeEnrollments.map((e) => {
+                const status = getDueStatus(e);
+                const dueDate = e.due_date ? new Date(e.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : null;
+                return (
+                  <Link
+                    key={e.id}
+                    href={`/learn/course/${e.course_id}`}
+                    className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow group"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-navy group-hover:text-accent transition-colors truncate">
+                          {e.courseTitle}
+                        </h3>
+                        {e.courseCategory && (
+                          <p className="text-[11px] text-gray-400 mt-0.5">{e.courseCategory}</p>
+                        )}
+                      </div>
+                      <span className={`flex-shrink-0 px-2 py-0.5 text-[11px] font-medium rounded-full ${status.bgColor} ${status.color}`}>
+                        {status.label}
+                      </span>
+                    </div>
+                    {dueDate && (
+                      <p className={`text-xs mt-2 ${status.label === "Overdue" ? "text-red-500" : status.label === "Due Soon" ? "text-amber-500" : "text-gray-400"}`}>
+                        Due {dueDate}
+                      </p>
+                    )}
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-[11px] text-gray-400 capitalize">{e.status.replace("_", " ")}</span>
+                      <span className="text-xs text-accent font-medium group-hover:underline">Continue &rarr;</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          {quickActions.map((action) => (
+            <Link
+              key={action.label}
+              href={action.href}
+              className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3 hover:shadow-sm hover:border-gray-300 transition-all group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center group-hover:bg-[#27a28c]/10 transition-colors">
+                {action.icon}
+              </div>
+              <span className="text-sm font-medium text-gray-600 group-hover:text-navy transition-colors">{action.label}</span>
+            </Link>
+          ))}
+        </div>
+
+        {/* Two-column: Recent Articles + Upcoming Events */}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Recent articles */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold text-navy">Recent Wiki Articles</h2>
-              <Link
-                href="/wiki"
-                className="text-sm text-accent hover:underline"
-              >
+              <Link href="/wiki" className="text-sm text-accent hover:underline">
                 View all
               </Link>
             </div>
@@ -160,13 +290,9 @@ export default function DashboardPage() {
                     href={`/wiki?article=${article.id}`}
                     className="block px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <p className="text-sm font-medium text-gray-800">
-                      {article.title}
-                    </p>
+                    <p className="text-sm font-medium text-gray-800">{article.title}</p>
                     {article.search_text && (
-                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
-                        {article.search_text}
-                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{article.search_text}</p>
                     )}
                   </Link>
                 ))
@@ -177,13 +303,8 @@ export default function DashboardPage() {
           {/* Upcoming events */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-navy">
-                Upcoming Events (30 days)
-              </h2>
-              <Link
-                href="/calendar"
-                className="text-sm text-accent hover:underline"
-              >
+              <h2 className="font-semibold text-navy">Upcoming Events</h2>
+              <Link href="/calendar" className="text-sm text-accent hover:underline">
                 View calendar
               </Link>
             </div>
@@ -191,46 +312,28 @@ export default function DashboardPage() {
               {loading ? (
                 <p className="text-sm text-gray-400 py-4 text-center">Loading...</p>
               ) : upcomingEvents.length === 0 ? (
-                <p className="text-sm text-gray-400 py-4 text-center">
-                  No upcoming events in the next 30 days.
-                </p>
+                <p className="text-sm text-gray-400 py-4 text-center">No upcoming events in the next 30 days.</p>
               ) : (
-                upcomingEvents.map((event) => {
-                  const colors =
-                    EVENT_TYPE_COLORS[event.event_type] ||
-                    EVENT_TYPE_COLORS.custom;
+                upcomingEvents.slice(0, 8).map((event) => {
+                  const colors = EVENT_TYPE_COLORS[event.event_type] || EVENT_TYPE_COLORS.custom;
                   const date = new Date(event.date_start);
                   return (
-                    <div
-                      key={event.id}
-                      className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
+                    <div key={event.id} className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <div className="flex-shrink-0 mt-1">
-                        <span
-                          className={`block w-2.5 h-2.5 rounded-full ${colors.dot}`}
-                        />
+                        <span className={`block w-2.5 h-2.5 rounded-full ${colors.dot}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800">
-                          {event.title}
-                        </p>
+                        <p className="text-sm font-medium text-gray-800">{event.title}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-xs text-gray-400">
-                            {date.toLocaleDateString("en-GB", {
-                              day: "numeric",
-                              month: "short",
-                            })}
+                            {date.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                           </span>
                           <span className="text-xs text-gray-300">|</span>
-                          <span className="text-xs text-gray-400">
-                            {event.brand}
-                          </span>
+                          <span className="text-xs text-gray-400">{event.brand}</span>
                           {event.country && (
                             <>
                               <span className="text-xs text-gray-300">|</span>
-                              <span className="text-xs text-gray-400">
-                                {event.country}
-                              </span>
+                              <span className="text-xs text-gray-400">{event.country}</span>
                             </>
                           )}
                         </div>
