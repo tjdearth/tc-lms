@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import type { Module, Lesson, LessonType } from "@/types";
 import QuizBuilder from "./QuizBuilder";
 import WikiNodePicker from "./WikiNodePicker";
+
+const BlockEditor = dynamic(() => import("./BlockEditor"), { ssr: false });
 
 interface ModuleLessonBuilderProps {
   courseId: string;
@@ -466,15 +469,12 @@ export default function ModuleLessonBuilder({
                         <>
                           {editContentLesson === lesson.id ? (
                             <div className="mt-2 space-y-2">
-                              <textarea
-                                value={contentDraft}
-                                onChange={(e) =>
-                                  setContentDraft(e.target.value)
-                                }
-                                rows={6}
-                                placeholder="Enter HTML content..."
-                                className="w-full px-3 py-2 text-xs font-mono border border-[#E8ECF1] rounded-lg outline-none focus:border-[#27a28c] resize-y"
-                              />
+                              <div className="border border-[#E8ECF1] rounded-lg overflow-hidden">
+                                <BlockEditor
+                                  content={contentDraft}
+                                  onChange={setContentDraft}
+                                />
+                              </div>
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => {

@@ -182,7 +182,6 @@ export default function LessonSidebar({
                       ) : (
                         <StatusIcon status={lesson.progress?.status} />
                       )}
-                      <LessonTypeIcon type={lesson.lesson_type} />
                       <div className="flex-1 min-w-0">
                         <p
                           className={`text-sm truncate ${
