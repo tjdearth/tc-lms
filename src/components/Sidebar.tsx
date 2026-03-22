@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { isAdmin, isCourseCreator } from "@/lib/admin";
 
 const TC_LOGO_URL =
   "https://lh7-rt.googleusercontent.com/docsz/AD_4nXcuZ3fOJUGrPHzT0Tu5n3IyhjOPWYUjkhaEcBcNhdpt2I5hcRLGyL_Sj635ZffMbHWB3xfPa8vnDZ06Pfl0ez9vedO8hDGzYaZxhKsj7yyVeyk-sUcbBz4G6KXjTCvXUgo48Y2n?key=5z7x5EJrcuoubrabZrlshg";
@@ -80,6 +81,50 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
   const userName = session?.user?.name || session?.user?.email?.split("@")[0] || "User";
   const userInitial = userName.charAt(0).toUpperCase();
   const userImage = session?.user?.image;
+  const userEmail = session?.user?.email || "";
+  const showWikiAdmin = isAdmin(userEmail);
+  const showCourseAdmin = isCourseCreator(userEmail);
+
+  const adminItems = [
+    ...(showWikiAdmin ? [{
+      label: "Wiki Admin",
+      href: "/wiki/admin",
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+      ),
+    }] : []),
+    ...(showCourseAdmin ? [
+      {
+        label: "Course Admin",
+        href: "/learn/admin",
+        icon: (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+          </svg>
+        ),
+      },
+      {
+        label: "Analytics",
+        href: "/learn/analytics",
+        icon: (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+        ),
+      },
+    ] : []),
+    {
+      label: "Ask Atlas",
+      href: "/ask",
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      ),
+    },
+  ];
 
   const handleNavClick = () => {
     if (onMobileClose) onMobileClose();
@@ -181,6 +226,50 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
           );
         })}
       </nav>
+
+      {/* Admin / Tools */}
+      {adminItems.length > 0 && (
+        <div className="px-3 pb-2">
+          <div style={{ borderTop: "1px solid #2A3F52" }} className="pt-3 mb-1">
+            <span className="px-3 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#6B7D8F" }}>
+              {showWikiAdmin || showCourseAdmin ? "Admin" : "Tools"}
+            </span>
+          </div>
+          <div className="space-y-0.5">
+            {adminItems.map((item) => {
+              const active = pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={handleNavClick}
+                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-[13px] transition-all duration-150"
+                  style={
+                    active
+                      ? { backgroundColor: "#304256", color: "#E8EDF2", fontWeight: 600 }
+                      : { color: "#8A9BB0" }
+                  }
+                  onMouseEnter={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.color = "#E8EDF2";
+                      e.currentTarget.style.backgroundColor = "rgba(48,66,86,0.3)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.color = "#8A9BB0";
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
+                >
+                  {item.icon}
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* User */}
       <div
