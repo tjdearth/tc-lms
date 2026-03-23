@@ -737,9 +737,13 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
             </svg>
           </ToolbarButton>
           <ToolbarButton onClick={addImageFromUrl} title="Image from URL">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="16" height="16" rx="2" />
+              <circle cx="7" cy="7" r="1.5" />
+              <polyline points="18 12 13 7 4 16" />
+              <path d="M18 16l3-3" />
+              <path d="M21 18l-3 3" />
+              <line x1="18" y1="16" x2="21" y2="18" />
             </svg>
           </ToolbarButton>
         </div>
