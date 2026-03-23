@@ -612,6 +612,24 @@ export default function CalendarView({ events, onDelete }: { events: CalendarEve
           onDelete={onDelete ? (id) => { onDelete(id); setPopover(null); } : undefined}
         />
       )}
+
+      {/* Info pill */}
+      <div className="mt-6 bg-[#F7F8FA] border border-[#E8ECF1] rounded-xl p-5">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-lg bg-[#304256]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#304256" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+          </div>
+          <div>
+            <h4 className="text-[13px] font-semibold text-[#304256] mb-1">About this calendar</h4>
+            <p className="text-[12px] text-gray-500 leading-relaxed">
+              This calendar tracks public holidays, cultural festivals, peak &amp; low travel seasons, and office closures across all 16 DMC destinations. It helps teams plan ahead for pricing changes, staffing needs, and operational impact. Use <strong className="text-[#304256]">AI Event Discovery</strong> above to research and add new events for your brand, or <strong className="text-[#304256]">Sync to Google Calendar</strong> to keep your personal calendar in sync automatically.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
