@@ -219,42 +219,75 @@ export default function LearnDashboard() {
             </section>
           )}
 
-          {/* Your Achievements */}
-          {completedCount > 0 && (
+          {/* Your Learning Track */}
+          {enrolledCourses.length > 0 && (
             <section className="mb-10">
-              <h2 className="text-base font-semibold text-[#304256] mb-4">
-                Your Achievements
-              </h2>
-              <div className="bg-white border border-[#E8ECF1] rounded-xl shadow-sm p-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-[#27a28c]/10 flex items-center justify-center">
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#27a28c"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="8" r="7" />
-                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
-                  </svg>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-semibold text-[#304256]">
+                  Your Learning Track
+                </h2>
+                <p className="text-xs text-gray-400">
+                  {completedCount} of {enrolledCourses.length} completed
+                </p>
+              </div>
+              <div className="bg-white border border-[#E8ECF1] rounded-xl shadow-sm overflow-hidden">
+                {/* Progress bar */}
+                <div className="h-1.5 bg-gray-100">
+                  <div
+                    className="h-full bg-[#27a28c] transition-all"
+                    style={{ width: `${enrolledCourses.length > 0 ? Math.round((completedCount / enrolledCourses.length) * 100) : 0}%` }}
+                  />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-[#304256]">
-                    {completedCount}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    course{completedCount !== 1 ? "s" : ""} completed
-                  </p>
+                <div className="divide-y divide-[#E8ECF1]">
+                  {enrolledCourses
+                    .sort((a, b) => {
+                      const statusOrder: Record<string, number> = { in_progress: 0, enrolled: 1, completed: 2 };
+                      const aStatus = enrollmentMap.get(a.id)?.status || "enrolled";
+                      const bStatus = enrollmentMap.get(b.id)?.status || "enrolled";
+                      return (statusOrder[aStatus] ?? 1) - (statusOrder[bStatus] ?? 1);
+                    })
+                    .map((course) => {
+                      const enrollment = enrollmentMap.get(course.id)!;
+                      const isCompleted = enrollment.status === "completed";
+                      const isInProgress = enrollment.status === "in_progress";
+                      return (
+                        <button
+                          key={course.id}
+                          onClick={() => router.push(`/learn/course/${course.id}`)}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                        >
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            isCompleted ? "bg-[#27a28c]" : isInProgress ? "border-2 border-[#27a28c]" : "border-2 border-gray-200"
+                          }`}>
+                            {isCompleted && (
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            )}
+                            {isInProgress && (
+                              <div className="w-2 h-2 rounded-full bg-[#27a28c]" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-medium truncate ${isCompleted ? "text-gray-400 line-through" : "text-[#304256]"}`}>
+                              {course.title}
+                            </p>
+                            <p className="text-[11px] text-gray-400">{course.category}</p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {getDueBadge(enrollment)}
+                            {isCompleted ? (
+                              <span className="text-[10px] font-medium text-[#27a28c]">Done</span>
+                            ) : isInProgress ? (
+                              <span className="text-[10px] font-medium text-[#304256]">{course.progress_pct || 0}%</span>
+                            ) : (
+                              <span className="text-[10px] text-gray-400">Not started</span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
                 </div>
-                <button
-                  onClick={() => router.push("/learn/certificates")}
-                  className="ml-auto px-4 py-2 text-xs font-medium text-[#27a28c] border border-[#27a28c] rounded-lg hover:bg-[#27a28c]/5 transition-colors"
-                >
-                  View Certificates
-                </button>
               </div>
             </section>
           )}
