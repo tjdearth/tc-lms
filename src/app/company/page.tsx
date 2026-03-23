@@ -381,6 +381,37 @@ export default function CompanyPage() {
   const [selectedDmc, setSelectedDmc] = useState(0);
   const [showAllTeam, setShowAllTeam] = useState(false);
   const [teamByBrand, setTeamByBrand] = useState<Record<string, BrandTeam>>({});
+  const [fxRates, setFxRates] = useState<Record<string, number>>({});
+  const [fxHistory, setFxHistory] = useState<{ date: string; rate: number }[]>([]);
+  const [fxLoading, setFxLoading] = useState(false);
+  const [fxLastUpdated, setFxLastUpdated] = useState("");
+
+  // Fetch FX rates when tab is active
+  useEffect(() => {
+    if (activeTab !== "fx") return;
+    if (Object.keys(fxRates).length > 0) return; // already loaded
+    setFxLoading(true);
+    fetch("/api/company/fx")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.rates) setFxRates(data.rates);
+        if (data.lastUpdated) setFxLastUpdated(data.lastUpdated);
+      })
+      .catch(() => {})
+      .finally(() => setFxLoading(false));
+  }, [activeTab, fxRates]);
+
+  // Fetch FX history when target currency changes
+  useEffect(() => {
+    if (activeTab !== "fx") return;
+    setFxHistory([]);
+    fetch(`/api/company/fx?history=${fxTarget}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.history) setFxHistory(data.history);
+      })
+      .catch(() => {});
+  }, [activeTab, fxTarget]);
 
   // Fetch team members
   useEffect(() => {
@@ -550,28 +581,64 @@ export default function CompanyPage() {
             {/* Rate Table */}
             <div className="lg:col-span-5 bg-white rounded-xl border border-[#E8ECF1] shadow-sm overflow-hidden">
               <div className="px-4 py-3 border-b border-[#E8ECF1] flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-[#304256]">Live Rates</h3>
-                <span className="text-[10px] text-gray-300 uppercase tracking-wider">Wise</span>
+                <h3 className="text-sm font-semibold text-[#304256]">1 USD =</h3>
+                {fxLastUpdated && (
+                  <span className="text-[10px] text-gray-300">Updated {fxLastUpdated}</span>
+                )}
               </div>
-              <div className="flex justify-center">
-                <div style={{ transform: "scale(0.92)", transformOrigin: "top center" }}>
-                  <iframe
-                    title="FX Rate Table"
-                    src="https://wise.com/gb/currency-converter/fx-widget/table?sourceCurrency=USD&targetCurrencies=EUR%2CMXN%2CJPY%2CAED%2CMAD%2CIDR%2CGBP%2CAUD%2CPEN%2CCOP%2CTRY%2CTHB"
-                    height={720}
-                    width={340}
-                    frameBorder={0}
-                    style={{ border: "none" }}
-                  />
+              {fxLoading ? (
+                <div className="p-12 flex justify-center">
+                  <div className="w-6 h-6 border-2 border-[#27a28c]/30 border-t-[#27a28c] rounded-full animate-spin" />
                 </div>
-              </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {FX_CURRENCIES.map((c) => {
+                    const rate = fxRates[c.code];
+                    const isActive = fxTarget === c.code;
+                    return (
+                      <button
+                        key={c.code}
+                        onClick={() => setFxTarget(c.code)}
+                        className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors ${
+                          isActive ? "bg-[#304256]/5" : "hover:bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">{c.flag}</span>
+                          <div>
+                            <p className={`text-sm font-medium ${isActive ? "text-[#304256]" : "text-gray-700"}`}>{c.code}</p>
+                            <p className="text-[11px] text-gray-400">{c.label}</p>
+                          </div>
+                        </div>
+                        <span className={`text-sm font-mono ${isActive ? "text-[#304256] font-semibold" : "text-gray-600"}`}>
+                          {rate ? (rate >= 100 ? rate.toLocaleString(undefined, { maximumFractionDigits: 0 }) : rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })) : "—"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Chart */}
             <div className="lg:col-span-7 bg-white rounded-xl border border-[#E8ECF1] shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#E8ECF1] flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-[#304256]">USD → {fxTarget}</h3>
-                <span className="text-[10px] text-gray-300 uppercase tracking-wider">30-day trend</span>
+              <div className="px-4 py-3 border-b border-[#E8ECF1]">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-semibold text-[#304256]">
+                    USD → {fxTarget}
+                  </h3>
+                  <span className="text-[10px] text-gray-300 uppercase tracking-wider">30-day trend</span>
+                </div>
+                {fxRates[fxTarget] && (
+                  <p className="text-2xl font-bold text-[#304256]">
+                    {fxRates[fxTarget] >= 100
+                      ? fxRates[fxTarget].toLocaleString(undefined, { maximumFractionDigits: 0 })
+                      : fxRates[fxTarget].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                    <span className="text-sm font-normal text-gray-400 ml-2">
+                      {FX_CURRENCIES.find((c) => c.code === fxTarget)?.flag} {FX_CURRENCIES.find((c) => c.code === fxTarget)?.label}
+                    </span>
+                  </p>
+                )}
               </div>
               <div className="px-4 py-3 border-b border-[#E8ECF1]/60 flex flex-wrap gap-1.5">
                 {FX_CURRENCIES.map((c) => (
@@ -584,23 +651,112 @@ export default function CompanyPage() {
                         : "text-gray-400 hover:text-[#304256] hover:bg-gray-50"
                     }`}
                   >
-                    {c.code}
+                    {c.flag} {c.code}
                   </button>
                 ))}
               </div>
-              <div className="flex justify-center p-2">
-                <div style={{ transform: "scale(0.95)", transformOrigin: "top center" }}>
-                  <iframe
-                    key={fxTarget}
-                    title={`FX Chart USD to ${fxTarget}`}
-                    src={`https://wise.com/gb/currency-converter/fx-widget/chart?sourceCurrency=USD&targetCurrency=${fxTarget}`}
-                    height={460}
-                    width={420}
-                    frameBorder={0}
-                    style={{ border: "none" }}
-                  />
-                </div>
+              <div className="p-6">
+                {fxHistory.length > 1 ? (() => {
+                  const rates = fxHistory.map((p) => p.rate);
+                  const min = Math.min(...rates);
+                  const max = Math.max(...rates);
+                  const range = max - min || 1;
+                  const W = 580;
+                  const H = 260;
+                  const padY = 20;
+                  const points = fxHistory.map((p, i) => {
+                    const x = (i / (fxHistory.length - 1)) * W;
+                    const y = padY + (1 - (p.rate - min) / range) * (H - 2 * padY);
+                    return `${x},${y}`;
+                  });
+                  const line = points.join(" ");
+                  // Y-axis labels
+                  const ySteps = 5;
+                  const yLabels = Array.from({ length: ySteps + 1 }, (_, i) => {
+                    const val = min + (range * i) / ySteps;
+                    return {
+                      val,
+                      y: padY + (1 - i / ySteps) * (H - 2 * padY),
+                    };
+                  });
+                  // X-axis labels (first, mid, last)
+                  const xLabels = [
+                    { label: fxHistory[0].date.slice(5), x: 0 },
+                    { label: fxHistory[Math.floor(fxHistory.length / 2)].date.slice(5), x: W / 2 },
+                    { label: fxHistory[fxHistory.length - 1].date.slice(5), x: W },
+                  ];
+
+                  return (
+                    <svg viewBox={`-50 0 ${W + 60} ${H + 30}`} className="w-full h-auto">
+                      {/* Grid lines */}
+                      {yLabels.map((yl, i) => (
+                        <g key={i}>
+                          <line x1={0} y1={yl.y} x2={W} y2={yl.y} stroke="#f0f0f0" strokeWidth={1} />
+                          <text x={-8} y={yl.y + 4} textAnchor="end" fill="#9ca3af" fontSize={10}>
+                            {yl.val >= 100 ? yl.val.toFixed(0) : yl.val.toFixed(4)}
+                          </text>
+                        </g>
+                      ))}
+                      {/* Area fill */}
+                      <path d={`M0,${padY + (1 - (rates[0] - min) / range) * (H - 2 * padY)} ${points.map((p) => `L${p}`).join(" ")} L${W},${H} L0,${H} Z`} fill="url(#fxGradient)" />
+                      <defs>
+                        <linearGradient id="fxGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#27a28c" stopOpacity={0.15} />
+                          <stop offset="100%" stopColor="#27a28c" stopOpacity={0.02} />
+                        </linearGradient>
+                      </defs>
+                      {/* Line */}
+                      <polyline points={line} fill="none" stroke="#27a28c" strokeWidth={2} strokeLinejoin="round" />
+                      {/* Current value dot */}
+                      <circle cx={W} cy={padY + (1 - (rates[rates.length - 1] - min) / range) * (H - 2 * padY)} r={4} fill="#27a28c" />
+                      {/* X-axis */}
+                      {xLabels.map((xl, i) => (
+                        <text key={i} x={xl.x} y={H + 18} textAnchor="middle" fill="#9ca3af" fontSize={10}>
+                          {xl.label}
+                        </text>
+                      ))}
+                    </svg>
+                  );
+                })() : (
+                  <div className="h-[260px] flex items-center justify-center">
+                    {fxHistory.length === 0 && !["EUR", "GBP", "MXN", "JPY", "AUD", "THB", "TRY", "IDR"].includes(fxTarget) ? (
+                      <p className="text-sm text-gray-400">Historical data not available for {fxTarget}</p>
+                    ) : (
+                      <div className="w-6 h-6 border-2 border-[#27a28c]/30 border-t-[#27a28c] rounded-full animate-spin" />
+                    )}
+                  </div>
+                )}
               </div>
+              {fxHistory.length > 1 && (() => {
+                const rates = fxHistory.map((p) => p.rate);
+                const min = Math.min(...rates);
+                const max = Math.max(...rates);
+                const first = rates[0];
+                const last = rates[rates.length - 1];
+                const change = ((last - first) / first) * 100;
+                return (
+                  <div className="px-6 pb-4 grid grid-cols-4 gap-4">
+                    <div>
+                      <p className="text-[10px] text-gray-400 uppercase">30d High</p>
+                      <p className="text-sm font-semibold text-[#304256]">{max >= 100 ? max.toFixed(0) : max.toFixed(4)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-400 uppercase">30d Low</p>
+                      <p className="text-sm font-semibold text-[#304256]">{min >= 100 ? min.toFixed(0) : min.toFixed(4)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-400 uppercase">30d Change</p>
+                      <p className={`text-sm font-semibold ${change >= 0 ? "text-green-600" : "text-red-500"}`}>
+                        {change >= 0 ? "+" : ""}{change.toFixed(2)}%
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-400 uppercase">Data Points</p>
+                      <p className="text-sm font-semibold text-[#304256]">{fxHistory.length}</p>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
