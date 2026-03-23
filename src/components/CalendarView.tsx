@@ -332,7 +332,7 @@ export default function CalendarView({ events, onDelete }: { events: CalendarEve
                 </div>
               </div>
 
-              <p className="text-[11px] text-gray-300 mt-4">
+              <p className="text-[11px] text-gray-500 mt-4">
                 Tip: Use the brand filter above to subscribe to a specific brand&apos;s events only.
               </p>
             </div>
