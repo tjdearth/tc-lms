@@ -46,9 +46,9 @@ function getRandomQuote() {
   return TRAVEL_QUOTES[seed % TRAVEL_QUOTES.length];
 }
 
-function getDueStatus(enrollment: Enrollment): { label: string; color: string; bgColor: string } {
+function getDueStatus(enrollment: Enrollment): { label: string; color: string; bgColor: string } | null {
   if (enrollment.status === "completed") return { label: "Completed", color: "text-emerald-600", bgColor: "bg-emerald-50" };
-  if (!enrollment.due_date) return { label: "On Track", color: "text-emerald-600", bgColor: "bg-emerald-50" };
+  if (!enrollment.due_date) return null;
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   const due = new Date(enrollment.due_date);
@@ -239,11 +239,13 @@ export default function DashboardPage() {
                           <p className="text-[11px] text-gray-400 mt-0.5">{e.courseCategory}</p>
                         )}
                       </div>
-                      <span className={`flex-shrink-0 px-2 py-0.5 text-[11px] font-medium rounded-full ${status.bgColor} ${status.color}`}>
-                        {status.label}
-                      </span>
+                      {status && (
+                        <span className={`flex-shrink-0 px-2 py-0.5 text-[11px] font-medium rounded-full ${status.bgColor} ${status.color}`}>
+                          {status.label}
+                        </span>
+                      )}
                     </div>
-                    {dueDate && (
+                    {dueDate && status && (
                       <p className={`text-xs mt-2 ${status.label === "Overdue" ? "text-red-500" : status.label === "Due Soon" ? "text-amber-500" : "text-gray-400"}`}>
                         Due {dueDate}
                       </p>
