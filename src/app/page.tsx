@@ -113,12 +113,12 @@ export default function DashboardPage() {
     .sort((a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime());
 
   const stats = [
-    { label: "In Progress", value: inProgress, icon: (
+    { label: "Courses In Progress", value: inProgress, icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27a28c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5" />
       </svg>
     )},
-    { label: "Completed", value: completed, icon: (
+    { label: "Courses Completed", value: completed, icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27a28c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
       </svg>
@@ -141,7 +141,7 @@ export default function DashboardPage() {
         <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5" />
       </svg>
     )},
-    { label: "Knowledge Base", href: "/wiki", icon: (
+    { label: "Wiki", href: "/wiki", icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#27a28c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
       </svg>
