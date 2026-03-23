@@ -223,9 +223,16 @@ export default function LearnDashboard() {
           {enrolledCourses.length > 0 && (
             <section className="mb-10">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-[#304256]">
-                  Your Learning Track
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-semibold text-[#304256]">
+                    Your Learning Track
+                  </h2>
+                  {user.track && (
+                    <span className="px-2.5 py-0.5 text-[10px] font-medium bg-[#27a28c]/10 text-[#27a28c] rounded-full">
+                      {user.track === "both" ? "TA + Ops" : user.track === "travel_advisor" ? "Travel Advisor" : user.track === "operations" ? "Operations" : "General"}
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-gray-400">
                   {completedCount} of {enrolledCourses.length} completed
                 </p>
