@@ -322,7 +322,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
 
   return (
     <aside
-      className={`w-[240px] flex flex-col fixed top-0 left-0 bottom-0 z-50 transition-transform duration-200 ease-in-out md:translate-x-0 ${
+      className={`w-[240px] flex flex-col fixed top-0 left-0 bottom-0 z-[70] transition-transform duration-200 ease-in-out md:translate-x-0 ${
         mobileOpen ? "translate-x-0" : "-translate-x-full"
       }`}
       style={{
