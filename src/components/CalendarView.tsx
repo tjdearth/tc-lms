@@ -176,6 +176,55 @@ export default function CalendarView({ events, onDelete }: { events: CalendarEve
     });
   };
 
+  const exportToIcs = () => {
+    const evts = filteredEvents;
+    if (evts.length === 0) return;
+
+    const escIcs = (s: string) => s.replace(/[\\;,]/g, (m) => `\\${m}`).replace(/\n/g, "\\n");
+    const toIcsDate = (d: string) => d.replace(/-/g, "");
+
+    const lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Travel Collection//Atlas Calendar//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      `X-WR-CALNAME:${selectedBrand === "all" ? "Travel Collection" : selectedBrand} Events`,
+    ];
+
+    for (const ev of evts) {
+      const uid = `${ev.id}@travelcollection.com`;
+      const dtStart = toIcsDate(ev.date_start);
+      // For all-day events, DTEND should be day after last day
+      const endDate = ev.date_end || ev.date_start;
+      const nextDay = new Date(endDate + "T00:00:00");
+      nextDay.setDate(nextDay.getDate() + 1);
+      const dtEnd = nextDay.toISOString().slice(0, 10).replace(/-/g, "");
+
+      lines.push("BEGIN:VEVENT");
+      lines.push(`UID:${uid}`);
+      lines.push(`DTSTART;VALUE=DATE:${dtStart}`);
+      lines.push(`DTEND;VALUE=DATE:${dtEnd}`);
+      lines.push(`SUMMARY:${escIcs(ev.title)}`);
+      if (ev.impact_notes) lines.push(`DESCRIPTION:${escIcs(ev.impact_notes)}`);
+      if (ev.country) lines.push(`LOCATION:${escIcs(ev.country)}`);
+      lines.push(`CATEGORIES:${escIcs(ev.brand)}`);
+      lines.push("END:VEVENT");
+    }
+
+    lines.push("END:VCALENDAR");
+
+    const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${selectedBrand === "all" ? "travel-collection" : selectedBrand.toLowerCase().replace(/\s+/g, "-")}-events.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleEventClick = (eventsToShow: CalendarEvent[], e: React.MouseEvent) => {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setPopover({
@@ -202,8 +251,21 @@ export default function CalendarView({ events, onDelete }: { events: CalendarEve
           ))}
         </select>
 
-        {/* View toggle — hidden on mobile */}
-        <div className="hidden md:flex bg-gray-100 rounded-lg p-0.5 sm:ml-auto">
+        {/* Export + View toggle */}
+        <div className="flex items-center gap-2 sm:ml-auto">
+          <button
+            onClick={exportToIcs}
+            disabled={filteredEvents.length === 0}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-500 hover:text-[#304256] border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Export to Google Calendar (.ics)"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Export .ics
+          </button>
+        </div>
+        <div className="hidden md:flex bg-gray-100 rounded-lg p-0.5">
           <button
             onClick={() => setViewMode("list")}
             className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
