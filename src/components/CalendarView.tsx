@@ -133,7 +133,7 @@ function EventPopover({
 }
 
 export default function CalendarView({ events, onDelete }: { events: CalendarEvent[]; onDelete?: (id: string) => void }) {
-  const [viewMode, setViewMode] = useState<"calendar" | "list">("list");
+  const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [currentMonth, setCurrentMonth] = useState(2); // March (0-indexed)
   const [currentYear] = useState(2026);
