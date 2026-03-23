@@ -87,12 +87,16 @@ export default function DashboardPage() {
   const firstName = session?.user?.name?.split(" ")[0] || "there";
   const userBrand = session?.user?.email ? brandFromEmail(session.user.email) : null;
 
+  // Only count enrollments for published courses
+  const publishedIds = new Set(courses.filter((c) => c.is_published).map((c) => c.id));
+  const publishedEnrollments = enrollments.filter((e) => publishedIds.has(e.course_id));
+
   // Enrollment stats
-  const inProgress = enrollments.filter((e) => e.status === "in_progress" || e.status === "enrolled").length;
-  const completed = enrollments.filter((e) => e.status === "completed").length;
+  const inProgress = publishedEnrollments.filter((e) => e.status === "in_progress" || e.status === "enrolled").length;
+  const completed = publishedEnrollments.filter((e) => e.status === "completed").length;
 
   // Active enrollments with course info (not completed, max 4)
-  const activeEnrollments = enrollments
+  const activeEnrollments = publishedEnrollments
     .filter((e) => e.status !== "completed")
     .slice(0, 4)
     .map((e) => {
