@@ -140,6 +140,8 @@ export default function CalendarView({ events, onDelete }: { events: CalendarEve
   const [isMobile, setIsMobile] = useState(false);
   const [showPast, setShowPast] = useState(false);
   const [popover, setPopover] = useState<{ events: CalendarEvent[]; rect: { top: number; left: number; width: number; bottom: number } } | null>(null);
+  const [showSubscribe, setShowSubscribe] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -176,53 +178,19 @@ export default function CalendarView({ events, onDelete }: { events: CalendarEve
     });
   };
 
-  const exportToIcs = () => {
-    const evts = filteredEvents;
-    if (evts.length === 0) return;
+  const getFeedUrl = () => {
+    const brandSlug = selectedBrand === "all"
+      ? "all"
+      : selectedBrand.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and");
+    const token = "tc-cal-2026";
+    const base = typeof window !== "undefined" ? window.location.origin : "";
+    return `${base}/api/calendar/feed/${brandSlug}?token=${token}`;
+  };
 
-    const escIcs = (s: string) => s.replace(/[\\;,]/g, (m) => `\\${m}`).replace(/\n/g, "\\n");
-    const toIcsDate = (d: string) => d.replace(/-/g, "");
-
-    const lines = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//Travel Collection//Atlas Calendar//EN",
-      "CALSCALE:GREGORIAN",
-      "METHOD:PUBLISH",
-      `X-WR-CALNAME:${selectedBrand === "all" ? "Travel Collection" : selectedBrand} Events`,
-    ];
-
-    for (const ev of evts) {
-      const uid = `${ev.id}@travelcollection.com`;
-      const dtStart = toIcsDate(ev.date_start);
-      // For all-day events, DTEND should be day after last day
-      const endDate = ev.date_end || ev.date_start;
-      const nextDay = new Date(endDate + "T00:00:00");
-      nextDay.setDate(nextDay.getDate() + 1);
-      const dtEnd = nextDay.toISOString().slice(0, 10).replace(/-/g, "");
-
-      lines.push("BEGIN:VEVENT");
-      lines.push(`UID:${uid}`);
-      lines.push(`DTSTART;VALUE=DATE:${dtStart}`);
-      lines.push(`DTEND;VALUE=DATE:${dtEnd}`);
-      lines.push(`SUMMARY:${escIcs(ev.title)}`);
-      if (ev.impact_notes) lines.push(`DESCRIPTION:${escIcs(ev.impact_notes)}`);
-      if (ev.country) lines.push(`LOCATION:${escIcs(ev.country)}`);
-      lines.push(`CATEGORIES:${escIcs(ev.brand)}`);
-      lines.push("END:VEVENT");
-    }
-
-    lines.push("END:VCALENDAR");
-
-    const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${selectedBrand === "all" ? "travel-collection" : selectedBrand.toLowerCase().replace(/\s+/g, "-")}-events.ics`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleCopyFeedUrl = () => {
+    navigator.clipboard.writeText(getFeedUrl());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleEventClick = (eventsToShow: CalendarEvent[], e: React.MouseEvent) => {
@@ -251,18 +219,20 @@ export default function CalendarView({ events, onDelete }: { events: CalendarEve
           ))}
         </select>
 
-        {/* Export + View toggle */}
+        {/* Subscribe + View toggle */}
         <div className="flex items-center gap-2 sm:ml-auto">
           <button
-            onClick={exportToIcs}
-            disabled={filteredEvents.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-500 hover:text-[#304256] border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            title="Export to Google Calendar (.ics)"
+            onClick={() => setShowSubscribe(!showSubscribe)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded-lg transition-colors ${
+              showSubscribe
+                ? "bg-[#304256] text-white border-[#304256]"
+                : "text-gray-500 hover:text-[#304256] border-gray-200 hover:bg-gray-50"
+            }`}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
             </svg>
-            Export .ics
+            Sync to Google Calendar
           </button>
         </div>
         <div className="hidden md:flex bg-gray-100 rounded-lg p-0.5">
@@ -288,6 +258,87 @@ export default function CalendarView({ events, onDelete }: { events: CalendarEve
           </button>
         </div>
       </div>
+
+      {/* Subscribe panel */}
+      {showSubscribe && (
+        <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#304256] flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-[15px] font-semibold text-[#304256] mb-1">
+                Sync {selectedBrand === "all" ? "All" : selectedBrand} Events to Google Calendar
+              </h3>
+              <p className="text-xs text-gray-400 mb-4">
+                Subscribe to a live calendar feed that auto-updates whenever events are added or removed. Works with Google Calendar, Apple Calendar, and Outlook.
+              </p>
+
+              <div className="space-y-3">
+                {/* Step 1 */}
+                <div className="flex items-start gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#27a28c] text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                  <p className="text-sm text-gray-600">Copy the feed URL below</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={getFeedUrl()}
+                    className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-600 font-mono truncate"
+                    onClick={(e) => (e.target as HTMLInputElement).select()}
+                  />
+                  <button
+                    onClick={handleCopyFeedUrl}
+                    className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
+                      copied
+                        ? "bg-[#27a28c] text-white"
+                        : "bg-[#304256] text-white hover:bg-[#3d5570]"
+                    }`}
+                  >
+                    {copied ? (
+                      <>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                        Copy URL
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Step 2 */}
+                <div className="flex items-start gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#27a28c] text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                  <div className="text-sm text-gray-600">
+                    <p>In Google Calendar, click <strong>+</strong> next to &quot;Other calendars&quot; → <strong>From URL</strong> → paste the link</p>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="flex items-start gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#27a28c] text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                  <p className="text-sm text-gray-600">Events will auto-sync every 12–24 hours as Google refreshes the feed</p>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-gray-300 mt-4">
+                Tip: Use the brand filter above to subscribe to a specific brand&apos;s events only.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Legend */}
       <div className="flex flex-wrap gap-3 md:gap-4 mb-6">
