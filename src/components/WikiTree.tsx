@@ -35,7 +35,7 @@ function TreeNode({
           if (hasChildren) {
             setExpanded(!expanded);
           }
-          if (node.node_type === "article" || (isHeading && !hasChildren)) {
+          if (node.node_type === "article" || (isHeading && !hasChildren) || (isHeading && node.html_content)) {
             onSelectArticle(node);
           }
         }}
