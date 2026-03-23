@@ -287,7 +287,7 @@ export default function DashboardPage() {
               ) : allArticles.length === 0 ? (
                 <p className="text-sm text-gray-400 py-4 text-center">No articles yet.</p>
               ) : (
-                allArticles.slice(0, 6).map((article) => (
+                [...allArticles].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).slice(0, 6).map((article) => (
                   <Link
                     key={article.id}
                     href={`/wiki?article=${article.id}`}
