@@ -14,9 +14,10 @@ export async function GET(req: Request) {
   try {
     // If requesting history for a specific currency
     if (target) {
+      const days = parseInt(searchParams.get("days") || "30", 10);
       const end = new Date();
       const start = new Date();
-      start.setDate(start.getDate() - 30);
+      start.setDate(start.getDate() - days);
       const fmt = (d: Date) => d.toISOString().split("T")[0];
 
       // Try Frankfurter first (has historical data)

@@ -398,6 +398,7 @@ export default function CompanyPage() {
   const [fxHistory, setFxHistory] = useState<{ date: string; rate: number }[]>([]);
   const [fxLoading, setFxLoading] = useState(false);
   const [fxLastUpdated, setFxLastUpdated] = useState("");
+  const [fxPeriod, setFxPeriod] = useState(30);
 
   // Fetch FX rates when tab is active
   useEffect(() => {
@@ -418,13 +419,13 @@ export default function CompanyPage() {
   useEffect(() => {
     if (activeTab !== "fx") return;
     setFxHistory([]);
-    fetch(`/api/company/fx?history=${fxTarget}`)
+    fetch(`/api/company/fx?history=${fxTarget}&days=${fxPeriod}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.history) setFxHistory(data.history);
       })
       .catch(() => {});
-  }, [activeTab, fxTarget]);
+  }, [activeTab, fxTarget, fxPeriod]);
 
   // Fetch team members
   useEffect(() => {
@@ -640,7 +641,26 @@ export default function CompanyPage() {
                   <h3 className="text-sm font-semibold text-[#304256]">
                     USD → {fxTarget}
                   </h3>
-                  <span className="text-[10px] text-gray-300 uppercase tracking-wider">30-day trend</span>
+                  <div className="flex items-center gap-1">
+                    {[
+                      { label: "7D", days: 7 },
+                      { label: "30D", days: 30 },
+                      { label: "90D", days: 90 },
+                      { label: "1Y", days: 365 },
+                    ].map((p) => (
+                      <button
+                        key={p.days}
+                        onClick={() => setFxPeriod(p.days)}
+                        className={`px-2 py-0.5 text-[10px] font-medium rounded transition-colors ${
+                          fxPeriod === p.days
+                            ? "bg-[#304256] text-white"
+                            : "text-gray-400 hover:text-[#304256] hover:bg-gray-100"
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 {fxRates[fxTarget] && (
                   <p className="text-2xl font-bold text-[#304256]">
@@ -750,15 +770,15 @@ export default function CompanyPage() {
                 return (
                   <div className="px-6 pb-4 grid grid-cols-4 gap-4">
                     <div>
-                      <p className="text-[10px] text-gray-400 uppercase">30d High</p>
+                      <p className="text-[10px] text-gray-400 uppercase">{fxPeriod <= 7 ? "7d" : fxPeriod <= 30 ? "30d" : fxPeriod <= 90 ? "90d" : "1y"} High</p>
                       <p className="text-sm font-semibold text-[#304256]">{max >= 100 ? max.toFixed(0) : max.toFixed(4)}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-gray-400 uppercase">30d Low</p>
+                      <p className="text-[10px] text-gray-400 uppercase">{fxPeriod <= 7 ? "7d" : fxPeriod <= 30 ? "30d" : fxPeriod <= 90 ? "90d" : "1y"} Low</p>
                       <p className="text-sm font-semibold text-[#304256]">{min >= 100 ? min.toFixed(0) : min.toFixed(4)}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-gray-400 uppercase">30d Change</p>
+                      <p className="text-[10px] text-gray-400 uppercase">{fxPeriod <= 7 ? "7d" : fxPeriod <= 30 ? "30d" : fxPeriod <= 90 ? "90d" : "1y"} Change</p>
                       <p className={`text-sm font-semibold ${change >= 0 ? "text-green-600" : "text-red-500"}`}>
                         {change >= 0 ? "+" : ""}{change.toFixed(2)}%
                       </p>
