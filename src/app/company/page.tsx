@@ -357,19 +357,32 @@ const DMC_BRANDS_INFO: DmcBrandInfo[] = [
 ];
 
 const FX_CURRENCIES = [
-  { code: "EUR", label: "Euro", flag: "🇪🇺" },
-  { code: "GBP", label: "British Pound", flag: "🇬🇧" },
-  { code: "AED", label: "UAE Dirham", flag: "🇦🇪" },
-  { code: "MXN", label: "Mexican Peso", flag: "🇲🇽" },
-  { code: "JPY", label: "Japanese Yen", flag: "🇯🇵" },
-  { code: "AUD", label: "Australian Dollar", flag: "🇦🇺" },
-  { code: "THB", label: "Thai Baht", flag: "🇹🇭" },
-  { code: "MAD", label: "Moroccan Dirham", flag: "🇲🇦" },
-  { code: "TRY", label: "Turkish Lira", flag: "🇹🇷" },
-  { code: "IDR", label: "Indonesian Rupiah", flag: "🇮🇩" },
-  { code: "PEN", label: "Peruvian Sol", flag: "🇵🇪" },
-  { code: "COP", label: "Colombian Peso", flag: "🇨🇴" },
+  { code: "EUR", label: "Euro", cc: "eu" },
+  { code: "GBP", label: "British Pound", cc: "gb" },
+  { code: "AED", label: "UAE Dirham", cc: "ae" },
+  { code: "MXN", label: "Mexican Peso", cc: "mx" },
+  { code: "JPY", label: "Japanese Yen", cc: "jp" },
+  { code: "AUD", label: "Australian Dollar", cc: "au" },
+  { code: "THB", label: "Thai Baht", cc: "th" },
+  { code: "MAD", label: "Moroccan Dirham", cc: "ma" },
+  { code: "TRY", label: "Turkish Lira", cc: "tr" },
+  { code: "IDR", label: "Indonesian Rupiah", cc: "id" },
+  { code: "PEN", label: "Peruvian Sol", cc: "pe" },
+  { code: "COP", label: "Colombian Peso", cc: "co" },
 ];
+
+function FlagImg({ cc, size = 20 }: { cc: string; size?: number }) {
+  return (
+    <img
+      src={`https://flagcdn.com/w40/${cc}.png`}
+      alt={cc}
+      width={size}
+      height={Math.round(size * 0.75)}
+      className="rounded-sm object-cover"
+      style={{ width: size, height: Math.round(size * 0.75) }}
+    />
+  );
+}
 
 export default function CompanyPage() {
   const [activeTab, setActiveTab] = useState<"map" | "weather" | "fx" | "dmcs">("map");
@@ -604,7 +617,7 @@ export default function CompanyPage() {
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-lg">{c.flag}</span>
+                          <FlagImg cc={c.cc} />
                           <div>
                             <p className={`text-sm font-medium ${isActive ? "text-[#304256]" : "text-gray-700"}`}>{c.code}</p>
                             <p className="text-[11px] text-gray-400">{c.label}</p>
@@ -634,8 +647,8 @@ export default function CompanyPage() {
                     {fxRates[fxTarget] >= 100
                       ? fxRates[fxTarget].toLocaleString(undefined, { maximumFractionDigits: 0 })
                       : fxRates[fxTarget].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-                    <span className="text-sm font-normal text-gray-400 ml-2">
-                      {FX_CURRENCIES.find((c) => c.code === fxTarget)?.flag} {FX_CURRENCIES.find((c) => c.code === fxTarget)?.label}
+                    <span className="text-sm font-normal text-gray-400 ml-2 inline-flex items-center gap-1">
+                      <FlagImg cc={FX_CURRENCIES.find((c) => c.code === fxTarget)?.cc || ""} size={16} /> {FX_CURRENCIES.find((c) => c.code === fxTarget)?.label}
                     </span>
                   </p>
                 )}
@@ -651,7 +664,7 @@ export default function CompanyPage() {
                         : "text-gray-400 hover:text-[#304256] hover:bg-gray-50"
                     }`}
                   >
-                    {c.flag} {c.code}
+                    <span className="inline-flex items-center gap-1"><FlagImg cc={c.cc} size={14} /> {c.code}</span>
                   </button>
                 ))}
               </div>
