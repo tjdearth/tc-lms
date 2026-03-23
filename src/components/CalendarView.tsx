@@ -590,7 +590,7 @@ export default function CalendarView({ events, onDelete }: { events: CalendarEve
                     {dayEvents.length > 2 && (
                       <button
                         onClick={(e) => handleEventClick(dayEvents, e)}
-                        className="text-[10px] text-gray-400 px-1 hover:text-gray-600 cursor-pointer"
+                        className="text-[10px] font-semibold text-[#304256] bg-[#E8ECF1] rounded px-1.5 py-0.5 hover:bg-[#d8dde4] cursor-pointer mt-0.5 inline-block"
                       >
                         +{dayEvents.length - 2} more
                       </button>
