@@ -23,7 +23,7 @@ function TreeNode({
   activeArticleId: string | null;
   onSelectArticle: (article: WikiNode) => void;
 }) {
-  const [expanded, setExpanded] = useState(depth < 3);
+  const [expanded, setExpanded] = useState(depth < 1);
   const hasChildren = node.children && node.children.length > 0;
   const isHeading = node.node_type === "heading";
   const isActive = node.id === activeArticleId;
