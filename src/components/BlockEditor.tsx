@@ -7,6 +7,7 @@ import Underline from "@tiptap/extension-underline";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
+import Link from "@tiptap/extension-link";
 import VideoEmbed from "./VideoEmbed";
 import { useEffect, useCallback, useRef, useState } from "react";
 
@@ -243,6 +244,14 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
       TextStyle,
       Color,
       Highlight.configure({ multicolor: true }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: "text-[#27a28c] underline cursor-pointer hover:text-[#1e7a6a]",
+          rel: "noopener noreferrer",
+          target: "_blank",
+        },
+      }),
       VideoEmbed,
     ],
     content,
@@ -607,6 +616,25 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
           title="Strikethrough"
         >
           <span className="line-through">S</span>
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => {
+            if (editor.isActive("link")) {
+              editor.chain().focus().unsetLink().run();
+              return;
+            }
+            const url = window.prompt("Enter URL:", "https://");
+            if (url) {
+              editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+            }
+          }}
+          active={editor.isActive("link")}
+          title={editor.isActive("link") ? "Remove link" : "Add link"}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
         </ToolbarButton>
 
         {/* Text color */}
