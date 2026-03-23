@@ -36,10 +36,12 @@ function EventPopover({
   events,
   anchorRect,
   onClose,
+  onDelete,
 }: {
   events: CalendarEvent[];
   anchorRect: { top: number; left: number; width: number; bottom: number };
   onClose: () => void;
+  onDelete?: (id: string) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -84,12 +86,23 @@ function EventPopover({
             month: "short",
           });
           return (
-            <div key={ev.id} className="px-4 py-3 border-b border-gray-100 last:border-b-0">
+            <div key={ev.id} className="px-4 py-3 border-b border-gray-100 last:border-b-0 group/popitem">
               <div className="flex items-center gap-2 mb-1">
-                <h4 className="text-sm font-medium text-gray-800">{ev.title}</h4>
+                <h4 className="text-sm font-medium text-gray-800 flex-1">{ev.title}</h4>
                 <span className={`inline-block px-1.5 py-0.5 text-[10px] rounded-full ${colors.bg} ${colors.text}`}>
                   {EVENT_TYPE_LABELS[ev.event_type]}
                 </span>
+                {onDelete && (
+                  <button
+                    onClick={() => { if (confirm(`Delete "${ev.title}"?`)) onDelete(ev.id); }}
+                    className="opacity-0 group-hover/popitem:opacity-100 text-gray-300 hover:text-red-500 transition-all p-0.5"
+                    title="Delete event"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" />
+                    </svg>
+                  </button>
+                )}
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-400">
                 <span
@@ -119,7 +132,7 @@ function EventPopover({
   );
 }
 
-export default function CalendarView({ events }: { events: CalendarEvent[] }) {
+export default function CalendarView({ events, onDelete }: { events: CalendarEvent[]; onDelete?: (id: string) => void }) {
   const [viewMode, setViewMode] = useState<"calendar" | "list">("list");
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [currentMonth, setCurrentMonth] = useState(2); // March (0-indexed)
@@ -262,7 +275,7 @@ export default function CalendarView({ events }: { events: CalendarEvent[] }) {
             return (
               <div
                 key={event.id}
-                className={`flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors ${isPast ? "opacity-50" : ""}`}
+                className={`flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors group/row ${isPast ? "opacity-50" : ""}`}
               >
                 {/* Type dot + date */}
                 <div className="flex items-center gap-2 flex-shrink-0 w-24">
@@ -295,6 +308,17 @@ export default function CalendarView({ events }: { events: CalendarEvent[] }) {
                       {event.impact_notes}
                     </span>
                   </div>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={() => { if (confirm(`Delete "${event.title}"?`)) onDelete(event.id); }}
+                    className="opacity-0 group-hover/row:opacity-100 text-gray-300 hover:text-red-500 transition-all p-1 flex-shrink-0"
+                    title="Delete event"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" />
+                    </svg>
+                  </button>
                 )}
               </div>
             );
@@ -472,6 +496,7 @@ export default function CalendarView({ events }: { events: CalendarEvent[] }) {
           events={popover.events}
           anchorRect={popover.rect}
           onClose={() => setPopover(null)}
+          onDelete={onDelete ? (id) => { onDelete(id); setPopover(null); } : undefined}
         />
       )}
     </div>

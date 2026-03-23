@@ -50,6 +50,21 @@ export default function CalendarPage() {
   const [discoverError, setDiscoverError] = useState("");
   const [addedCount, setAddedCount] = useState(0);
 
+  const handleDeleteEvent = async (id: string) => {
+    try {
+      const res = await fetch("/api/calendar/events", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+    } catch (err) {
+      console.error("Delete event error:", err);
+      alert("Failed to delete event. Please try again.");
+    }
+  };
+
   const loadEvents = useCallback(() => {
     fetchCalendarEvents().then((data) => {
       setEvents(data);
@@ -329,7 +344,7 @@ export default function CalendarPage() {
             <p className="text-sm">Loading events...</p>
           </div>
         ) : (
-          <CalendarView events={events} />
+          <CalendarView events={events} onDelete={handleDeleteEvent} />
         )}
       </div>
     </AppShell>
