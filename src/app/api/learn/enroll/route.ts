@@ -103,13 +103,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Calculate due date from course default if not explicitly provided
+    let effectiveDueDate = due_date || null;
+    if (!effectiveDueDate) {
+      const { data: courseData } = await supabaseAdmin
+        .from("courses")
+        .select("due_days_after_enrollment")
+        .eq("id", course_id)
+        .single();
+      if (courseData?.due_days_after_enrollment) {
+        const d = new Date();
+        d.setDate(d.getDate() + courseData.due_days_after_enrollment);
+        effectiveDueDate = d.toISOString().split("T")[0];
+      }
+    }
+
     // Insert enrollment
     const { data, error } = await supabaseAdmin
       .from("enrollments")
       .insert({
         user_id: lmsUser.id,
         course_id,
-        due_date: due_date || null,
+        due_date: effectiveDueDate,
         status: "enrolled",
       })
       .select()

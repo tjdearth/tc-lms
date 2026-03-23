@@ -64,6 +64,7 @@ export default function CourseBuilderPage() {
   const [isSequential, setIsSequential] = useState(true);
   const [prerequisiteIds, setPrerequisiteIds] = useState<string[]>([]);
   const [isPublished, setIsPublished] = useState(false);
+  const [dueDaysAfterEnrollment, setDueDaysAfterEnrollment] = useState<number | null>(null);
 
   const loadCourse = useCallback(async () => {
     setLoading(true);
@@ -86,6 +87,7 @@ export default function CourseBuilderPage() {
         setIsSequential(detail.is_sequential);
         setPrerequisiteIds(detail.prerequisite_ids || []);
         setIsPublished(detail.is_published);
+        setDueDaysAfterEnrollment(detail.due_days_after_enrollment ?? null);
       }
       setAllCourses(courses.filter((c) => c.id !== courseId));
     } finally {
@@ -181,6 +183,7 @@ export default function CourseBuilderPage() {
           min_score_pct: completionRule === "min_score" ? minScorePct : null,
           is_sequential: isSequential,
           is_published: isPublished,
+          due_days_after_enrollment: dueDaysAfterEnrollment,
         }),
       });
 
@@ -451,6 +454,38 @@ export default function CourseBuilderPage() {
                   }
                   className="w-32 px-3 py-2.5 text-sm border border-[#E8ECF1] rounded-lg outline-none focus:border-[#27a28c]"
                 />
+              </div>
+
+              {/* Due Days After Enrollment */}
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">
+                  Due Date (days after enrollment)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={dueDaysAfterEnrollment ?? ""}
+                    onChange={(e) =>
+                      setDueDaysAfterEnrollment(e.target.value ? Number(e.target.value) : null)
+                    }
+                    placeholder="No deadline"
+                    className="w-32 px-3 py-2.5 text-sm border border-[#E8ECF1] rounded-lg outline-none focus:border-[#27a28c]"
+                  />
+                  <span className="text-xs text-gray-400">days</span>
+                  {dueDaysAfterEnrollment && (
+                    <button
+                      onClick={() => setDueDaysAfterEnrollment(null)}
+                      className="text-xs text-gray-400 hover:text-red-500"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Auto-sets a due date when a learner enrolls. Leave blank for no deadline.
+                </p>
               </div>
 
               {/* Completion Rule */}

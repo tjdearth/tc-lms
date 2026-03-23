@@ -69,6 +69,7 @@ export interface Course {
   completion_rule: CompletionRule;
   min_score_pct: number | null;
   sort_order: number;
+  due_days_after_enrollment: number | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
