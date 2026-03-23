@@ -392,17 +392,17 @@ export default function ModuleLessonBuilder({
                           autoFocus
                           value={lessonTitleDraft}
                           onChange={(e) => setLessonTitleDraft(e.target.value)}
-                          onBlur={() => {
-                            updateLesson(lesson.id, {
+                          onBlur={async () => {
+                            await updateLesson(lesson.id, {
                               title: lessonTitleDraft,
-                            });
+                            }, true);
                             setEditingLessonTitle(null);
                           }}
-                          onKeyDown={(e) => {
+                          onKeyDown={async (e) => {
                             if (e.key === "Enter") {
-                              updateLesson(lesson.id, {
+                              await updateLesson(lesson.id, {
                                 title: lessonTitleDraft,
-                              });
+                              }, true);
                               setEditingLessonTitle(null);
                             }
                             if (e.key === "Escape")
@@ -476,10 +476,10 @@ export default function ModuleLessonBuilder({
                               </div>
                               <div className="flex gap-2">
                                 <button
-                                  onClick={() => {
-                                    updateLesson(lesson.id, {
+                                  onClick={async () => {
+                                    await updateLesson(lesson.id, {
                                       html_content: contentDraft,
-                                    });
+                                    }, true);
                                     setEditContentLesson(null);
                                   }}
                                   className="px-3 py-1.5 text-xs font-medium text-white bg-[#27a28c] rounded-lg hover:bg-[#27a28c]/90"
@@ -517,7 +517,7 @@ export default function ModuleLessonBuilder({
                             onBlur={(e) =>
                               updateLesson(lesson.id, {
                                 video_url: e.target.value || null,
-                              })
+                              }, true)
                             }
                             className="w-full px-3 py-1.5 text-xs border border-[#E8ECF1] rounded-lg outline-none focus:border-[#27a28c]"
                           />
@@ -617,7 +617,7 @@ export default function ModuleLessonBuilder({
         onClose={() => setWikiPickerLesson(null)}
         onSelect={(nodeId) => {
           if (wikiPickerLesson) {
-            updateLesson(wikiPickerLesson, { wiki_node_id: nodeId });
+            updateLesson(wikiPickerLesson, { wiki_node_id: nodeId }, true);
           }
           setWikiPickerLesson(null);
         }}
