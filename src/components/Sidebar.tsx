@@ -142,12 +142,13 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
         style={{ borderBottom: `1px solid ${brand.sidebarBorder}` }}
       >
         <div className="flex flex-col items-center gap-3">
-          <img
-            src={isTc ? TC_LOGO_URL : brand.logo}
-            alt={brand.name}
-            className="w-full h-auto"
-            style={{ filter: "brightness(0) invert(1)", maxHeight: isTc ? undefined : "64px", objectFit: "contain" }}
-          />
+          <div className="w-full h-[60px] flex items-center justify-center">
+            <img
+              src={isTc ? TC_LOGO_URL : brand.logo}
+              alt={brand.name}
+              style={{ filter: "brightness(0) invert(1)", maxWidth: "100%", maxHeight: "60px", objectFit: "contain" }}
+            />
+          </div>
           <div
             className="text-[13px] font-bold tracking-wide uppercase text-center"
             style={{ color: brand.accent }}
