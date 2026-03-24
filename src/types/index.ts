@@ -36,7 +36,7 @@ export interface CalendarEvent {
   updated_at: string;
 }
 
-export type LmsTrack = 'general' | 'travel_advisor' | 'operations' | 'both';
+export type LmsTrack = 'general' | 'travel_advisor' | 'operations' | 'both' | 'business_development';
 export type CompletionRule = 'all_lessons' | 'all_quizzes' | 'min_score' | 'manual';
 export type QuestionType = 'single_choice' | 'multi_choice' | 'true_false' | 'fill_blank' | 'ordering';
 export type EnrollmentStatus = 'enrolled' | 'in_progress' | 'completed';

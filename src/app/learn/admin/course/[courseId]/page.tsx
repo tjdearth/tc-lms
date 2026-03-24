@@ -25,7 +25,8 @@ const TRACKS: { value: LmsTrack; label: string }[] = [
   { value: "general", label: "General" },
   { value: "travel_advisor", label: "Travel Advisor" },
   { value: "operations", label: "Operations" },
-  { value: "both", label: "Both" },
+  { value: "both", label: "Both (TA + Ops)" },
+  { value: "business_development", label: "Business Development" },
 ];
 
 const COMPLETION_RULES: { value: CompletionRule; label: string }[] = [
