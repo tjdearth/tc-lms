@@ -2,6 +2,36 @@
 
 import { useState, useEffect, useMemo } from "react";
 
+const DMC_COLORS: Record<string, string> = {
+  "Authenticus Italy": "#C6B356",
+  "Unbox Spain & Portugal": "#7C1137",
+  "Truly Swahili": "#4F9E2D",
+  "Across Mexico": "#E56456",
+  "Kembali Indonesia": "#ADA263",
+  "Majlis Retreats": "#B28A72",
+  "Crown Journey": "#6D7581",
+  "Oshinobi Travel": "#E9395E",
+  "Essentially French": "#58392E",
+  "Elura Australia": "#B04D32",
+  "Nira Thailand": "#636218",
+  "Sar Turkiye": "#247F82",
+  "Nostos Greece": "#0E1952",
+  "Vista Colombia": "#FEE9A8",
+  "Awaken Peru": "#95AFA2",
+  "Experience Morocco": "#F56A23",
+  "Travel Collection": "#304256",
+  "Travel Collection HQ": "#304256",
+};
+
+function brandTextColor(bg: string): string {
+  const hex = bg.replace("#", "");
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.55 ? "#304256" : "#ffffff";
+}
+
 interface EnrollmentRow {
   id: string;
   user_email: string;
@@ -181,50 +211,50 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-[11px] uppercase tracking-wide text-gray-400 border-b border-[#E8ECF1]">
+            <tr className="text-left text-[10px] uppercase tracking-wide text-gray-400 border-b border-[#E8ECF1]">
               <th
-                className="px-4 py-2.5 font-medium cursor-pointer select-none hover:text-[#304256]"
+                className="px-2.5 py-2 font-medium cursor-pointer select-none hover:text-[#304256]"
                 onClick={() => handleSort("user_name")}
               >
                 User <SortIcon col="user_name" />
               </th>
               <th
-                className="px-4 py-2.5 font-medium cursor-pointer select-none hover:text-[#304256]"
+                className="px-2.5 py-2 font-medium cursor-pointer select-none hover:text-[#304256]"
                 onClick={() => handleSort("user_brand")}
               >
                 DMC <SortIcon col="user_brand" />
               </th>
               <th
-                className="px-4 py-2.5 font-medium cursor-pointer select-none hover:text-[#304256]"
+                className="px-2.5 py-2 font-medium cursor-pointer select-none hover:text-[#304256]"
                 onClick={() => handleSort("status")}
               >
                 Status <SortIcon col="status" />
               </th>
               <th
-                className="px-4 py-2.5 font-medium cursor-pointer select-none hover:text-[#304256]"
+                className="px-2.5 py-2 font-medium cursor-pointer select-none hover:text-[#304256]"
                 onClick={() => handleSort("enrolled_at")}
               >
                 Enrolled <SortIcon col="enrolled_at" />
               </th>
               <th
-                className="px-4 py-2.5 font-medium cursor-pointer select-none hover:text-[#304256]"
+                className="px-2.5 py-2 font-medium cursor-pointer select-none hover:text-[#304256]"
                 onClick={() => handleSort("due_date")}
               >
                 Due Date <SortIcon col="due_date" />
               </th>
               <th
-                className="px-4 py-2.5 font-medium cursor-pointer select-none hover:text-[#304256]"
+                className="px-2.5 py-2 font-medium cursor-pointer select-none hover:text-[#304256]"
                 onClick={() => handleSort("progress_pct")}
               >
                 Progress <SortIcon col="progress_pct" />
               </th>
               <th
-                className="px-4 py-2.5 font-medium cursor-pointer select-none hover:text-[#304256]"
+                className="px-2.5 py-2 font-medium cursor-pointer select-none hover:text-[#304256]"
                 onClick={() => handleSort("quiz_best_score")}
               >
                 Quiz Score <SortIcon col="quiz_best_score" />
               </th>
-              <th className="px-4 py-2.5 font-medium">Actions</th>
+              <th className="px-2.5 py-2 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -233,24 +263,30 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
                 key={enr.id}
                 className="border-b border-[#E8ECF1] last:border-b-0 hover:bg-gray-50/50"
               >
-                <td className="px-4 py-2.5">
+                <td className="px-2.5 py-1.5">
                   <div>
-                    <p className="text-sm font-medium text-[#304256]">
+                    <p className="text-xs font-medium text-[#304256]">
                       {enr.user_name || "Unknown"}
                     </p>
-                    <p className="text-xs text-gray-400">{enr.user_email}</p>
+                    <p className="text-[10px] text-gray-400">{enr.user_email}</p>
                   </div>
                 </td>
-                <td className="px-4 py-2.5">
+                <td className="px-2.5 py-1.5">
                   {enr.user_brand ? (
-                    <span className="inline-block px-2 py-0.5 text-[11px] font-medium rounded-full bg-[#304256]/5 text-[#304256]">
+                    <span
+                      className="inline-block px-1.5 py-0.5 text-[10px] font-medium rounded-full whitespace-nowrap"
+                      style={{
+                        backgroundColor: DMC_COLORS[enr.user_brand] || "#304256",
+                        color: brandTextColor(DMC_COLORS[enr.user_brand] || "#304256"),
+                      }}
+                    >
                       {enr.user_brand}
                     </span>
                   ) : (
                     <span className="text-xs text-gray-300">—</span>
                   )}
                 </td>
-                <td className="px-4 py-2.5">
+                <td className="px-2.5 py-1.5">
                   <span
                     className={`inline-block px-2.5 py-0.5 text-[11px] font-medium rounded-full ${
                       statusColors[enr.status] || "bg-gray-100 text-gray-600"
@@ -259,10 +295,10 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
                     {statusLabels[enr.status] || enr.status}
                   </span>
                 </td>
-                <td className="px-4 py-2.5 text-xs text-gray-500">
+                <td className="px-2.5 py-1.5 text-xs text-gray-500">
                   {new Date(enr.enrolled_at).toLocaleDateString()}
                 </td>
-                <td className="px-4 py-2.5">
+                <td className="px-2.5 py-1.5">
                   {editDueDate === enr.id ? (
                     <div className="flex items-center gap-1">
                       <input
@@ -300,7 +336,7 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
                     </button>
                   )}
                 </td>
-                <td className="px-4 py-2.5">
+                <td className="px-2.5 py-1.5">
                   <div className="flex items-center gap-2">
                     <div className="w-16 h-1.5 bg-[#E8ECF1] rounded-full overflow-hidden">
                       <div
@@ -313,7 +349,7 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
                     </span>
                   </div>
                 </td>
-                <td className="px-4 py-2.5">
+                <td className="px-2.5 py-1.5">
                   {enr.quiz_best_score !== null ? (
                     <div>
                       <span className={`text-xs font-medium ${enr.quiz_best_score >= 70 ? "text-[#27a28c]" : "text-amber-600"}`}>
@@ -327,7 +363,7 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
                     <span className="text-xs text-gray-300">—</span>
                   )}
                 </td>
-                <td className="px-4 py-2.5">
+                <td className="px-2.5 py-1.5">
                   {enr.status !== "completed" && (
                     <button
                       onClick={async () => {
