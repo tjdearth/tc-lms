@@ -14,6 +14,8 @@ const categories = [
   { key: "Travel Advisors", label: "Travel Advisors" },
   { key: "Operations", label: "Operations" },
   { key: "Best Practices", label: "Best Practices" },
+  { key: "Business Development", label: "Business Development" },
+  { key: "Finance", label: "Finance" },
 ];
 
 const statusFilters = [

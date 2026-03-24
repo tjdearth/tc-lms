@@ -15,6 +15,8 @@ const CATEGORIES = [
   { value: "Travel Advisors", label: "Travel Advisors" },
   { value: "Operations", label: "Operations" },
   { value: "Best Practices", label: "Best Practices" },
+  { value: "Business Development", label: "Business Development" },
+  { value: "Finance", label: "Finance" },
 ];
 
 const TRACKS: { value: LmsTrack; label: string }[] = [
