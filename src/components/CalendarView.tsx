@@ -132,9 +132,9 @@ function EventPopover({
   );
 }
 
-export default function CalendarView({ events, onDelete }: { events: CalendarEvent[]; onDelete?: (id: string) => void }) {
+export default function CalendarView({ events, onDelete, defaultBrand }: { events: CalendarEvent[]; onDelete?: (id: string) => void; defaultBrand?: string }) {
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
-  const [selectedBrand, setSelectedBrand] = useState<string>("all");
+  const [selectedBrand, setSelectedBrand] = useState<string>(defaultBrand || "all");
   const [currentMonth, setCurrentMonth] = useState(2); // March (0-indexed)
   const [currentYear] = useState(2026);
   const [isMobile, setIsMobile] = useState(false);
@@ -205,19 +205,21 @@ export default function CalendarView({ events, onDelete }: { events: CalendarEve
     <div>
       {/* Header controls */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-6">
-        {/* Brand filter */}
-        <select
-          value={selectedBrand}
-          onChange={(e) => setSelectedBrand(e.target.value)}
-          className="w-full sm:w-auto px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
-        >
-          <option value="all">All Brands (16)</option>
-          {allBrands.map((brand) => (
-            <option key={brand} value={brand}>
-              {brand}
-            </option>
-          ))}
-        </select>
+        {/* Brand filter — hidden in DMC mode */}
+        {!defaultBrand && (
+          <select
+            value={selectedBrand}
+            onChange={(e) => setSelectedBrand(e.target.value)}
+            className="w-full sm:w-auto px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+          >
+            <option value="all">All Brands (16)</option>
+            {allBrands.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
+        )}
 
         {/* Subscribe + View toggle */}
         <div className="flex items-center gap-2 sm:ml-auto">

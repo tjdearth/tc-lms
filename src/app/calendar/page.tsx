@@ -354,7 +354,7 @@ export default function CalendarPage() {
             <p className="text-sm">Loading events...</p>
           </div>
         ) : (
-          <CalendarView events={filteredEvents} onDelete={handleDeleteEvent} />
+          <CalendarView events={filteredEvents} onDelete={handleDeleteEvent} defaultBrand={isDmc ? "Unbox Spain & Portugal" : undefined} />
         )}
       </div>
     </AppShell>
