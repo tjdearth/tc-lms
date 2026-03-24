@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { isAdmin } from "@/lib/admin";
 import { WikiNode } from "@/types";
+import { useBrand } from "@/lib/brand-context";
 import dynamic from "next/dynamic";
 
 const BlockEditor = dynamic(() => import("@/components/BlockEditor"), {
@@ -390,6 +391,9 @@ function AdminTreeNode({
 export default function WikiAdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { brand } = useBrand();
+  const isDmc = brand.mode !== "tc";
+  const wikiBrand = isDmc ? "unbox-spain" : "tc";
 
   const [flatNodes, setFlatNodes] = useState<WikiNode[]>([]);
   const [tree, setTree] = useState<WikiNode[]>([]);
@@ -425,13 +429,14 @@ export default function WikiAdminPage() {
     const { data } = await supabase
       .from("wiki_nodes")
       .select("*")
+      .eq("brand", wikiBrand)
       .order("sort_order", { ascending: true });
     if (data) {
       setFlatNodes(data as WikiNode[]);
       setTree(buildTree(data as WikiNode[]));
     }
     setLoading(false);
-  }, []);
+  }, [wikiBrand]);
 
   useEffect(() => {
     fetchNodes();
@@ -641,7 +646,7 @@ export default function WikiAdminPage() {
           node_type: "article",
           parent_id: parentId,
           sort_order: sortOrder,
-          brand: "tc",
+          brand: wikiBrand,
           html_content: parsed.content,
         });
         setStatusMsg(`✓ "${parsed.title}" saved successfully`);
@@ -709,7 +714,7 @@ export default function WikiAdminPage() {
         node_type: addType,
         parent_id: addParentId,
         sort_order: maxSort + 1,
-        brand: "tc",
+        brand: wikiBrand,
       });
       setStatusMsg(`✓ "${addTitle}" created`);
       setAddTitle("");
@@ -884,7 +889,7 @@ export default function WikiAdminPage() {
                           node_type: addType,
                           parent_id: null,
                           sort_order: maxSort + 1,
-                          brand: "tc",
+                          brand: wikiBrand,
                         });
                         setStatusMsg(`✓ "${addTitle}" created`);
                         setAddParentId(null);
