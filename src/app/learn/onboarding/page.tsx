@@ -4,10 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import TrackSelector from "@/components/TrackSelector";
-import { BRAND_NAMES, brandFromEmail, getBrandColor, getBrandLogo } from "@/lib/brands";
+import { brandFromEmail, getBrandColor, getBrandLogo } from "@/lib/brands";
 import type { LmsUser, LmsTrack, Course } from "@/types";
-
-const allBrands = ["Travel Collection HQ", ...BRAND_NAMES];
 
 interface TeamMember {
   name: string;
@@ -27,7 +25,7 @@ interface WikiResource {
   node_type: string;
 }
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 5;
 
 export default function OnboardingPage() {
   const { data: session } = useSession();
@@ -99,12 +97,12 @@ export default function OnboardingPage() {
 
   // Load team when entering step 5
   useEffect(() => {
-    if (step === 5) fetchTeam();
+    if (step === 4) fetchTeam();
   }, [step, fetchTeam]);
 
   // Load wiki resources when entering step 6
   useEffect(() => {
-    if (step !== 6) return;
+    if (step !== 5) return;
     setResourcesLoading(true);
     fetch("/api/learn/onboarding-resources")
       .then((r) => r.json())
@@ -210,49 +208,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 2: Brand selection */}
+          {/* Step 2: Track selection */}
           {step === 2 && (
-            <div>
-              <h2 className="text-lg font-bold text-[#304256] mb-1">
-                Select Your Brand
-              </h2>
-              <p className="text-sm text-gray-500 mb-6">
-                Which DMC brand are you part of?
-              </p>
-
-              <select
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
-                className="w-full px-4 py-2.5 text-sm text-[#304256] bg-white border border-[#E8ECF1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#27a28c]/30 focus:border-[#27a28c] transition-colors"
-              >
-                <option value="">Choose a brand...</option>
-                {allBrands.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
-
-              <div className="flex items-center justify-between mt-8">
-                <button
-                  onClick={() => setStep(1)}
-                  className="px-4 py-2 text-sm text-gray-500 hover:text-[#304256] transition-colors"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={() => setStep(3)}
-                  disabled={!brand}
-                  className="px-6 py-2.5 text-sm font-medium text-white bg-[#27a28c] rounded-lg hover:bg-[#27a28c]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Track selection */}
-          {step === 3 && (
             <div>
               <h2 className="text-lg font-bold text-[#304256] mb-1">
                 Choose Your Learning Track
@@ -265,13 +222,13 @@ export default function OnboardingPage() {
 
               <div className="flex items-center justify-between mt-8">
                 <button
-                  onClick={() => setStep(2)}
+                  onClick={() => setStep(1)}
                   className="px-4 py-2 text-sm text-gray-500 hover:text-[#304256] transition-colors"
                 >
                   Back
                 </button>
                 <button
-                  onClick={() => setStep(4)}
+                  onClick={() => setStep(3)}
                   disabled={!track}
                   className="px-6 py-2.5 text-sm font-medium text-white bg-[#27a28c] rounded-lg hover:bg-[#27a28c]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -281,8 +238,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 4: Your Learning Plan */}
-          {step === 4 && (
+          {/* Step 3: Your Learning Plan */}
+          {step === 3 && (
             <div>
               <h2 className="text-lg font-bold text-[#304256] mb-1">
                 Your Learning Plan
@@ -360,13 +317,13 @@ export default function OnboardingPage() {
 
               <div className="flex items-center justify-between mt-8">
                 <button
-                  onClick={() => setStep(3)}
+                  onClick={() => setStep(2)}
                   className="px-4 py-2 text-sm text-gray-500 hover:text-[#304256] transition-colors"
                 >
                   Back
                 </button>
                 <button
-                  onClick={() => setStep(5)}
+                  onClick={() => setStep(4)}
                   className="px-6 py-2.5 text-sm font-medium text-white bg-[#27a28c] rounded-lg hover:bg-[#27a28c]/90 transition-colors"
                 >
                   Continue
@@ -375,8 +332,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 5: Meet Your Team */}
-          {step === 5 && (
+          {/* Step 4: Meet Your Team */}
+          {step === 4 && (
             <div>
               <h2 className="text-lg font-bold text-[#304256] mb-1">
                 Meet Your Team
@@ -475,13 +432,13 @@ export default function OnboardingPage() {
 
               <div className="flex items-center justify-between">
                 <button
-                  onClick={() => setStep(4)}
+                  onClick={() => setStep(3)}
                   className="px-4 py-2 text-sm text-gray-500 hover:text-[#304256] transition-colors"
                 >
                   Back
                 </button>
                 <button
-                  onClick={() => setStep(6)}
+                  onClick={() => setStep(5)}
                   className="px-6 py-2.5 text-sm font-medium text-white bg-[#27a28c] rounded-lg hover:bg-[#27a28c]/90 transition-colors"
                 >
                   Continue
@@ -490,8 +447,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 6: Key Resources + Finish */}
-          {step === 6 && (
+          {/* Step 5: Key Resources + Finish */}
+          {step === 5 && (
             <div>
               <h2 className="text-lg font-bold text-[#304256] mb-1">
                 Key Resources
@@ -563,7 +520,7 @@ export default function OnboardingPage() {
 
               <div className="flex items-center justify-between">
                 <button
-                  onClick={() => setStep(5)}
+                  onClick={() => setStep(4)}
                   className="px-4 py-2 text-sm text-gray-500 hover:text-[#304256] transition-colors"
                 >
                   Back
