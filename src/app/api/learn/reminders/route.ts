@@ -122,23 +122,23 @@ export async function POST(req: NextRequest) {
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#ffffff;">
     <tr>
       <td style="background:#304256;padding:24px 32px;">
-        <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">Travel Collection LMS</h1>
+        <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">Travel Collection Atlas</h1>
       </td>
     </tr>
     <tr>
       <td style="padding:32px;">
         <p style="margin:0 0 16px;color:#333;font-size:16px;">Hi ${userName},</p>
         <p style="margin:0 0 24px;color:#333;font-size:16px;">${reminder.bodyText}</p>
-        <p style="margin:0 0 16px;color:#333;font-size:16px;">Please log in to the LMS to continue your progress.</p>
-        <a href="${process.env.NEXTAUTH_URL || "https://tc-lms.vercel.app"}/learn"
+        <p style="margin:0 0 16px;color:#333;font-size:16px;">Please log in to Atlas to continue your progress.</p>
+        <a href="${process.env.NEXTAUTH_URL || "https://atlas.travelcollection.co"}/learn"
            style="display:inline-block;padding:12px 24px;background:#27a28c;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;">
-          Go to LMS
+          Go to Atlas
         </a>
       </td>
     </tr>
     <tr>
       <td style="padding:16px 32px;background:#f4f5f7;color:#888;font-size:12px;text-align:center;">
-        Travel Collection &mdash; Learning Management System
+        Travel Collection &mdash; Atlas
       </td>
     </tr>
   </table>
