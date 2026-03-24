@@ -141,12 +141,12 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
         className="px-5 py-5"
         style={{ borderBottom: `1px solid ${brand.sidebarBorder}` }}
       >
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-[60px] h-[60px] flex items-center justify-center flex-shrink-0">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-full h-[50px] flex items-center justify-center">
             <img
               src={isTc ? TC_LOGO_URL : brand.logo}
               alt={brand.name}
-              style={{ filter: "brightness(0) invert(1)", maxWidth: "60px", maxHeight: "60px", objectFit: "contain" }}
+              style={{ filter: "brightness(0) invert(1)", maxWidth: "100%", maxHeight: "50px", objectFit: "contain" }}
             />
           </div>
           <div
@@ -158,7 +158,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
         </div>
 
         {/* Brand toggle */}
-        <div className="mt-3 flex rounded-full overflow-hidden h-6" style={{ border: `1px solid ${brand.sidebarBorder}` }}>
+        <div className="mt-2 mx-auto flex rounded-full overflow-hidden h-[22px] w-[100px]" style={{ border: `1px solid ${brand.sidebarBorder}` }}>
           <button
             onClick={() => setBrandMode("tc")}
             className="flex-1 text-[9px] font-semibold tracking-wider text-center transition-colors"
