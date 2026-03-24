@@ -479,24 +479,20 @@ export default function OnboardingPage() {
                       rel="noopener noreferrer"
                       className="flex items-center gap-3 p-3 border border-[#E8ECF1] rounded-lg hover:border-[#27a28c]/40 hover:bg-[#27a28c]/5 transition-colors group"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-[#304256]/5 flex items-center justify-center flex-shrink-0">
-                        {r.icon ? (
-                          <span className="text-base">{r.icon}</span>
-                        ) : (
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#304256"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                          </svg>
-                        )}
+                      <div className="w-8 h-8 rounded-lg bg-[#27a28c]/10 flex items-center justify-center flex-shrink-0">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#27a28c"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        </svg>
                       </div>
                       <span className="text-sm text-[#304256] group-hover:text-[#27a28c] transition-colors">
                         {r.title}
