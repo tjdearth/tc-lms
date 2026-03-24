@@ -251,6 +251,12 @@ Include quizzes: ${includeQuizzes !== false ? "Yes" : "No"}`;
       messages: [{ role: "user", content: userPrompt }],
     });
 
+    // Check if response was truncated
+    const stopReason = response.stop_reason;
+    if (stopReason === "max_tokens") {
+      console.error("AI response truncated — hit max_tokens limit");
+    }
+
     const rawText = response.content
       .filter((block) => block.type === "text")
       .map((block) => {
@@ -275,15 +281,39 @@ Include quizzes: ${includeQuizzes !== false ? "Yes" : "No"}`;
       }
     }
 
+    // If truncated, try to repair the JSON by closing open structures
     let generated: GeneratedCourse;
     try {
       generated = JSON.parse(jsonText);
     } catch {
-      console.error("AI response parse failed. Raw text:", rawText.slice(0, 500));
-      return NextResponse.json(
-        { error: "Failed to parse AI response. Please try again." },
-        { status: 500 }
-      );
+      // Attempt to repair truncated JSON
+      let repaired = jsonText;
+      // Count open/close braces and brackets
+      const openBraces = (repaired.match(/{/g) || []).length;
+      const closeBraces = (repaired.match(/}/g) || []).length;
+      const openBrackets = (repaired.match(/\[/g) || []).length;
+      const closeBrackets = (repaired.match(/]/g) || []).length;
+
+      // Strip trailing incomplete values (partial strings, etc.)
+      repaired = repaired.replace(/,\s*"[^"]*$/, "");
+      repaired = repaired.replace(/,\s*$/, "");
+      repaired = repaired.replace(/,\s*\{[^}]*$/, "");
+
+      // Close open brackets and braces
+      for (let i = 0; i < openBrackets - closeBrackets; i++) repaired += "]";
+      for (let i = 0; i < openBraces - closeBraces; i++) repaired += "}";
+
+      try {
+        generated = JSON.parse(repaired);
+        console.log("AI response was truncated but successfully repaired");
+      } catch {
+        console.error("AI response parse failed even after repair. Raw text (first 1000 chars):", rawText.slice(0, 1000));
+        console.error("Stop reason:", stopReason);
+        return NextResponse.json(
+          { error: `Failed to parse AI response (${stopReason === "max_tokens" ? "response was too long — try fewer modules" : "invalid JSON"}). Please try again.` },
+          { status: 500 }
+        );
+      }
     }
 
     // Validate basic structure
