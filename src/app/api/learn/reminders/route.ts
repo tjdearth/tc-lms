@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#ffffff;">
     <tr>
       <td style="background:#304256;padding:24px 32px;">
-        <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">Travel Collection Atlas</h1>
+        <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">Atlas <span style="color:#27a28c;font-weight:400;">&mdash; Learn</span></h1>
       </td>
     </tr>
     <tr>
