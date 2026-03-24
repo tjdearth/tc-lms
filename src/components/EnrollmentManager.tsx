@@ -337,17 +337,22 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
                   )}
                 </td>
                 <td className="px-2.5 py-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 h-1.5 bg-[#E8ECF1] rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-[#27a28c] rounded-full"
-                        style={{ width: `${enr.progress_pct}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-400">
-                      {enr.progress_pct}%
-                    </span>
-                  </div>
+                  {(() => {
+                    const pct = enr.status === "completed" ? 100 : enr.progress_pct;
+                    return (
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 bg-[#E8ECF1] rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-[#27a28c] rounded-full"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-400">
+                          {pct}%
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </td>
                 <td className="px-2.5 py-1.5">
                   {enr.quiz_best_score !== null ? (
