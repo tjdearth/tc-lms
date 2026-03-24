@@ -546,10 +546,27 @@ export default function CreateCoursePage() {
           {/* AI Generate step */}
           {step === "ai" && (
             <div className="bg-white border border-[#E8ECF1] rounded-xl shadow-sm p-6 space-y-5">
-              <div className="px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg">
-                <p className="text-xs text-purple-700 font-medium">
-                  AI will generate a complete course with modules, lessons, and optional quizzes
-                </p>
+              <div className="px-4 py-4 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-purple-900 mb-1">AI Course Generator</p>
+                    <p className="text-xs text-purple-700 leading-relaxed mb-2">
+                      Describe your course topic and Claude AI will generate a complete draft — modules, chapters with rich content, and quiz questions with answers. The course is saved as an unpublished draft for you to review and edit.
+                    </p>
+                    <div className="text-[11px] text-purple-600 space-y-0.5">
+                      <p>💡 <strong>Tips for best results:</strong></p>
+                      <p>• Be specific in your topic and description — &quot;Salesforce lead management for travel advisors&quot; beats &quot;Salesforce training&quot;</p>
+                      <p>• Add wiki articles as references so the AI uses your actual company processes</p>
+                      <p>• Upload HTML files for dashboards or tools the AI can&apos;t access directly</p>
+                      <p>• Use Additional Instructions for tone, focus areas, or specific scenarios to cover</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Topic */}
