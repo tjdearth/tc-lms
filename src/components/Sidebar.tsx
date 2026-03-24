@@ -7,8 +7,6 @@ import { useSession, signOut } from "next-auth/react";
 import { isAdmin, isCourseCreator } from "@/lib/admin";
 import { useBrand } from "@/lib/brand-context";
 
-const TC_LOGO_URL =
-  "https://lh7-rt.googleusercontent.com/docsz/AD_4nXcuZ3fOJUGrPHzT0Tu5n3IyhjOPWYUjkhaEcBcNhdpt2I5hcRLGyL_Sj635ZffMbHWB3xfPa8vnDZ06Pfl0ez9vedO8hDGzYaZxhKsj7yyVeyk-sUcbBz4G6KXjTCvXUgo48Y2n?key=5z7x5EJrcuoubrabZrlshg";
 
 const navItems = [
   {
