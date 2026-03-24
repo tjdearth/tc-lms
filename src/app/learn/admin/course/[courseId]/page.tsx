@@ -337,9 +337,19 @@ export default function CourseBuilderPage() {
                 </label>
                 <textarea
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2.5 text-sm border border-[#E8ECF1] rounded-lg outline-none focus:border-[#27a28c] resize-none"
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    e.target.style.height = "auto";
+                    e.target.style.height = e.target.scrollHeight + "px";
+                  }}
+                  ref={(el) => {
+                    if (el) {
+                      el.style.height = "auto";
+                      el.style.height = el.scrollHeight + "px";
+                    }
+                  }}
+                  rows={2}
+                  className="w-full px-3 py-2.5 text-sm border border-[#E8ECF1] rounded-lg outline-none focus:border-[#27a28c] resize-none overflow-hidden"
                 />
               </div>
 
