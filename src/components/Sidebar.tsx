@@ -181,7 +181,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
             <img
               src={brand.logo}
               alt={brand.name}
-              style={{ filter: "brightness(0) invert(1)", maxWidth: "100%", maxHeight: "120px", objectFit: "contain" }}
+              style={{ filter: brand.sidebarIsDark ? "brightness(0) invert(1)" : "none", maxWidth: "100%", maxHeight: "120px", objectFit: "contain" }}
             />
           </div>
           <div
@@ -199,7 +199,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
             className="flex-1 text-[9px] font-semibold tracking-wider text-center transition-colors"
             style={{
               backgroundColor: isTc ? brand.accent : "transparent",
-              color: isTc ? "#fff" : "#8A9BB0",
+              color: isTc ? "#fff" : brand.sidebarText,
             }}
           >
             TC
@@ -216,7 +216,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
             className="flex-1 text-[9px] font-semibold tracking-wider text-center transition-colors"
             style={{
               backgroundColor: !isTc ? brand.accent : "transparent",
-              color: !isTc ? "#fff" : "#8A9BB0",
+              color: !isTc ? "#fff" : brand.sidebarText,
             }}
           >
             DMC
@@ -235,11 +235,11 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
                 onClick={() => { setBrandMode(bName); setShowBrandDropdown(false); }}
                 className="w-full text-left px-3 py-1.5 text-[11px] transition-colors"
                 style={{
-                  color: brand.mode === bName ? "#fff" : "#8A9BB0",
+                  color: brand.mode === bName ? "#fff" : brand.sidebarText,
                   backgroundColor: brand.mode === bName ? brand.accent : "transparent",
                 }}
-                onMouseEnter={(e) => { if (brand.mode !== bName) e.currentTarget.style.color = "#E8EDF2"; }}
-                onMouseLeave={(e) => { if (brand.mode !== bName) e.currentTarget.style.color = "#8A9BB0"; }}
+                onMouseEnter={(e) => { if (brand.mode !== bName) e.currentTarget.style.color = brand.sidebarTextActive; }}
+                onMouseLeave={(e) => { if (brand.mode !== bName) e.currentTarget.style.color = brand.sidebarText; }}
               >
                 {bName}
               </button>
@@ -261,7 +261,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
             strokeLinecap="round"
             strokeLinejoin="round"
             className="absolute left-2.5 top-1/2 -translate-y-1/2"
-            style={{ color: "#8A9BB0" }}
+            style={{ color: brand.sidebarText }}
           >
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -273,9 +273,9 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
             }}
             className="w-full text-left pl-8 pr-7 py-2 rounded-lg text-[12px]"
             style={{
-              backgroundColor: isTc ? "#0F1923" : "#1A0810",
+              backgroundColor: brand.sidebarActiveBg,
               border: `1px solid ${brand.sidebarBorder}`,
-              color: "#8A9BB0",
+              color: brand.sidebarText,
             }}
           >
             Search everything...
@@ -299,18 +299,18 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
               className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm transition-all duration-150"
               style={
                 active
-                  ? { backgroundColor: brand.sidebarActiveBg, color: "#E8EDF2", fontWeight: 600 }
-                  : { color: "#8A9BB0" }
+                  ? { backgroundColor: brand.sidebarActiveBg, color: brand.sidebarTextActive, fontWeight: 600 }
+                  : { color: brand.sidebarText }
               }
               onMouseEnter={(e) => {
                 if (!active) {
-                  e.currentTarget.style.color = "#E8EDF2";
+                  e.currentTarget.style.color = brand.sidebarTextActive;
                   e.currentTarget.style.backgroundColor = `${brand.sidebarActiveBg}4D`;
                 }
               }}
               onMouseLeave={(e) => {
                 if (!active) {
-                  e.currentTarget.style.color = "#8A9BB0";
+                  e.currentTarget.style.color = brand.sidebarText;
                   e.currentTarget.style.backgroundColor = "transparent";
                 }
               }}
@@ -341,18 +341,18 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
                   className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-[13px] transition-all duration-150"
                   style={
                     active
-                      ? { backgroundColor: brand.sidebarActiveBg, color: "#E8EDF2", fontWeight: 600 }
-                      : { color: "#8A9BB0" }
+                      ? { backgroundColor: brand.sidebarActiveBg, color: brand.sidebarTextActive, fontWeight: 600 }
+                      : { color: brand.sidebarText }
                   }
                   onMouseEnter={(e) => {
                     if (!active) {
-                      e.currentTarget.style.color = "#E8EDF2";
+                      e.currentTarget.style.color = brand.sidebarTextActive;
                       e.currentTarget.style.backgroundColor = `${brand.sidebarActiveBg}4D`;
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!active) {
-                      e.currentTarget.style.color = "#8A9BB0";
+                      e.currentTarget.style.color = brand.sidebarText;
                       e.currentTarget.style.backgroundColor = "transparent";
                     }
                   }}
@@ -387,17 +387,17 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
               <span className="text-[13px] font-semibold truncate block" style={{ color: "#E8EDF2" }}>
                 {userName}
               </span>
-              <span className="text-[11px] truncate block" style={{ color: "#8A9BB0" }}>
+              <span className="text-[11px] truncate block" style={{ color: brand.sidebarText }}>
                 Admin &middot; Travel Collection HQ
               </span>
             </div>
             <button
               onClick={async () => { await signOut({ redirect: false }); window.location.href = "/login"; }}
               className="cursor-pointer flex-shrink-0"
-              style={{ color: "#8A9BB0" }}
+              style={{ color: brand.sidebarText }}
               title="Sign out"
-              onMouseEnter={(e) => { e.currentTarget.style.color = "#E8EDF2"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "#8A9BB0"; }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = brand.sidebarTextActive; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = brand.sidebarText; }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -429,9 +429,9 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
       <button
         onClick={onMobileClose}
         className="md:hidden absolute top-4 right-4 z-10 cursor-pointer"
-        style={{ color: "#8A9BB0" }}
-        onMouseEnter={(e) => { e.currentTarget.style.color = "#E8EDF2"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.color = "#8A9BB0"; }}
+        style={{ color: brand.sidebarText }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = brand.sidebarTextActive; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = brand.sidebarText; }}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="18" y1="6" x2="6" y2="18" />
