@@ -3,8 +3,27 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import AppShell from "@/components/AppShell";
-import { brandFromEmail } from "@/lib/brands";
-import { getBrandColor } from "@/lib/brands";
+import { brandFromEmail, getBrandColor } from "@/lib/brands";
+import { isAdmin } from "@/lib/admin";
+
+const ALL_DMC_BRANDS = [
+  "Authenticus Italy",
+  "Unbox Spain & Portugal",
+  "Truly Swahili",
+  "Across Mexico",
+  "Kembali Indonesia",
+  "Majlis Retreats",
+  "Crown Journey",
+  "Oshinobi Travel",
+  "Essentially French",
+  "Elura Australia",
+  "Nira Thailand",
+  "Sar Turkiye",
+  "Nostos Greece",
+  "Vista Colombia",
+  "Awaken Peru",
+  "Experience Morocco",
+];
 
 interface TeamMember {
   id: string;
@@ -49,21 +68,33 @@ export default function DMCDashboardPage() {
   const { data: session, status } = useSession();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
 
-  const userBrand = session?.user?.email ? brandFromEmail(session.user.email) : null;
+  const userEmail = session?.user?.email || "";
+  const userBrand = userEmail ? brandFromEmail(userEmail) : null;
+  const userIsAdmin = isAdmin(userEmail);
   const isDMC = userBrand && userBrand !== "Travel Collection";
-  const brandColor = userBrand ? getBrandColor(userBrand) : "#304256";
+
+  // The active brand: admin's selection, or the user's own brand
+  const activeBrand = userIsAdmin ? (selectedBrand || ALL_DMC_BRANDS[0]) : userBrand;
+  const brandColor = activeBrand ? getBrandColor(activeBrand) : "#304256";
+
+  // Set initial brand for admins
+  useEffect(() => {
+    if (userIsAdmin && !selectedBrand) {
+      setSelectedBrand(ALL_DMC_BRANDS[0]);
+    }
+  }, [userIsAdmin, selectedBrand]);
 
   useEffect(() => {
-    if (status !== "authenticated" || !userBrand) return;
-    // For TC users, still allow viewing — they can see TC data
-    const brand = userBrand;
-    fetch(`/api/dmc-dashboard?brand=${encodeURIComponent(brand)}`)
+    if (status !== "authenticated" || !activeBrand) return;
+    setLoading(true);
+    fetch(`/api/dmc-dashboard?brand=${encodeURIComponent(activeBrand)}`)
       .then((r) => (r.ok ? r.json() : null))
       .then(setData)
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [status, userBrand]);
+  }, [status, activeBrand]);
 
   if (status === "loading") {
     return (
@@ -75,8 +106,8 @@ export default function DMCDashboardPage() {
     );
   }
 
-  // No DMC detected
-  if (!userBrand || !isDMC) {
+  // Not a DMC user and not an admin
+  if (!isDMC && !userIsAdmin) {
     return (
       <AppShell>
         <div className="min-h-[60vh] flex items-center justify-center p-8">
@@ -152,9 +183,22 @@ export default function DMCDashboardPage() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-1">
             <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: brandColor }} />
-            <h1 className="text-2xl font-bold text-[#304256]">{userBrand} Dashboard</h1>
+            <h1 className="text-2xl font-bold text-[#304256]">{activeBrand} Dashboard</h1>
           </div>
-          <p className="text-gray-500">Team learning progress and performance overview</p>
+          <div className="flex items-center gap-4">
+            <p className="text-gray-500">Team learning progress and performance overview</p>
+            {userIsAdmin && (
+              <select
+                value={selectedBrand || ""}
+                onChange={(e) => setSelectedBrand(e.target.value)}
+                className="px-3 py-1.5 text-sm border border-[#E8ECF1] rounded-lg outline-none focus:border-[#27a28c] bg-white"
+              >
+                {ALL_DMC_BRANDS.map((brand) => (
+                  <option key={brand} value={brand}>{brand}</option>
+                ))}
+              </select>
+            )}
+          </div>
         </div>
 
         {loading || !data ? (
