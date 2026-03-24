@@ -12,9 +12,12 @@ interface EnrollmentRow {
   due_date: string | null;
   completed_at: string | null;
   progress_pct: number;
+  quiz_best_score: number | null;
+  quiz_attempts: number;
+  quiz_passed: number;
 }
 
-type SortKey = "user_name" | "user_brand" | "status" | "enrolled_at" | "due_date" | "progress_pct";
+type SortKey = "user_name" | "user_brand" | "status" | "enrolled_at" | "due_date" | "progress_pct" | "quiz_best_score";
 type SortDir = "asc" | "desc";
 
 interface EnrollmentManagerProps {
@@ -82,6 +85,9 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
           break;
         case "progress_pct":
           cmp = a.progress_pct - b.progress_pct;
+          break;
+        case "quiz_best_score":
+          cmp = (a.quiz_best_score ?? -1) - (b.quiz_best_score ?? -1);
           break;
       }
       return sortDir === "asc" ? cmp : -cmp;
@@ -212,6 +218,12 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
               >
                 Progress <SortIcon col="progress_pct" />
               </th>
+              <th
+                className="px-4 py-2.5 font-medium cursor-pointer select-none hover:text-[#304256]"
+                onClick={() => handleSort("quiz_best_score")}
+              >
+                Quiz Score <SortIcon col="quiz_best_score" />
+              </th>
               <th className="px-4 py-2.5 font-medium">Actions</th>
             </tr>
           </thead>
@@ -300,6 +312,20 @@ export default function EnrollmentManager({ courseId }: EnrollmentManagerProps) 
                       {enr.progress_pct}%
                     </span>
                   </div>
+                </td>
+                <td className="px-4 py-2.5">
+                  {enr.quiz_best_score !== null ? (
+                    <div>
+                      <span className={`text-xs font-medium ${enr.quiz_best_score >= 70 ? "text-[#27a28c]" : "text-amber-600"}`}>
+                        {enr.quiz_best_score}%
+                      </span>
+                      <span className="text-[10px] text-gray-400 ml-1">
+                        ({enr.quiz_attempts} attempt{enr.quiz_attempts !== 1 ? "s" : ""})
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-300">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-2.5">
                   {enr.status !== "completed" && (

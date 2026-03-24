@@ -86,10 +86,39 @@ export async function GET(req: NextRequest) {
       progressByUser = counts;
     }
 
+    // Get quiz scores per user
+    const quizScoresByUser = new Map<string, { best: number; count: number; passed: number }>();
+    if (lessonIds.length > 0) {
+      const { data: quizzes } = await supabaseAdmin
+        .from("quizzes")
+        .select("id")
+        .in("lesson_id", lessonIds);
+      const quizIds = (quizzes || []).map((q: { id: string }) => q.id);
+
+      if (quizIds.length > 0) {
+        const { data: attempts } = await supabaseAdmin
+          .from("quiz_attempts")
+          .select("user_id, score_pct, passed")
+          .in("quiz_id", quizIds);
+
+        for (const a of attempts || []) {
+          const existing = quizScoresByUser.get(a.user_id);
+          if (!existing) {
+            quizScoresByUser.set(a.user_id, { best: a.score_pct, count: 1, passed: a.passed ? 1 : 0 });
+          } else {
+            existing.best = Math.max(existing.best, a.score_pct);
+            existing.count += 1;
+            if (a.passed) existing.passed += 1;
+          }
+        }
+      }
+    }
+
     // Assemble response
     const result = enrollments.map((e) => {
       const user = userMap.get(e.user_id);
       const completedLessons = progressByUser.get(e.user_id) || 0;
+      const quizScore = quizScoresByUser.get(e.user_id);
       return {
         id: e.id,
         user_email: user?.email || "unknown",
@@ -100,6 +129,9 @@ export async function GET(req: NextRequest) {
         due_date: e.due_date,
         completed_at: e.completed_at,
         progress_pct: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
+        quiz_best_score: quizScore?.best ?? null,
+        quiz_attempts: quizScore?.count ?? 0,
+        quiz_passed: quizScore?.passed ?? 0,
       };
     });
 
