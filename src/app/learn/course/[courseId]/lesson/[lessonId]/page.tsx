@@ -20,6 +20,7 @@ export default function LessonViewer() {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [showCourseComplete, setShowCourseComplete] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -82,8 +83,8 @@ export default function LessonViewer() {
       if (nextLesson) {
         router.push(`/learn/course/${courseId}/lesson/${nextLesson.id}`);
       } else {
-        // Course complete - go back to course overview
-        router.push(`/learn/course/${courseId}`);
+        // Last lesson — show completion screen
+        setShowCourseComplete(true);
       }
     } catch (err) {
       console.error("Mark complete error:", err);
@@ -102,6 +103,10 @@ export default function LessonViewer() {
           status: "completed",
         }),
       });
+      // If this was the last lesson, show completion
+      if (!nextLesson) {
+        setShowCourseComplete(true);
+      }
     }
   };
 
@@ -293,6 +298,43 @@ export default function LessonViewer() {
           </div>
         </div>
       </div>
+
+      {/* Course completion overlay */}
+      {showCourseComplete && (
+        <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-8 text-center shadow-2xl">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#27a28c]/10 flex items-center justify-center">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#27a28c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-[#304256] mb-2">
+              Congratulations!
+            </h2>
+            <p className="text-sm text-gray-500 mb-1">
+              You&apos;ve completed
+            </p>
+            <p className="text-lg font-semibold text-[#304256] mb-6">
+              {course.title}
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => router.push(`/learn/course/${courseId}`)}
+                className="w-full px-4 py-2.5 text-sm font-medium text-white bg-[#27a28c] rounded-lg hover:bg-[#27a28c]/90 transition-colors"
+              >
+                View Course Overview
+              </button>
+              <button
+                onClick={() => router.push("/learn")}
+                className="w-full px-4 py-2.5 text-sm font-medium text-[#304256] bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Back to Learning Hub
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
