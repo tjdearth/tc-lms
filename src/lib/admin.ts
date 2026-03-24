@@ -3,6 +3,7 @@
 export const ADMIN_EMAILS: string[] = [
   "tucker@travelcollection.co",
   "tdearth@travelcollection.com",
+  "giulia@travelcollection.co",
   // Add more admin emails here
 ];
 
@@ -12,7 +13,7 @@ export function isAdmin(email: string | null | undefined): boolean {
 }
 
 export const COURSE_CREATOR_EMAILS: string[] = [
-  "giulia@travelcollection.co",
+  // Add course-only creators here (admins are automatically course creators)
 ];
 
 export function isCourseCreator(email: string | null | undefined): boolean {
