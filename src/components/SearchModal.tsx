@@ -68,7 +68,24 @@ export default function SearchModal({
   const [selectedIdx, setSelectedIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const logTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastLoggedQuery = useRef<string>("");
   const allArticles = useMemo(() => getAllArticles(nodes), [nodes]);
+
+  // Log a search query to the analytics API
+  const logSearch = useCallback((q: string, resultsCount: number, clickedId?: string) => {
+    if (!q.trim()) return;
+    fetch("/api/search-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: q.trim(),
+        source: "wiki_search",
+        results_count: resultsCount,
+        clicked_result_id: clickedId || null,
+      }),
+    }).catch(() => {});
+  }, []);
 
   // Recent articles (last 6 with content, sorted by updated_at)
   const recentArticles = useMemo(() => {
@@ -106,6 +123,19 @@ export default function SearchModal({
       contentMatch: boolean;
     }>;
   }, [query, allArticles]);
+
+  // Debounced search logging — log when user stops typing for 1 second
+  useEffect(() => {
+    if (!query.trim() || query.trim() === lastLoggedQuery.current) return;
+    if (logTimerRef.current) clearTimeout(logTimerRef.current);
+    logTimerRef.current = setTimeout(() => {
+      lastLoggedQuery.current = query.trim();
+      logSearch(query, results.length);
+    }, 1000);
+    return () => {
+      if (logTimerRef.current) clearTimeout(logTimerRef.current);
+    };
+  }, [query, results.length, logSearch]);
 
   // Reset selection when results change
   useEffect(() => {
@@ -161,6 +191,10 @@ export default function SearchModal({
   if (!isOpen) return null;
 
   const handleSelect = (article: WikiNode) => {
+    // Log the click if there's an active search query
+    if (query.trim()) {
+      logSearch(query, results.length, article.id);
+    }
     onSelectArticle(article);
     onClose();
   };

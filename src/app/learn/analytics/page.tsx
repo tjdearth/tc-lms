@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import AppShell from "@/components/AppShell";
-import { isCourseCreator } from "@/lib/admin";
+import { isCourseCreator, isAdmin } from "@/lib/admin";
 import { getBrandColor } from "@/lib/brands";
 
 interface AnalyticsData {
@@ -36,12 +36,20 @@ interface AnalyticsData {
   }[];
 }
 
+interface SearchAnalyticsData {
+  top_searches: { query: string; count: number }[];
+  no_results_queries: { query: string; count: number }[];
+  volume: { this_week: number; this_month: number };
+}
+
 export default function AnalyticsPage() {
   const { data: session, status } = useSession();
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchData, setSearchData] = useState<SearchAnalyticsData | null>(null);
 
   const hasAccess = status === "authenticated" && isCourseCreator(session?.user?.email || "");
+  const showSearchAnalytics = status === "authenticated" && isAdmin(session?.user?.email || "");
 
   useEffect(() => {
     if (!hasAccess) return;
@@ -51,6 +59,14 @@ export default function AnalyticsPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [hasAccess]);
+
+  useEffect(() => {
+    if (!showSearchAnalytics) return;
+    fetch("/api/search-log")
+      .then((r) => r.ok ? r.json() : null)
+      .then(setSearchData)
+      .catch(() => {});
+  }, [showSearchAnalytics]);
 
   if (status === "loading") return <AppShell><div className="p-8"><div className="w-8 h-8 border-2 border-[#27a28c]/30 border-t-[#27a28c] rounded-full animate-spin mx-auto mt-20" /></div></AppShell>;
 
@@ -203,6 +219,84 @@ export default function AnalyticsPage() {
                 </div>
               </div>
             </div>
+
+            {/* Search Analytics (admin only) */}
+            {showSearchAnalytics && searchData && (
+              <>
+                <div className="mb-4 mt-2">
+                  <h2 className="text-lg font-bold text-[#304256]">Search Analytics</h2>
+                  <p className="text-sm text-gray-400">What users are searching for across the platform</p>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-4 mb-6">
+                  <div className="bg-white rounded-xl border border-[#E8ECF1] p-5">
+                    <div className="text-2xl font-bold text-[#304256]">{searchData.volume.this_week}</div>
+                    <div className="text-sm text-gray-400 mt-1">Searches This Week</div>
+                  </div>
+                  <div className="bg-white rounded-xl border border-[#E8ECF1] p-5">
+                    <div className="text-2xl font-bold text-[#304256]">{searchData.volume.this_month}</div>
+                    <div className="text-sm text-gray-400 mt-1">Searches This Month</div>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6 mb-8">
+                  {/* Top Searched Terms */}
+                  <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
+                    <div className="px-5 py-4 border-b border-[#E8ECF1] flex items-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#27a28c" strokeWidth="2" className="flex-shrink-0">
+                        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                      </svg>
+                      <h2 className="font-semibold text-[#304256]">Top 20 Searched Terms</h2>
+                    </div>
+                    <div className="max-h-[400px] overflow-y-auto">
+                      {searchData.top_searches.length === 0 ? (
+                        <div className="px-5 py-8 text-center text-gray-400 text-sm">No search data yet</div>
+                      ) : (
+                        <div>
+                          {searchData.top_searches.map((s, i) => (
+                            <div key={s.query} className="px-5 py-2.5 border-b border-gray-100 last:border-b-0 flex items-center gap-3">
+                              <span className="text-xs text-gray-300 w-5 text-right tabular-nums">{i + 1}</span>
+                              <span className="flex-1 text-sm text-gray-800 truncate">{s.query}</span>
+                              <span className="text-xs font-semibold text-[#27a28c] tabular-nums">{s.count}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* No Results Queries */}
+                  <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
+                    <div className="px-5 py-4 border-b border-[#E8ECF1] flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-amber-500" />
+                      <h2 className="font-semibold text-[#304256]">No Results Searches</h2>
+                      {searchData.no_results_queries.length > 0 && (
+                        <span className="text-[10px] bg-amber-50 text-amber-600 rounded-full px-2 py-0.5 font-medium">
+                          {searchData.no_results_queries.length}
+                        </span>
+                      )}
+                    </div>
+                    <div className="max-h-[400px] overflow-y-auto">
+                      {searchData.no_results_queries.length === 0 ? (
+                        <div className="px-5 py-8 text-center">
+                          <div className="text-2xl mb-2">&#10003;</div>
+                          <p className="text-sm text-gray-400">All searches returned results</p>
+                        </div>
+                      ) : (
+                        <div>
+                          {searchData.no_results_queries.map((s) => (
+                            <div key={s.query} className="px-5 py-2.5 border-b border-gray-100 last:border-b-0 flex items-center justify-between">
+                              <span className="text-sm text-gray-800 truncate">{s.query}</span>
+                              <span className="text-xs font-semibold text-amber-600 tabular-nums">{s.count}x</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>

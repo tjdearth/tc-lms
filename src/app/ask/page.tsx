@@ -30,6 +30,17 @@ export default function AskAtlasPage() {
     setInput("");
     setLoading(true);
 
+    // Log AI chat query to search analytics
+    fetch("/api/search-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: q,
+        source: "ai_chat",
+        results_count: 1,
+      }),
+    }).catch(() => {});
+
     try {
       const res = await fetch("/api/ask", {
         method: "POST",
