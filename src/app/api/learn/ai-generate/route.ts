@@ -165,8 +165,8 @@ IMPORTANT RULES:
 - Generate rich styled HTML content with:
   - Headings (h2, h3)
   - Styled callout/tip boxes using div with inline styles (e.g. <div style="background:#f0fdf4;border-left:4px solid #27a28c;padding:12px 16px;margin:16px 0;border-radius:6px">)
-  - Tables where relevant (with inline styles for borders and padding)
-  - Bullet and numbered lists
+  - Tables MUST use proper HTML <table> tags with inline styles (e.g. <table style="width:100%;border-collapse:collapse;margin:16px 0"><thead><tr style="background:#f8f9fa"><th style="text-align:left;padding:8px 12px;border:1px solid #e5e7eb">). NEVER output tables as plain text.
+  - Bullet and numbered lists using <ul>/<ol> and <li> tags
   - Bold key terms using <strong>
   - Image placeholder markers like <!-- [Image: description of what visual would help] --> where visuals would help
 - For quiz questions, use question_type "single_choice" with 4 options each, one correct
