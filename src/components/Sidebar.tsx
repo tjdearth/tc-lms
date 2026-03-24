@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { isAdmin, isCourseCreator } from "@/lib/admin";
+import { useBrand } from "@/lib/brand-context";
 
 const TC_LOGO_URL =
   "https://lh7-rt.googleusercontent.com/docsz/AD_4nXcuZ3fOJUGrPHzT0Tu5n3IyhjOPWYUjkhaEcBcNhdpt2I5hcRLGyL_Sj635ZffMbHWB3xfPa8vnDZ06Pfl0ez9vedO8hDGzYaZxhKsj7yyVeyk-sUcbBz4G6KXjTCvXUgo48Y2n?key=5z7x5EJrcuoubrabZrlshg";
@@ -87,6 +88,8 @@ interface SidebarProps {
 export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { brand, setBrandMode } = useBrand();
+  const isTc = brand.mode === "tc";
 
   const userName = session?.user?.name || session?.user?.email?.split("@")[0] || "User";
   const userInitial = userName.charAt(0).toUpperCase();
@@ -136,21 +139,45 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
       {/* Logo */}
       <div
         className="px-5 py-5"
-        style={{ borderBottom: "1px solid #2A3F52" }}
+        style={{ borderBottom: `1px solid ${brand.sidebarBorder}` }}
       >
         <div className="flex flex-col items-center gap-3">
           <img
-            src={TC_LOGO_URL}
-            alt="Travel Collection"
+            src={isTc ? TC_LOGO_URL : brand.logo}
+            alt={brand.name}
             className="w-full h-auto"
-            style={{ filter: "brightness(0) invert(1)" }}
+            style={{ filter: "brightness(0) invert(1)", maxHeight: isTc ? undefined : "48px", objectFit: "contain" }}
           />
           <div
             className="text-[13px] font-bold tracking-wide uppercase text-center"
-            style={{ color: "#27a28c" }}
+            style={{ color: brand.accent }}
           >
             Atlas
           </div>
+        </div>
+
+        {/* Brand toggle */}
+        <div className="mt-3 flex rounded-lg overflow-hidden" style={{ border: `1px solid ${brand.sidebarBorder}` }}>
+          <button
+            onClick={() => setBrandMode("tc")}
+            className="flex-1 py-1.5 text-[10px] font-semibold tracking-wide text-center transition-colors"
+            style={{
+              backgroundColor: isTc ? brand.accent : "transparent",
+              color: isTc ? "#fff" : "#8A9BB0",
+            }}
+          >
+            TC
+          </button>
+          <button
+            onClick={() => setBrandMode("unbox-spain")}
+            className="flex-1 py-1.5 text-[10px] font-semibold tracking-wide text-center transition-colors"
+            style={{
+              backgroundColor: !isTc ? brand.accent : "transparent",
+              color: !isTc ? "#fff" : "#8A9BB0",
+            }}
+          >
+            DMC
+          </button>
         </div>
       </div>
 
@@ -179,8 +206,8 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
             }}
             className="w-full text-left pl-8 pr-7 py-2 rounded-lg text-[12px]"
             style={{
-              backgroundColor: "#0F1923",
-              border: "1px solid #2A3F52",
+              backgroundColor: isTc ? "#0F1923" : "#1A0810",
+              border: `1px solid ${brand.sidebarBorder}`,
               color: "#8A9BB0",
             }}
           >
@@ -205,13 +232,13 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
               className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm transition-all duration-150"
               style={
                 active
-                  ? { backgroundColor: "#304256", color: "#E8EDF2", fontWeight: 600 }
+                  ? { backgroundColor: brand.sidebarActiveBg, color: "#E8EDF2", fontWeight: 600 }
                   : { color: "#8A9BB0" }
               }
               onMouseEnter={(e) => {
                 if (!active) {
                   e.currentTarget.style.color = "#E8EDF2";
-                  e.currentTarget.style.backgroundColor = "rgba(48,66,86,0.3)";
+                  e.currentTarget.style.backgroundColor = `${brand.sidebarActiveBg}4D`;
                 }
               }}
               onMouseLeave={(e) => {
@@ -231,7 +258,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
       {/* Admin / Tools */}
       {adminItems.length > 0 && (
         <div className="px-3 pb-2">
-          <div style={{ borderTop: "1px solid #2A3F52" }} className="pt-3 mb-1">
+          <div style={{ borderTop: `1px solid ${brand.sidebarBorder}` }} className="pt-3 mb-1">
             <span className="px-3 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#6B7D8F" }}>
               {showWikiAdmin || showCourseAdmin ? "Admin" : "Tools"}
             </span>
@@ -247,13 +274,13 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
                   className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-[13px] transition-all duration-150"
                   style={
                     active
-                      ? { backgroundColor: "#304256", color: "#E8EDF2", fontWeight: 600 }
+                      ? { backgroundColor: brand.sidebarActiveBg, color: "#E8EDF2", fontWeight: 600 }
                       : { color: "#8A9BB0" }
                   }
                   onMouseEnter={(e) => {
                     if (!active) {
                       e.currentTarget.style.color = "#E8EDF2";
-                      e.currentTarget.style.backgroundColor = "rgba(48,66,86,0.3)";
+                      e.currentTarget.style.backgroundColor = `${brand.sidebarActiveBg}4D`;
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -275,7 +302,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
       {/* User */}
       <div
         className="px-4 py-4"
-        style={{ borderTop: "1px solid #2A3F52" }}
+        style={{ borderTop: `1px solid ${brand.sidebarBorder}` }}
       >
         {session?.user ? (
           <div className="flex items-center gap-2.5">
@@ -327,8 +354,8 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
         mobileOpen ? "translate-x-0" : "-translate-x-full"
       }`}
       style={{
-        backgroundColor: "#1A2A3A",
-        borderRight: "1px solid #2A3F52",
+        backgroundColor: brand.sidebarBg,
+        borderRight: `1px solid ${brand.sidebarBorder}`,
       }}
     >
       {/* Mobile close button */}
