@@ -157,8 +157,8 @@ export async function POST(req: NextRequest) {
 
 Your task is to generate a complete course structure with rich content. The course should be practical, engaging, and relevant to travel industry professionals.
 
-IMPORTANT RULES:
-- Generate EXACTLY ${numModules || 3} modules
+CRITICAL RULES:
+- You MUST generate EXACTLY ${numModules || 3} modules. Not fewer, not more. This is non-negotiable.
 - ${quizInstruction}
 - Difficulty level: ${difficulty || "Intermediate"}
 - Each content lesson should have 300-600 words of substantive training content
@@ -168,9 +168,18 @@ IMPORTANT RULES:
   - Tables MUST use proper HTML <table> tags with inline styles (e.g. <table style="width:100%;border-collapse:collapse;margin:16px 0"><thead><tr style="background:#f8f9fa"><th style="text-align:left;padding:8px 12px;border:1px solid #e5e7eb">). NEVER output tables as plain text.
   - Bullet and numbered lists using <ul>/<ol> and <li> tags
   - Bold key terms using <strong>
-  - Image placeholder markers like <!-- [Image: description of what visual would help] --> where visuals would help
+  - Process flow diagrams using styled HTML divs. Create visual step-by-step flows like:
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0;flex-wrap:wrap">
+      <div style="background:#304256;color:white;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:600">Step 1</div>
+      <span style="font-size:20px;color:#27a28c">→</span>
+      <div style="background:#304256;color:white;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:600">Step 2</div>
+    </div>
+  - Include at least ONE process flow diagram or visual summary per module where it makes sense
+  - Comparison tables, decision trees, and summary boxes to make content scannable
+  - Image placeholder markers like <!-- [Image: description] --> where screenshots or photos would help
 - For quiz questions, use question_type "single_choice" with 4 options each, one correct
 - Course code should be uppercase, short (e.g. "SF-BASICS", "OPS-101")
+- REMEMBER: You MUST output EXACTLY ${numModules || 3} modules. Do not stop early.
 
 Respond ONLY with valid JSON in exactly this format (no markdown, no code fences):
 {
@@ -237,7 +246,7 @@ Include quizzes: ${includeQuizzes !== false ? "Yes" : "No"}`;
     const anthropic = new Anthropic();
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 8192,
+      max_tokens: 16000,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     });
