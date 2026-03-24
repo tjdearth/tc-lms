@@ -8,6 +8,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
+import { Markdown } from "tiptap-markdown";
 import VideoEmbed from "./VideoEmbed";
 import { useEffect, useCallback, useRef, useState } from "react";
 
@@ -253,6 +254,11 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
         },
       }),
       VideoEmbed,
+      Markdown.configure({
+        html: true,
+        transformPastedText: true,
+        transformCopiedText: false,
+      }),
     ],
     content,
     editorProps: {
