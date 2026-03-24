@@ -8,7 +8,7 @@ interface CourseTemplatesProps {
   onSelect: (template: CourseTemplate | null, cloneCourseId?: string) => void;
 }
 
-type SelectionMode = "template" | "clone" | "blank";
+type SelectionMode = "template" | "clone" | "blank" | "ai";
 
 export default function CourseTemplates({ onSelect }: CourseTemplatesProps) {
   const [mode, setMode] = useState<SelectionMode | null>(null);
@@ -51,13 +51,16 @@ export default function CourseTemplates({ onSelect }: CourseTemplatesProps) {
       onSelect(selectedTemplate);
     } else if (mode === "clone" && selectedCloneId) {
       onSelect(null, selectedCloneId);
+    } else if (mode === "ai") {
+      onSelect({ name: "__ai__", description: "", category: "", modules: [] });
     }
   };
 
   const canConfirm =
     mode === "blank" ||
     (mode === "template" && selectedTemplate) ||
-    (mode === "clone" && selectedCloneId);
+    (mode === "clone" && selectedCloneId) ||
+    mode === "ai";
 
   return (
     <div className="space-y-6">
@@ -66,7 +69,7 @@ export default function CourseTemplates({ onSelect }: CourseTemplatesProps) {
       </h3>
 
       {/* Mode selection cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Blank */}
         <button
           onClick={() => {
@@ -166,6 +169,39 @@ export default function CourseTemplates({ onSelect }: CourseTemplatesProps) {
           </p>
           <p className="text-xs text-gray-500 mt-0.5">
             Copy an existing course
+          </p>
+        </button>
+
+        {/* AI Generate */}
+        <button
+          onClick={() => {
+            setMode("ai");
+            setSelectedTemplate(null);
+            setSelectedCloneId(null);
+          }}
+          className={`p-4 rounded-xl border-2 text-left transition-all ${
+            mode === "ai"
+              ? "border-[#27a28c] bg-[#27a28c]/5"
+              : "border-[#E8ECF1] bg-white hover:border-gray-300"
+          }`}
+        >
+          <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center mb-2">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#8b5cf6"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+            </svg>
+          </div>
+          <p className="text-sm font-semibold text-[#304256]">AI Generate</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            AI builds course content
           </p>
         </button>
       </div>
@@ -271,6 +307,8 @@ export default function CourseTemplates({ onSelect }: CourseTemplatesProps) {
               ? "Start Blank"
               : mode === "template"
               ? "Use Template"
+              : mode === "ai"
+              ? "Set Up AI Generator"
               : "Clone Course"}
           </button>
         </div>
