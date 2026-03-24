@@ -178,8 +178,11 @@ CRITICAL RULES:
   - Comparison tables, decision trees, and summary boxes to make content scannable
   - Image placeholder markers like <!-- [Image: description] --> where screenshots or photos would help
 - For quiz questions, use question_type "single_choice" with 4 options each, one correct
+- CRITICAL: RANDOMIZE the position of the correct answer across all questions. Do NOT always put the correct answer first. Mix it up — sometimes 1st, sometimes 2nd, 3rd, or 4th position. This is essential for a fair quiz.
+- Include a mix of question types: factual recall, scenario-based ("What should you do if..."), and application questions
 - Course code should be uppercase, short (e.g. "SF-BASICS", "OPS-101")
 - REMEMBER: You MUST output EXACTLY ${numModules || 3} modules. Do not stop early.
+- Where relevant, create visual HTML elements: process flow diagrams using styled divs with arrows (→), comparison tables, step-by-step boxes with numbered circles, tip/warning callout boxes with colored borders
 
 Respond ONLY with valid JSON in exactly this format (no markdown, no code fences):
 {
@@ -207,10 +210,10 @@ Respond ONLY with valid JSON in exactly this format (no markdown, no code fences
                 "question_text": "What is...?",
                 "explanation": "The answer is X because...",
                 "options": [
+                  {"text": "Wrong answer A", "is_correct": false},
+                  {"text": "Wrong answer B", "is_correct": false},
                   {"text": "Correct answer", "is_correct": true},
-                  {"text": "Wrong answer 1", "is_correct": false},
-                  {"text": "Wrong answer 2", "is_correct": false},
-                  {"text": "Wrong answer 3", "is_correct": false}
+                  {"text": "Wrong answer C", "is_correct": false}
                 ],
                 "points": 1
               }
@@ -405,7 +408,7 @@ Include quizzes: ${includeQuizzes !== false ? "Yes" : "No"}`;
               title: lesson.title,
               passing_score: lesson.quiz.passing_score || 70,
               max_attempts: 0,
-              shuffle_questions: false,
+              shuffle_questions: true,
             })
             .select()
             .single();
@@ -416,19 +419,23 @@ Include quizzes: ${includeQuizzes !== false ? "Yes" : "No"}`;
           // Create quiz questions
           if (lesson.quiz.questions && lesson.quiz.questions.length > 0) {
             const questionRows = lesson.quiz.questions.map(
-              (q: GeneratedQuestion, qIdx: number) => ({
-                quiz_id: quizData.id,
-                question_type: q.question_type || "single_choice",
-                question_text: q.question_text,
-                explanation: q.explanation || null,
-                options: (q.options || []).map((o: GeneratedOption) => ({
-                  id: randomUUID(),
-                  text: o.text,
-                  is_correct: o.is_correct,
-                })),
-                points: q.points ?? 1,
-                sort_order: qIdx,
-              })
+              (q: GeneratedQuestion, qIdx: number) => {
+                // Shuffle options so correct answer isn't always in the same position
+                const shuffledOptions = [...(q.options || [])].sort(() => Math.random() - 0.5);
+                return {
+                  quiz_id: quizData.id,
+                  question_type: q.question_type || "single_choice",
+                  question_text: q.question_text,
+                  explanation: q.explanation || null,
+                  options: shuffledOptions.map((o: GeneratedOption) => ({
+                    id: randomUUID(),
+                    text: o.text,
+                    is_correct: o.is_correct,
+                  })),
+                  points: q.points ?? 1,
+                  sort_order: qIdx,
+                };
+              }
             );
 
             await supabaseAdmin.from("quiz_questions").insert(questionRows);
