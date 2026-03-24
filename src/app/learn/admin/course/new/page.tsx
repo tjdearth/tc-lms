@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
@@ -75,6 +75,7 @@ export default function CreateCoursePage() {
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiProgress, setAiProgress] = useState("");
   const [wikiPickerOpen, setWikiPickerOpen] = useState(false);
+  const aiAbortRef = useRef<AbortController | null>(null);
 
   if (status === "loading") {
     return (
@@ -281,11 +282,23 @@ export default function CreateCoursePage() {
     setAiReferenceFiles((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  const handleAiCancel = () => {
+    if (aiAbortRef.current) {
+      aiAbortRef.current.abort();
+      aiAbortRef.current = null;
+    }
+    setAiGenerating(false);
+    setAiProgress("");
+  };
+
   const handleAiGenerate = async () => {
     if (!aiTopic.trim()) return;
     setAiGenerating(true);
     setError(null);
     setAiProgress("Preparing course generation...");
+
+    const controller = new AbortController();
+    aiAbortRef.current = controller;
 
     try {
       setAiProgress("AI is generating your course structure and content. This may take 30-60 seconds...");
@@ -307,6 +320,7 @@ export default function CreateCoursePage() {
           referenceFiles: aiReferenceFiles.length > 0 ? aiReferenceFiles : undefined,
           additionalInstructions: aiInstructions.trim() || undefined,
         }),
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -318,6 +332,10 @@ export default function CreateCoursePage() {
       const data = await res.json();
       router.push(`/learn/admin/course/${data.courseId}`);
     } catch (e: unknown) {
+      if (e instanceof DOMException && e.name === "AbortError") {
+        setAiProgress("");
+        return;
+      }
       setError(e instanceof Error ? e.message : "Failed to generate course");
       setAiGenerating(false);
       setAiProgress("");
@@ -799,10 +817,10 @@ export default function CreateCoursePage() {
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setStep("template")}
-                  className="px-4 py-2.5 text-sm text-gray-500 hover:text-[#304256] transition-colors"
+                  onClick={aiGenerating ? handleAiCancel : () => setStep("template")}
+                  className={`px-4 py-2.5 text-sm transition-colors ${aiGenerating ? "text-red-500 hover:text-red-700 font-medium" : "text-gray-500 hover:text-[#304256]"}`}
                 >
-                  Cancel
+                  {aiGenerating ? "Stop Generating" : "Cancel"}
                 </button>
                 <button
                   type="button"
