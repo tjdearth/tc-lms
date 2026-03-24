@@ -376,32 +376,39 @@ export default function OnboardingPage() {
                     </div>
                   )}
 
-                  {/* Team member grid */}
+                  {/* Team member grid — show first 8, then count */}
                   {teamData.team.length > 0 && (
-                    <div className="grid grid-cols-2 gap-3">
-                      {teamData.team.map((m) => (
-                        <div
-                          key={m.email}
-                          className="flex items-center gap-3 p-3 border border-[#E8ECF1] rounded-lg"
-                        >
-                          {m.avatar_url ? (
-                            <img
-                              src={m.avatar_url}
-                              alt={m.name}
-                              className="w-8 h-8 rounded-full object-cover"
-                              referrerPolicy="no-referrer"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium text-sm">
-                              {m.name.charAt(0)}
-                            </div>
-                          )}
-                          <span className="text-sm text-[#304256] truncate">
-                            {m.name}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        {teamData.team.slice(0, 8).map((m) => (
+                          <div
+                            key={m.email}
+                            className="flex items-center gap-3 p-3 border border-[#E8ECF1] rounded-lg"
+                          >
+                            {m.avatar_url ? (
+                              <img
+                                src={m.avatar_url}
+                                alt={m.name}
+                                className="w-8 h-8 rounded-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium text-sm">
+                                {m.name.charAt(0)}
+                              </div>
+                            )}
+                            <span className="text-sm text-[#304256] truncate">
+                              {m.name}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      {teamData.team.length > 8 && (
+                        <p className="text-center text-sm text-gray-400 mt-3">
+                          and {teamData.team.length - 8} more colleague{teamData.team.length - 8 !== 1 ? "s" : ""}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               ) : (
