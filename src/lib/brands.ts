@@ -118,3 +118,27 @@ export function brandFromEmail(email: string): string | null {
   const domain = email.split("@")[1]?.toLowerCase();
   return domain ? EMAIL_DOMAIN_TO_BRAND[domain] ?? null : null;
 }
+
+const BRAND_LOGOS: Record<string, string> = {
+  "Travel Collection": "/logos/tc.png",
+  "Authenticus Italy": "/logos/authenticus-italy.png",
+  "Unbox Spain & Portugal": "/logos/unbox-spain.png",
+  "Truly Swahili": "/logos/truly-swahili.png",
+  "Across Mexico": "/logos/across-mexico.png",
+  "Kembali Indonesia": "/logos/kembali-indonesia.png",
+  "Majlis Retreats": "/logos/majlis-retreats.png",
+  "Crown Journey": "/logos/crown-journey.png",
+  "Oshinobi Travel": "/logos/oshinobi-travel.png",
+  "Essentially French": "/logos/essentially-french.png",
+  "Elura Australia": "/logos/elura-australia.png",
+  "Nira Thailand": "/logos/nira-thailand.png",
+  "Sar Turkiye": "/logos/sar-turkiye.png",
+  "Nostos Greece": "/logos/nostos-greece.png",
+  "Vista Colombia": "/logos/vista-colombia.png",
+  "Awaken Peru": "/logos/awaken-peru.png",
+  "Experience Morocco": "/logos/experience-morocco.png",
+};
+
+export function getBrandLogo(brand: string): string {
+  return BRAND_LOGOS[brand] || "/logos/tc.png";
+}
