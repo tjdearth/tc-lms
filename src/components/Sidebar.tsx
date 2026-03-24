@@ -98,7 +98,7 @@ interface SidebarProps {
 export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const { brand, setBrandMode } = useBrand();
+  const { brand, userDmcBrand, setBrandMode } = useBrand();
   const isTc = brand.mode === "tc";
 
   const userName = session?.user?.name || session?.user?.email?.split("@")[0] || "User";
@@ -180,7 +180,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
             TC
           </button>
           <button
-            onClick={() => setBrandMode("unbox-spain")}
+            onClick={() => userDmcBrand && setBrandMode(userDmcBrand)}
             className="flex-1 text-[9px] font-semibold tracking-wider text-center transition-colors"
             style={{
               backgroundColor: !isTc ? brand.accent : "transparent",
