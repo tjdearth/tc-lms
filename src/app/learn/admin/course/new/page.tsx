@@ -562,7 +562,7 @@ export default function CreateCoursePage() {
                       <p>💡 <strong>Tips for best results:</strong></p>
                       <p>• Be specific in your topic and description — &quot;Salesforce lead management for travel advisors&quot; beats &quot;Salesforce training&quot;</p>
                       <p>• Add wiki articles as references so the AI uses your actual company processes</p>
-                      <p>• Upload HTML files for dashboards or tools the AI can&apos;t access directly</p>
+                      <p>• Upload files (docs, spreadsheets, saved web pages) for content the AI can&apos;t access directly</p>
                       <p>• Use Additional Instructions for tone, focus areas, or specific scenarios to cover</p>
                     </div>
                   </div>
@@ -769,7 +769,7 @@ export default function CreateCoursePage() {
               {/* Reference Files */}
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5">
-                  Reference Files (HTML)
+                  Reference Files
                 </label>
                 {aiReferenceFiles.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-2">
@@ -793,14 +793,14 @@ export default function CreateCoursePage() {
                 )}
                 <input
                   type="file"
-                  accept=".html,.htm"
+                  accept=".html,.htm,.txt,.md,.csv,.json,.pdf,.doc,.docx"
                   multiple
                   onChange={handleFileUpload}
                   disabled={aiGenerating}
                   className="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border file:border-dashed file:border-[#E8ECF1] file:text-sm file:bg-white file:text-gray-500 hover:file:border-gray-300 file:cursor-pointer disabled:opacity-50"
                 />
                 <p className="text-[11px] text-gray-400 mt-1">
-                  Upload saved web pages (.html) for content Claude can&apos;t access directly — like dashboards or internal tools
+                  Upload any files the AI can&apos;t access directly — saved web pages, documents, spreadsheets, or text files with content you want the course to cover
                 </p>
               </div>
 
