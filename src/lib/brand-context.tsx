@@ -11,6 +11,7 @@ export interface BrandTheme {
   sidebarBg: string;
   sidebarBorder: string;
   sidebarActiveBg: string;
+  sidebarIsDark: boolean;
   logo: string;
   countries: string[];
 }
@@ -23,6 +24,7 @@ const THEMES: Record<BrandMode, BrandTheme> = {
     sidebarBg: "#1A2A3A",
     sidebarBorder: "#2A3F52",
     sidebarActiveBg: "#304256",
+    sidebarIsDark: true,
     logo: "/logos/tc.png",
     countries: [],
   },
@@ -33,6 +35,7 @@ const THEMES: Record<BrandMode, BrandTheme> = {
     sidebarBg: "#2A1019",
     sidebarBorder: "#4A1E2E",
     sidebarActiveBg: "#5A2338",
+    sidebarIsDark: true,
     logo: "/logos/unbox-spain.png",
     countries: ["Spain", "Portugal"],
   },

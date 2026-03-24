@@ -149,7 +149,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
           </div>
           <div
             className="text-[13px] font-bold tracking-wide uppercase text-center"
-            style={{ color: isTc ? brand.accent : "#E8EDF2" }}
+            style={{ color: isTc ? brand.accent : brand.sidebarIsDark ? "#E8EDF2" : "#304256" }}
           >
             Atlas
           </div>
