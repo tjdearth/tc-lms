@@ -5,6 +5,8 @@ interface CourseProgressProps {
   size?: number;
   strokeWidth?: number;
   className?: string;
+  textColor?: string;
+  trackColor?: string;
 }
 
 export default function CourseProgress({
@@ -12,6 +14,8 @@ export default function CourseProgress({
   size = 48,
   strokeWidth = 4,
   className = "",
+  textColor = "#304256",
+  trackColor = "#E8ECF1",
 }: CourseProgressProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -27,7 +31,7 @@ export default function CourseProgress({
           cy={center}
           r={radius}
           fill="none"
-          stroke="#E8ECF1"
+          stroke={trackColor}
           strokeWidth={strokeWidth}
         />
         {/* Progress */}
@@ -44,7 +48,7 @@ export default function CourseProgress({
           className="transition-all duration-500 ease-out"
         />
       </svg>
-      <span className="absolute text-xs font-semibold text-[#304256]">
+      <span className="absolute text-xs font-semibold" style={{ color: textColor }}>
         {Math.round(percent)}%
       </span>
     </div>

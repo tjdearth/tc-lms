@@ -181,7 +181,7 @@ export default function CourseOverview() {
     );
   }
 
-  const progressPct = course.progress_pct ?? 0;
+  const progressPct = course.enrollment?.status === "completed" ? 100 : (course.progress_pct ?? 0);
   const totalLessons = (course.modules || []).reduce(
     (acc, m) => acc + (m.lessons?.length || 0),
     0
@@ -234,7 +234,7 @@ export default function CourseOverview() {
               {/* Progress ring */}
               {enrollment && (
                 <div className="hidden sm:block flex-shrink-0">
-                  <CourseProgress percent={progressPct} size={72} strokeWidth={5} />
+                  <CourseProgress percent={progressPct} size={72} strokeWidth={5} textColor="#ffffff" trackColor="rgba(255,255,255,0.15)" />
                 </div>
               )}
             </div>
