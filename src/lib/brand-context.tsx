@@ -14,9 +14,6 @@ export interface BrandTheme {
   sidebarBorder: string;
   sidebarActiveBg: string;
   sidebarIsDark: boolean;
-  sidebarText: string;        // default nav text color
-  sidebarTextActive: string;  // active/hover nav text color
-  sidebarTextMuted: string;   // muted text color
   logo: string;
   countries: string[];
 }
@@ -69,9 +66,6 @@ const TC_THEME: BrandTheme = {
   sidebarBorder: "#2A3F52",
   sidebarActiveBg: "#304256",
   sidebarIsDark: true,
-  sidebarText: "#8A9BB0",
-  sidebarTextActive: "#E8EDF2",
-  sidebarTextMuted: "rgba(232,237,242,0.3)",
   logo: "/logos/tc.png",
   countries: [],
 };
@@ -83,21 +77,19 @@ function buildDmcTheme(brandName: string): BrandTheme {
   const hex = brand.hex;
   const dark = isDarkColor(hex);
 
-  // Use the brand hex as the sidebar background
-  const sidebarBorder = dark ? darken(hex, 0.7) : darken(hex, 0.6);
-  const sidebarActiveBg = dark ? darken(hex, 0.7) : darken(hex, 0.7);
+  // Generate dark sidebar colors from the brand color
+  const sidebarBg = dark ? darken(hex, 0.25) : darken(hex, 0.15);
+  const sidebarBorder = dark ? darken(hex, 0.4) : darken(hex, 0.25);
+  const sidebarActiveBg = dark ? darken(hex, 0.55) : darken(hex, 0.35);
 
   return {
     mode: brandName,
     name: brandName,
     accent: hex,
-    sidebarBg: hex,
+    sidebarBg,
     sidebarBorder,
     sidebarActiveBg,
-    sidebarIsDark: dark,
-    sidebarText: dark ? "#c0c8d4" : "#4a3520",
-    sidebarTextActive: dark ? "#ffffff" : "#1a1a1a",
-    sidebarTextMuted: dark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
+    sidebarIsDark: true, // sidebar is always dark (darkened brand color)
     logo: BRAND_LOGOS[brandName] || "/logos/tc.png",
     countries: brand.countries,
   };
