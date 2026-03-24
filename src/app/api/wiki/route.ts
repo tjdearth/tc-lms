@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
+import { isWikiAdminForBrand } from "@/lib/admin-server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 async function requireAdmin() {
@@ -10,6 +11,29 @@ async function requireAdmin() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
   return null;
+}
+
+/**
+ * Require that the user is either a global admin or a GM for the given brand.
+ * Returns null if authorized, or a Response if denied.
+ * Also returns the session email for further checks.
+ */
+async function requireWikiAdmin(brand?: string): Promise<{ denied: NextResponse | null; email: string | null }> {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email || null;
+  if (!email) {
+    return { denied: NextResponse.json({ error: "Unauthorized" }, { status: 403 }), email: null };
+  }
+  // Global admins can edit any brand
+  if (isAdmin(email)) {
+    return { denied: null, email };
+  }
+  // GMs can edit their own brand
+  if (brand) {
+    const allowed = await isWikiAdminForBrand(email, brand);
+    if (allowed) return { denied: null, email };
+  }
+  return { denied: NextResponse.json({ error: "Unauthorized" }, { status: 403 }), email };
 }
 
 function slugify(text: string): string {
@@ -30,11 +54,14 @@ function stripHtmlForSearch(html: string): string {
 
 // POST — create a wiki node
 export async function POST(req: NextRequest) {
-  const denied = await requireAdmin();
-  if (denied) return denied;
   try {
     const body = await req.json();
     const { title, node_type, parent_id, sort_order, brand, html_content, slug, is_published } = body;
+
+    // Auth: global admin or GM for the target brand
+    const nodeBrand = brand || "tc";
+    const { denied } = await requireWikiAdmin(nodeBrand);
+    if (denied) return denied;
 
     if (!title || !node_type) {
       return NextResponse.json({ error: "title and node_type are required" }, { status: 400 });
@@ -74,8 +101,6 @@ export async function POST(req: NextRequest) {
 
 // PATCH — update a wiki node
 export async function PATCH(req: NextRequest) {
-  const denied = await requireAdmin();
-  if (denied) return denied;
   try {
     const body = await req.json();
     const { id, ...updates } = body;
@@ -83,6 +108,16 @@ export async function PATCH(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
+
+    // Look up the node's brand for GM auth check
+    const { data: existingNode } = await supabaseAdmin
+      .from("wiki_nodes")
+      .select("brand")
+      .eq("id", id)
+      .single();
+    const nodeBrand = existingNode?.brand || "tc";
+    const { denied } = await requireWikiAdmin(nodeBrand);
+    if (denied) return denied;
 
     // Rebuild search_text if html_content changed
     if (updates.html_content) {
@@ -204,8 +239,6 @@ function transformScribeHtml(html: string): string {
 
 // DELETE — delete a wiki node
 export async function DELETE(req: NextRequest) {
-  const denied = await requireAdmin();
-  if (denied) return denied;
   try {
     const body = await req.json();
     const { id } = body;
@@ -213,6 +246,16 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
+
+    // Look up the node's brand for GM auth check
+    const { data: existingNode } = await supabaseAdmin
+      .from("wiki_nodes")
+      .select("brand")
+      .eq("id", id)
+      .single();
+    const nodeBrand = existingNode?.brand || "tc";
+    const { denied } = await requireWikiAdmin(nodeBrand);
+    if (denied) return denied;
 
     // Check for children
     const { data: children } = await supabaseAdmin

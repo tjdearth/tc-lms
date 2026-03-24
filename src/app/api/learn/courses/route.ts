@@ -2,14 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { isCourseCreator } from "@/lib/admin";
+import { isCourseCreatorForBrand } from "@/lib/admin-server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function requireCourseCreator() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email || !isCourseCreator(session.user.email)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
   return null;
+}
+
+async function requireCourseCreatorForBrand(brand?: string): Promise<NextResponse | null> {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email;
+  if (!email) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  // Global course creators can edit any brand
+  if (isCourseCreator(email)) return null;
+  // GMs can create/edit for their own brand
+  if (brand) {
+    const allowed = await isCourseCreatorForBrand(email, brand);
+    if (allowed) return null;
+  }
+  return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 }
 
 // GET — list courses with optional filters
@@ -24,12 +40,16 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get("category");
     const track = searchParams.get("track");
     const published = searchParams.get("published");
+    const brand = searchParams.get("brand");
 
     let query = supabaseAdmin
       .from("courses")
       .select("*")
       .order("sort_order", { ascending: true });
 
+    if (brand) {
+      query = query.eq("brand", brand);
+    }
     if (category) {
       query = query.eq("category", category);
     }
@@ -112,13 +132,15 @@ export async function GET(req: NextRequest) {
 
 // POST — create course
 export async function POST(req: NextRequest) {
-  const denied = await requireCourseCreator();
-  if (denied) return denied;
   try {
     const session = await getServerSession(authOptions);
     const body = await req.json();
 
-    const { code, title, description, thumbnail_url, category, tracks, estimated_minutes, is_published, is_sequential, completion_rule, min_score_pct, sort_order } = body;
+    const { code, title, description, thumbnail_url, category, tracks, estimated_minutes, is_published, is_sequential, completion_rule, min_score_pct, sort_order, brand } = body;
+
+    const courseBrand = brand || "tc";
+    const denied = await requireCourseCreatorForBrand(courseBrand);
+    if (denied) return denied;
 
     if (!code || !title) {
       return NextResponse.json({ error: "code and title are required" }, { status: 400 });
@@ -139,6 +161,7 @@ export async function POST(req: NextRequest) {
         completion_rule: completion_rule || "all_lessons",
         min_score_pct: min_score_pct || null,
         sort_order: sort_order || 0,
+        brand: courseBrand,
         created_by: session!.user!.email,
       })
       .select()
@@ -157,8 +180,6 @@ export async function POST(req: NextRequest) {
 
 // PATCH — update course
 export async function PATCH(req: NextRequest) {
-  const denied = await requireCourseCreator();
-  if (denied) return denied;
   try {
     const body = await req.json();
     const { id, _update_prerequisites, prerequisite_ids, ...updates } = body;
@@ -166,6 +187,16 @@ export async function PATCH(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
+
+    // Look up the course's brand for GM auth check
+    const { data: existingCourse } = await supabaseAdmin
+      .from("courses")
+      .select("brand")
+      .eq("id", id)
+      .single();
+    const courseBrand = existingCourse?.brand || "tc";
+    const denied = await requireCourseCreatorForBrand(courseBrand);
+    if (denied) return denied;
 
     // Handle prerequisite updates
     if (_update_prerequisites && Array.isArray(prerequisite_ids)) {
@@ -209,8 +240,6 @@ export async function PATCH(req: NextRequest) {
 
 // DELETE — delete course
 export async function DELETE(req: NextRequest) {
-  const denied = await requireCourseCreator();
-  if (denied) return denied;
   try {
     const body = await req.json();
     const { id } = body;
@@ -218,6 +247,16 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
+
+    // Look up the course's brand for GM auth check
+    const { data: existingCourse } = await supabaseAdmin
+      .from("courses")
+      .select("brand")
+      .eq("id", id)
+      .single();
+    const courseBrand = existingCourse?.brand || "tc";
+    const denied = await requireCourseCreatorForBrand(courseBrand);
+    if (denied) return denied;
 
     const { error } = await supabaseAdmin
       .from("courses")

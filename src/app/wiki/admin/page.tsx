@@ -8,6 +8,12 @@ import { supabase } from "@/lib/supabase";
 import { isAdmin } from "@/lib/admin";
 import { WikiNode } from "@/types";
 import { useBrand } from "@/lib/brand-context";
+
+interface UserPermissions {
+  isGlobalAdmin: boolean;
+  isGlobalCourseCreator: boolean;
+  gmForBrand: string | null;
+}
 import dynamic from "next/dynamic";
 
 const BlockEditor = dynamic(() => import("@/components/BlockEditor"), {
@@ -393,7 +399,9 @@ export default function WikiAdminPage() {
   const router = useRouter();
   const { brand } = useBrand();
   const isDmc = brand.mode !== "tc";
-  const wikiBrand = isDmc ? "unbox-spain" : "tc";
+  const wikiBrand = isDmc ? brand.mode : "tc";
+
+  const [permissions, setPermissions] = useState<UserPermissions | null>(null);
 
   const [flatNodes, setFlatNodes] = useState<WikiNode[]>([]);
   const [tree, setTree] = useState<WikiNode[]>([]);
@@ -441,6 +449,14 @@ export default function WikiAdminPage() {
   useEffect(() => {
     fetchNodes();
   }, [fetchNodes]);
+
+  // Fetch user permissions for GM check
+  useEffect(() => {
+    fetch("/api/auth/permissions")
+      .then((r) => r.json())
+      .then((data) => setPermissions(data))
+      .catch(() => {});
+  }, []);
 
   // Panel resize handlers
   useEffect(() => {
@@ -591,7 +607,7 @@ export default function WikiAdminPage() {
       let sortOrder = 0;
 
       if (parsed.numbering) {
-        parentId = await ensureParentHeadings(parsed.numbering, "tc", importRootId);
+        parentId = await ensureParentHeadings(parsed.numbering, wikiBrand, importRootId);
         sortOrder = numberingToSortOrder(parsed.numbering);
       }
 
@@ -751,7 +767,12 @@ export default function WikiAdminPage() {
     router.replace("/login");
     return null;
   }
-  if (!isAdmin(session?.user?.email)) {
+  // Access: global admin always, GM only when in their DMC mode
+  const isGlobalAdmin = isAdmin(session?.user?.email);
+  const isGmForCurrentBrand = permissions?.gmForBrand && isDmc && permissions.gmForBrand === brand.mode;
+  const hasAccess = isGlobalAdmin || isGmForCurrentBrand;
+
+  if (!hasAccess) {
     return (
       <AppShell>
         <div className="flex items-center justify-center h-screen">

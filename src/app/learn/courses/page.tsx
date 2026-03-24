@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import CourseCard from "@/components/CourseCard";
+import { useBrand } from "@/lib/brand-context";
 import type { Course, Enrollment } from "@/types";
 
 const categories = [
@@ -28,6 +29,8 @@ const statusFilters = [
 export default function CourseCatalog() {
   useSession();
   const router = useRouter();
+  const { brand } = useBrand();
+  const currentBrand = brand.mode === "tc" ? "tc" : brand.mode;
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -38,9 +41,10 @@ export default function CourseCatalog() {
 
   useEffect(() => {
     async function load() {
+      setLoading(true);
       try {
         const [coursesRes, enrollmentsRes] = await Promise.all([
-          fetch("/api/learn/courses"),
+          fetch(`/api/learn/courses?brand=${encodeURIComponent(currentBrand)}`),
           fetch("/api/learn/enroll"),
         ]);
         const coursesData: Course[] = await coursesRes.json();
@@ -55,7 +59,7 @@ export default function CourseCatalog() {
       }
     }
     load();
-  }, []);
+  }, [currentBrand]);
 
   const enrollmentMap = new Map(enrollments.map((e) => [e.course_id, e]));
 

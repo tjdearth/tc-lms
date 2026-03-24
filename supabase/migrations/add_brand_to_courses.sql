@@ -1,0 +1,2 @@
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS brand TEXT NOT NULL DEFAULT 'tc';
+CREATE INDEX IF NOT EXISTS idx_courses_brand ON courses(brand);

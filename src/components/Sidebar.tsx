@@ -1,11 +1,19 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { isAdmin, isCourseCreator } from "@/lib/admin";
 import { useBrand } from "@/lib/brand-context";
+import { BRAND_NAMES } from "@/lib/brands";
+
+interface UserPermissions {
+  isGlobalAdmin: boolean;
+  isGlobalCourseCreator: boolean;
+  gmForBrand: string | null;
+}
 
 
 const navItems = [
@@ -100,13 +108,30 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
   const { data: session } = useSession();
   const { brand, userDmcBrand, setBrandMode } = useBrand();
   const isTc = brand.mode === "tc";
+  const isDmc = !isTc;
+  const [permissions, setPermissions] = useState<UserPermissions | null>(null);
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
 
   const userName = session?.user?.name || session?.user?.email?.split("@")[0] || "User";
   const userInitial = userName.charAt(0).toUpperCase();
   const userImage = session?.user?.image;
   const userEmail = session?.user?.email || "";
-  const showWikiAdmin = isAdmin(userEmail);
-  const showCourseAdmin = isCourseCreator(userEmail);
+  const globalAdmin = isAdmin(userEmail);
+  const globalCourseCreator = isCourseCreator(userEmail);
+
+  // GM check: show admin links when in their DMC mode
+  const isGmForCurrentBrand = permissions?.gmForBrand && isDmc && permissions.gmForBrand === brand.mode;
+  const showWikiAdmin = globalAdmin || !!isGmForCurrentBrand;
+  const showCourseAdmin = globalCourseCreator || !!isGmForCurrentBrand;
+
+  useEffect(() => {
+    if (session?.user?.email) {
+      fetch("/api/auth/permissions")
+        .then((r) => r.json())
+        .then((data) => setPermissions(data))
+        .catch(() => {});
+    }
+  }, [session?.user?.email]);
 
   const adminItems = [
     ...(showWikiAdmin ? [{
@@ -170,7 +195,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
         {/* Brand toggle */}
         <div className="mt-2 mx-auto flex rounded-full overflow-hidden h-[22px] w-[100px]" style={{ border: `1px solid ${brand.sidebarBorder}` }}>
           <button
-            onClick={() => setBrandMode("tc")}
+            onClick={() => { setBrandMode("tc"); setShowBrandDropdown(false); }}
             className="flex-1 text-[9px] font-semibold tracking-wider text-center transition-colors"
             style={{
               backgroundColor: isTc ? brand.accent : "transparent",
@@ -180,7 +205,14 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
             TC
           </button>
           <button
-            onClick={() => userDmcBrand && setBrandMode(userDmcBrand)}
+            onClick={() => {
+              if (globalAdmin) {
+                // Admins get a dropdown to pick any DMC
+                setShowBrandDropdown(!showBrandDropdown);
+              } else if (userDmcBrand) {
+                setBrandMode(userDmcBrand);
+              }
+            }}
             className="flex-1 text-[9px] font-semibold tracking-wider text-center transition-colors"
             style={{
               backgroundColor: !isTc ? brand.accent : "transparent",
@@ -190,6 +222,30 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
             DMC
           </button>
         </div>
+
+        {/* Admin brand dropdown */}
+        {globalAdmin && showBrandDropdown && (
+          <div
+            className="mt-1 mx-auto rounded-lg overflow-hidden max-h-[200px] overflow-y-auto"
+            style={{ backgroundColor: brand.sidebarActiveBg, border: `1px solid ${brand.sidebarBorder}`, width: "180px" }}
+          >
+            {BRAND_NAMES.map((bName) => (
+              <button
+                key={bName}
+                onClick={() => { setBrandMode(bName); setShowBrandDropdown(false); }}
+                className="w-full text-left px-3 py-1.5 text-[11px] transition-colors"
+                style={{
+                  color: brand.mode === bName ? "#fff" : "#8A9BB0",
+                  backgroundColor: brand.mode === bName ? brand.accent : "transparent",
+                }}
+                onMouseEnter={(e) => { if (brand.mode !== bName) e.currentTarget.style.color = "#E8EDF2"; }}
+                onMouseLeave={(e) => { if (brand.mode !== bName) e.currentTarget.style.color = "#8A9BB0"; }}
+              >
+                {bName}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Search */}

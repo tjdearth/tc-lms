@@ -68,6 +68,7 @@ export interface Course {
   is_sequential: boolean;
   completion_rule: CompletionRule;
   min_score_pct: number | null;
+  brand: string;
   sort_order: number;
   due_days_after_enrollment: number | null;
   created_by: string | null;

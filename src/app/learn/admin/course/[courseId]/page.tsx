@@ -8,8 +8,15 @@ import ModuleLessonBuilder from "@/components/ModuleLessonBuilder";
 import QuizBuilder from "@/components/QuizBuilder";
 import EnrollmentManager from "@/components/EnrollmentManager";
 import { isCourseCreator } from "@/lib/admin";
+import { useBrand } from "@/lib/brand-context";
 import { fetchCourseDetail, fetchCourses } from "@/lib/learn-api";
 import type { Course, LmsTrack, CompletionRule, Lesson } from "@/types";
+
+interface UserPermissions {
+  isGlobalAdmin: boolean;
+  isGlobalCourseCreator: boolean;
+  gmForBrand: string | null;
+}
 
 const CATEGORIES = [
   { value: "General Onboarding", label: "General Onboarding" },
@@ -43,7 +50,12 @@ export default function CourseBuilderPage() {
   const router = useRouter();
   const params = useParams();
   const courseId = params.courseId as string;
-  const isCreator = isCourseCreator(session?.user?.email);
+  const { brand } = useBrand();
+  const isDmc = brand.mode !== "tc";
+  const [permissions, setPermissions] = useState<UserPermissions | null>(null);
+  const isGlobalCreator = isCourseCreator(session?.user?.email);
+  const isGmForCurrentBrand = permissions?.gmForBrand && isDmc && permissions.gmForBrand === brand.mode;
+  const isCreator = isGlobalCreator || isGmForCurrentBrand;
 
   const [course, setCourse] = useState<Course | null>(null);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
@@ -68,6 +80,15 @@ export default function CourseBuilderPage() {
   const [prerequisiteIds, setPrerequisiteIds] = useState<string[]>([]);
   const [isPublished, setIsPublished] = useState(false);
   const [dueDaysAfterEnrollment, setDueDaysAfterEnrollment] = useState<number | null>(null);
+  const [courseBrand, setCourseBrand] = useState("tc");
+
+  // Fetch permissions for GM check
+  useEffect(() => {
+    fetch("/api/auth/permissions")
+      .then((r) => r.json())
+      .then((data) => setPermissions(data))
+      .catch(() => {});
+  }, []);
 
   const loadCourse = useCallback(async () => {
     setLoading(true);
@@ -91,6 +112,7 @@ export default function CourseBuilderPage() {
         setPrerequisiteIds(detail.prerequisite_ids || []);
         setIsPublished(detail.is_published);
         setDueDaysAfterEnrollment(detail.due_days_after_enrollment ?? null);
+        setCourseBrand(detail.brand || "tc");
       }
       setAllCourses(courses.filter((c) => c.id !== courseId));
     } finally {
@@ -187,6 +209,7 @@ export default function CourseBuilderPage() {
           is_sequential: isSequential,
           is_published: isPublished,
           due_days_after_enrollment: dueDaysAfterEnrollment,
+          brand: courseBrand,
         }),
       });
 

@@ -24,11 +24,14 @@ function WikiContent() {
   const [isResizing, setIsResizing] = useState(false);
 
   useEffect(() => {
-    fetchWikiTree().then((tree) => {
+    setLoading(true);
+    const wikiBrand = isDmc ? brand.mode : "tc";
+    fetchWikiTree(wikiBrand).then((tree) => {
       setWikiTree(tree);
+      setActiveArticle(null);
       setLoading(false);
     });
-  }, []);
+  }, [brand.mode, isDmc]);
 
   useEffect(() => {
     if (articleParam && wikiTree.length > 0) {
@@ -78,7 +81,7 @@ function WikiContent() {
     <div className="flex flex-col h-[calc(100vh-3.5rem)] md:h-screen" style={{ marginLeft: 0 }}>
       {isDmc && (
         <div className="flex-shrink-0 px-4 py-2 text-xs text-center" style={{ backgroundColor: `${brand.accent}15`, color: brand.accent, borderBottom: `1px solid ${brand.accent}30` }}>
-          Viewing Travel Collection wiki — {brand.name} wiki coming soon
+          {brand.name} Wiki
         </div>
       )}
       <div className="flex flex-1 min-h-0">

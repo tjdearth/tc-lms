@@ -2,13 +2,21 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { isCourseCreator } from "@/lib/admin";
+import { getGmBrand } from "@/lib/admin-server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // GET — admin stats dashboard (optimized: 4 queries instead of 40+)
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email || !isCourseCreator(session.user.email)) {
+    const email = session?.user?.email;
+    if (!email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+    // Allow global course creators OR GMs
+    const isGlobalCreator = isCourseCreator(email);
+    const gmBrand = !isGlobalCreator ? await getGmBrand(email) : null;
+    if (!isGlobalCreator && !gmBrand) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -22,7 +30,7 @@ export async function GET() {
         .select("course_id, status"),
       supabaseAdmin
         .from("courses")
-        .select("id, title, code, category, is_published")
+        .select("id, title, code, category, is_published, brand")
         .order("sort_order", { ascending: true }),
     ]);
 
@@ -58,12 +66,14 @@ export async function GET() {
         code: string;
         category: string;
         is_published: boolean;
+        brand: string;
       }) => ({
         id: c.id,
         title: c.title,
         code: c.code,
         category: c.category,
         is_published: c.is_published,
+        brand: c.brand || "tc",
         enrolled_count: enrolledByCourse[c.id] || 0,
         completed_count: completedByCourse[c.id] || 0,
         avg_score: null,

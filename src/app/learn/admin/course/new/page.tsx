@@ -1,13 +1,20 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import CourseTemplates from "@/components/CourseTemplates";
 import WikiNodePicker from "@/components/WikiNodePicker";
 import { isCourseCreator } from "@/lib/admin";
+import { useBrand } from "@/lib/brand-context";
 import type { CourseTemplate, LmsTrack, CompletionRule, LessonType } from "@/types";
+
+interface UserPermissions {
+  isGlobalAdmin: boolean;
+  isGlobalCourseCreator: boolean;
+  gmForBrand: string | null;
+}
 
 const CATEGORIES = [
   { value: "General Onboarding", label: "General Onboarding" },
@@ -45,7 +52,13 @@ function slugify(str: string): string {
 export default function CreateCoursePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const isCreator = isCourseCreator(session?.user?.email);
+  const { brand } = useBrand();
+  const isDmc = brand.mode !== "tc";
+  const currentBrand = isDmc ? brand.mode : "tc";
+  const [permissions, setPermissions] = useState<UserPermissions | null>(null);
+  const isGlobalCreator = isCourseCreator(session?.user?.email);
+  const isGmForCurrentBrand = permissions?.gmForBrand && isDmc && permissions.gmForBrand === brand.mode;
+  const isCreator = isGlobalCreator || isGmForCurrentBrand;
 
   const [step, setStep] = useState<"template" | "form" | "ai">("template");
   const [selectedTemplate, setSelectedTemplate] =
@@ -79,6 +92,14 @@ export default function CreateCoursePage() {
   const [aiProgress, setAiProgress] = useState("");
   const [wikiPickerOpen, setWikiPickerOpen] = useState(false);
   const aiAbortRef = useRef<AbortController | null>(null);
+
+  // Fetch permissions for GM check
+  useEffect(() => {
+    fetch("/api/auth/permissions")
+      .then((r) => r.json())
+      .then((data) => setPermissions(data))
+      .catch(() => {});
+  }, []);
 
   if (status === "loading") {
     return (
@@ -184,6 +205,7 @@ export default function CreateCoursePage() {
           is_sequential: true,
           estimated_minutes: 0,
           sort_order: 0,
+          brand: currentBrand,
         }),
       });
 

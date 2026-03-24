@@ -5,6 +5,13 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import { isCourseCreator } from "@/lib/admin";
+import { useBrand } from "@/lib/brand-context";
+
+interface UserPermissions {
+  isGlobalAdmin: boolean;
+  isGlobalCourseCreator: boolean;
+  gmForBrand: string | null;
+}
 
 interface CourseStats {
   id: string;
@@ -12,6 +19,7 @@ interface CourseStats {
   code: string;
   category: string;
   is_published: boolean;
+  brand: string;
   enrolled_count: number;
   completed_count: number;
   avg_score: number;
@@ -56,15 +64,30 @@ function sortCourses(courses: CourseStats[], sortKey: SortKey, sortDir: "asc" | 
 export default function LearnAdminPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const { brand } = useBrand();
+  const isDmc = brand.mode !== "tc";
+  const currentBrand = isDmc ? brand.mode : "tc";
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>("category");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [permissions, setPermissions] = useState<UserPermissions | null>(null);
 
   const userEmail = session?.user?.email || "";
-  const hasAccess = isCourseCreator(userEmail);
+  const isGlobalCreator = isCourseCreator(userEmail);
+  const isGmForCurrentBrand = permissions?.gmForBrand && isDmc && permissions.gmForBrand === brand.mode;
+  const hasAccess = isGlobalCreator || isGmForCurrentBrand;
+
+  // Fetch permissions
+  useEffect(() => {
+    fetch("/api/auth/permissions")
+      .then((r) => r.json())
+      .then((data) => setPermissions(data))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
+    if (permissions === null) return; // Wait for permissions to load
     if (!hasAccess) { setLoading(false); return; }
     async function load() {
       try {
@@ -79,7 +102,7 @@ export default function LearnAdminPage() {
       }
     }
     load();
-  }, [hasAccess]);
+  }, [hasAccess, permissions]);
 
   if (!hasAccess) {
     return (
@@ -199,7 +222,11 @@ export default function LearnAdminPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#E8ECF1]">
-                      {sortCourses(stats.courses || [], sortKey, sortDir).map((c) => {
+                      {sortCourses((stats.courses || []).filter((c) => {
+                        // Filter courses by current brand context
+                        const cBrand = c.brand || "tc";
+                        return cBrand === currentBrand;
+                      }), sortKey, sortDir).map((c) => {
                         const pct = c.enrolled_count > 0 ? Math.round((c.completed_count / c.enrolled_count) * 100) : 0;
                         return (
                           <tr key={c.id} className="hover:bg-gray-50">
