@@ -7,8 +7,11 @@ import WikiTree from "@/components/WikiTree";
 import ArticleViewer from "@/components/ArticleViewer";
 import { fetchWikiTree, findArticleById } from "@/lib/api";
 import { WikiNode } from "@/types";
+import { useBrand } from "@/lib/brand-context";
 
 function WikiContent() {
+  const { brand } = useBrand();
+  const isDmc = brand.mode !== "tc";
   const searchParams = useSearchParams();
   const articleParam = searchParams.get("article");
   const [activeArticle, setActiveArticle] = useState<WikiNode | null>(null);
@@ -72,7 +75,13 @@ function WikiContent() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] md:h-screen" style={{ marginLeft: 0 }}>
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] md:h-screen" style={{ marginLeft: 0 }}>
+      {isDmc && (
+        <div className="flex-shrink-0 px-4 py-2 text-xs text-center" style={{ backgroundColor: `${brand.accent}15`, color: brand.accent, borderBottom: `1px solid ${brand.accent}30` }}>
+          Viewing Travel Collection wiki — {brand.name} wiki coming soon
+        </div>
+      )}
+      <div className="flex flex-1 min-h-0">
       <WikiTree
         nodes={wikiTree}
         activeArticleId={activeArticle?.id ?? null}
@@ -95,6 +104,7 @@ function WikiContent() {
         onBrowseClick={() => setTreeOpen(true)}
         allNodes={wikiTree}
       />
+      </div>
     </div>
   );
 }

@@ -146,7 +146,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
             src={isTc ? TC_LOGO_URL : brand.logo}
             alt={brand.name}
             className="w-full h-auto"
-            style={{ filter: "brightness(0) invert(1)", maxHeight: isTc ? undefined : "48px", objectFit: "contain" }}
+            style={{ filter: "brightness(0) invert(1)", maxHeight: isTc ? undefined : "64px", objectFit: "contain" }}
           />
           <div
             className="text-[13px] font-bold tracking-wide uppercase text-center"
@@ -157,10 +157,10 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
         </div>
 
         {/* Brand toggle */}
-        <div className="mt-3 flex rounded-lg overflow-hidden" style={{ border: `1px solid ${brand.sidebarBorder}` }}>
+        <div className="mt-3 flex rounded-full overflow-hidden h-6" style={{ border: `1px solid ${brand.sidebarBorder}` }}>
           <button
             onClick={() => setBrandMode("tc")}
-            className="flex-1 py-1.5 text-[10px] font-semibold tracking-wide text-center transition-colors"
+            className="flex-1 text-[9px] font-semibold tracking-wider text-center transition-colors"
             style={{
               backgroundColor: isTc ? brand.accent : "transparent",
               color: isTc ? "#fff" : "#8A9BB0",
@@ -170,7 +170,7 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
           </button>
           <button
             onClick={() => setBrandMode("unbox-spain")}
-            className="flex-1 py-1.5 text-[10px] font-semibold tracking-wide text-center transition-colors"
+            className="flex-1 text-[9px] font-semibold tracking-wider text-center transition-colors"
             style={{
               backgroundColor: !isTc ? brand.accent : "transparent",
               color: !isTc ? "#fff" : "#8A9BB0",

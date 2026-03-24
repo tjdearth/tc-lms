@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import AppShell from "@/components/AppShell";
 import CalendarView from "@/components/CalendarView";
 import { fetchCalendarEvents } from "@/lib/api";
 import { CalendarEvent } from "@/types";
 import { BRAND_NAMES, getBrandColor } from "@/lib/brands";
+import { useBrand } from "@/lib/brand-context";
 
 interface DiscoveredEvent {
   title: string;
@@ -36,6 +37,8 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
 };
 
 export default function CalendarPage() {
+  const { brand } = useBrand();
+  const isDmc = brand.mode !== "tc";
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -71,6 +74,13 @@ export default function CalendarPage() {
       setLoading(false);
     });
   }, []);
+
+  // Filter events based on brand mode
+  const dmcBrandName = isDmc ? "Unbox Spain & Portugal" : null;
+  const filteredEvents = useMemo(() => {
+    if (!isDmc) return events;
+    return events.filter((e) => e.brand === dmcBrandName);
+  }, [events, isDmc, dmcBrandName]);
 
   useEffect(() => {
     loadEvents();
@@ -153,10 +163,10 @@ export default function CalendarPage() {
         <div className="flex items-start justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-navy mb-1">
-              Holidays &amp; Festivals Calendar
+              {isDmc ? `${brand.name} Calendar` : "Holidays & Festivals Calendar"}
             </h1>
             <p className="text-gray-500">
-              Key dates across all 16 DMC brands. Plan ahead for holidays, peak
+              {isDmc ? `Key dates for Spain & Portugal. Plan ahead for holidays, peak` : `Key dates across all 16 DMC brands. Plan ahead for holidays, peak`}
               seasons, and cultural events.
             </p>
           </div>
@@ -344,7 +354,7 @@ export default function CalendarPage() {
             <p className="text-sm">Loading events...</p>
           </div>
         ) : (
-          <CalendarView events={events} onDelete={handleDeleteEvent} />
+          <CalendarView events={filteredEvents} onDelete={handleDeleteEvent} />
         )}
       </div>
     </AppShell>
