@@ -250,16 +250,27 @@ Include quizzes: ${includeQuizzes !== false ? "Yes" : "No"}`;
       })
       .join("");
 
-    // Parse JSON - handle potential markdown code fences
+    // Parse JSON - handle markdown code fences, surrounding text, etc.
     let jsonText = rawText.trim();
-    if (jsonText.startsWith("```")) {
-      jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+    // Remove markdown code fences
+    const fenceMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (fenceMatch) {
+      jsonText = fenceMatch[1];
+    }
+    // Try to extract JSON object if there's surrounding text
+    if (!jsonText.startsWith("{")) {
+      const braceStart = jsonText.indexOf("{");
+      const braceEnd = jsonText.lastIndexOf("}");
+      if (braceStart !== -1 && braceEnd > braceStart) {
+        jsonText = jsonText.slice(braceStart, braceEnd + 1);
+      }
     }
 
     let generated: GeneratedCourse;
     try {
       generated = JSON.parse(jsonText);
     } catch {
+      console.error("AI response parse failed. Raw text:", rawText.slice(0, 500));
       return NextResponse.json(
         { error: "Failed to parse AI response. Please try again." },
         { status: 500 }
