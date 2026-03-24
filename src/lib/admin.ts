@@ -13,7 +13,7 @@ export function isAdmin(email: string | null | undefined): boolean {
 }
 
 export const COURSE_CREATOR_EMAILS: string[] = [
-  // Add course-only creators here (admins are automatically course creators)
+  "milena@travelcollection.co",
 ];
 
 export function isCourseCreator(email: string | null | undefined): boolean {
