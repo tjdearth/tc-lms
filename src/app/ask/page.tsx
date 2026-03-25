@@ -58,13 +58,13 @@ export default function AskAtlasPage() {
 
   return (
     <AppShell>
-      <div className="p-4 md:p-8 max-w-[800px]">
-        <div className="mb-6">
+      <div className="p-4 md:p-6 max-w-[1100px]">
+        <div className="mb-4">
           <h1 className="text-2xl font-bold text-[#304256] mb-1">Ask Atlas</h1>
           <p className="text-gray-500">AI-powered assistant for Travel Collection knowledge</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-[#E8ECF1] flex flex-col shadow-sm" style={{ height: "calc(100vh - 220px)" }}>
+        <div className="bg-white rounded-xl border border-[#E8ECF1] flex flex-col shadow-sm" style={{ height: "calc(100vh - 180px)" }}>
           {/* Messages area */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-4">
             {messages.length === 0 && !loading ? (
