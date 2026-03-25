@@ -44,7 +44,7 @@ export default function CalendarPage() {
 
   // AI Discover state
   const [showDiscover, setShowDiscover] = useState(false);
-  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState(isDmc ? brand.name : "");
   const [searchYear, setSearchYear] = useState(new Date().getFullYear());
   const [discovering, setDiscovering] = useState(false);
   const [discoveredEvents, setDiscoveredEvents] = useState<DiscoveredEvent[]>([]);
@@ -209,16 +209,22 @@ export default function CalendarPage() {
             <div className="flex items-end gap-3 mb-4">
               <div className="flex-1">
                 <label className="block text-xs font-medium text-gray-500 mb-1">DMC Brand</label>
-                <select
-                  value={selectedBrand}
-                  onChange={(e) => setSelectedBrand(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-[#304256] focus:outline-none focus:border-[#27a28c]"
-                >
-                  <option value="">Select a brand...</option>
-                  {BRAND_NAMES.map((b) => (
-                    <option key={b} value={b}>{b}</option>
-                  ))}
-                </select>
+                {isDmc ? (
+                  <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-[#304256] bg-gray-50">
+                    {brand.name}
+                  </div>
+                ) : (
+                  <select
+                    value={selectedBrand}
+                    onChange={(e) => setSelectedBrand(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-[#304256] focus:outline-none focus:border-[#27a28c]"
+                  >
+                    <option value="">Select a brand...</option>
+                    {BRAND_NAMES.map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div className="w-28">
                 <label className="block text-xs font-medium text-gray-500 mb-1">Year</label>
