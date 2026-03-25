@@ -138,6 +138,12 @@ function EventPopover({
 export default function CalendarView({ events, onDelete, defaultBrand }: { events: CalendarEvent[]; onDelete?: (id: string) => void; defaultBrand?: string }) {
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
   const [selectedBrand, setSelectedBrand] = useState<string>(defaultBrand || "all");
+
+  // Keep selectedBrand in sync when defaultBrand changes (e.g., DMC mode switch)
+  useEffect(() => {
+    if (defaultBrand) setSelectedBrand(defaultBrand);
+  }, [defaultBrand]);
+
   const [currentMonth, setCurrentMonth] = useState(2); // March (0-indexed)
   const [currentYear] = useState(2026);
   const [isMobile, setIsMobile] = useState(false);

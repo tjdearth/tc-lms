@@ -45,6 +45,11 @@ export default function CalendarPage() {
   // AI Discover state
   const [showDiscover, setShowDiscover] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState(isDmc ? brand.name : "");
+
+  // Keep selectedBrand in sync when brand mode changes
+  useEffect(() => {
+    if (isDmc) setSelectedBrand(brand.name);
+  }, [isDmc, brand.name]);
   const [searchYear, setSearchYear] = useState(new Date().getFullYear());
   const [discovering, setDiscovering] = useState(false);
   const [discoveredEvents, setDiscoveredEvents] = useState<DiscoveredEvent[]>([]);
