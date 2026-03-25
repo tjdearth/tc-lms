@@ -163,12 +163,34 @@ Be concise and use markdown formatting. Only introduce yourself if it seems like
 ${context}`;
 
     const anthropic = new Anthropic();
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1024,
-      system: finalSystemPrompt,
-      messages: [{ role: "user", content: question }],
-    });
+
+    // Retry up to 2 times on overloaded errors (529)
+    let response;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        response = await anthropic.messages.create({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1024,
+          system: finalSystemPrompt,
+          messages: [{ role: "user", content: question }],
+        });
+        break; // success
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        if (errMsg.includes("529") || errMsg.includes("overloaded")) {
+          if (attempt < 2) {
+            console.log(`Ask Atlas: Claude overloaded, retrying (attempt ${attempt + 2}/3)...`);
+            await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+            continue;
+          }
+        }
+        throw err; // non-retryable error
+      }
+    }
+
+    if (!response) {
+      return NextResponse.json({ error: "Atlas AI is temporarily busy. Please try again in a moment." }, { status: 503 });
+    }
 
     const answer = response.content
       .filter((block) => block.type === "text")
