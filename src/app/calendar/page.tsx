@@ -76,7 +76,7 @@ export default function CalendarPage() {
   }, []);
 
   // Filter events based on brand mode
-  const dmcBrandName = isDmc ? "Unbox Spain & Portugal" : null;
+  const dmcBrandName = isDmc ? brand.name : null;
   const filteredEvents = useMemo(() => {
     if (!isDmc) return events;
     return events.filter((e) => e.brand === dmcBrandName);
@@ -166,7 +166,7 @@ export default function CalendarPage() {
               {isDmc ? `${brand.name} Calendar` : "Holidays & Festivals Calendar"}
             </h1>
             <p className="text-gray-500">
-              {isDmc ? `Key dates for Spain & Portugal. Plan ahead for holidays, peak` : `Key dates across all 16 DMC brands. Plan ahead for holidays, peak`}
+              {isDmc ? `Key dates for ${brand.countries.join(", ") || brand.name}. Plan ahead for holidays, peak` : `Key dates across all 16 DMC brands. Plan ahead for holidays, peak`}
               seasons, and cultural events.
             </p>
           </div>
@@ -354,7 +354,7 @@ export default function CalendarPage() {
             <p className="text-sm">Loading events...</p>
           </div>
         ) : (
-          <CalendarView events={filteredEvents} onDelete={handleDeleteEvent} defaultBrand={isDmc ? "Unbox Spain & Portugal" : undefined} />
+          <CalendarView events={filteredEvents} onDelete={handleDeleteEvent} defaultBrand={isDmc ? brand.name : undefined} />
         )}
       </div>
     </AppShell>
