@@ -86,7 +86,11 @@ export default function AskAtlasPage() {
       });
       const data = await res.json();
       const messageId = generateMessageId();
-      setMessages((prev) => [...prev, { role: "assistant", content: data.answer || "Sorry, I couldn't process that request.", messageId }]);
+      if (!res.ok || data.error) {
+        setMessages((prev) => [...prev, { role: "assistant", content: `Sorry, something went wrong: ${data.error || "Unknown error"}. Please try again.`, messageId }]);
+      } else {
+        setMessages((prev) => [...prev, { role: "assistant", content: data.answer || "Sorry, I couldn't process that request.", messageId }]);
+      }
     } catch {
       const messageId = generateMessageId();
       setMessages((prev) => [...prev, { role: "assistant", content: "Something went wrong. Please try again.", messageId }]);
@@ -191,7 +195,7 @@ export default function AskAtlasPage() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                 className="flex-1 px-4 py-2.5 rounded-lg border border-[#E8ECF1] bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#27a28c] focus:ring-1 focus:ring-[#27a28c]/30 transition-colors"
-                placeholder="Ask about courses, processes, events..."
+                placeholder="Ask about wikis, courses, processes, events..."
                 disabled={loading}
               />
               <button

@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import Anthropic from "@anthropic-ai/sdk";
 
+// Allow up to 30 seconds for this API route (default is 10s)
+export const maxDuration = 30;
+
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
 }
