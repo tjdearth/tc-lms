@@ -128,8 +128,7 @@ export default function ArticleViewer({ article, onBrowseClick, allNodes = [] }:
         ) : (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center text-gray-400">
             <p className="text-sm">
-              Content will be imported from Scribe. This is a placeholder for
-              the article.
+              Content can be added using the rich text editor, imported from Scribe, or pasted as HTML. Markdown is also supported.
             </p>
           </div>
         )}
