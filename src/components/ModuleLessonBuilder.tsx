@@ -505,6 +505,23 @@ export default function ModuleLessonBuilder({
                               Edit Content
                             </button>
                           )}
+                          {/* Transcript for content lessons with embedded videos */}
+                          {(lesson.video_url || lesson.html_content?.includes("drive.google.com")) && (
+                            <div className="mt-2">
+                              <label className="block text-[10px] text-gray-400 mb-1">Video Transcript (for AI search — not displayed to learners)</label>
+                              <textarea
+                                defaultValue={lesson.transcript || ""}
+                                placeholder="Paste video transcript here..."
+                                rows={3}
+                                onBlur={(e) =>
+                                  updateLesson(lesson.id, {
+                                    transcript: e.target.value || null,
+                                  }, true)
+                                }
+                                className="w-full px-3 py-1.5 text-xs border border-[#E8ECF1] rounded-lg outline-none focus:border-[#27a28c] resize-y"
+                              />
+                            </div>
+                          )}
                         </>
                       )}
 
