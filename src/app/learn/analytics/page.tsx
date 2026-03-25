@@ -37,9 +37,30 @@ interface AnalyticsData {
 }
 
 interface SearchAnalyticsData {
-  top_searches: { query: string; count: number }[];
+  top_searches: { query: string; count: number; source: string }[];
   no_results_queries: { query: string; count: number }[];
   volume: { this_week: number; this_month: number };
+  feedback: {
+    total_positive: number;
+    total_negative: number;
+    helpfulness_rate: number | null;
+    negative_queries: { query: string; count: number }[];
+  };
+}
+
+function SourceBadge({ source }: { source: string }) {
+  if (source === "ai_chat") {
+    return (
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#27a28c]/10 text-[#27a28c]">
+        AI
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600">
+      Wiki
+    </span>
+  );
 }
 
 export default function AnalyticsPage() {
@@ -103,7 +124,7 @@ export default function AnalyticsPage() {
                 { label: "Total Users", value: data.overview.total_users },
                 { label: "Total Enrollments", value: data.overview.total_enrollments },
                 { label: "Completion Rate", value: `${data.overview.completion_rate}%` },
-                { label: "Avg Quiz Score", value: data.overview.avg_quiz_score !== null ? `${data.overview.avg_quiz_score}%` : "—" },
+                { label: "Avg Quiz Score", value: data.overview.avg_quiz_score !== null ? `${data.overview.avg_quiz_score}%` : "\u2014" },
               ].map((s) => (
                 <div key={s.label} className="bg-white rounded-xl border border-[#E8ECF1] p-5">
                   <div className="text-2xl font-bold text-[#304256]">{s.value}</div>
@@ -257,6 +278,7 @@ export default function AnalyticsPage() {
                             <div key={s.query} className="px-5 py-2.5 border-b border-gray-100 last:border-b-0 flex items-center gap-3">
                               <span className="text-xs text-gray-300 w-5 text-right tabular-nums">{i + 1}</span>
                               <span className="flex-1 text-sm text-gray-800 truncate">{s.query}</span>
+                              <SourceBadge source={s.source} />
                               <span className="text-xs font-semibold text-[#27a28c] tabular-nums">{s.count}</span>
                             </div>
                           ))}
@@ -295,6 +317,50 @@ export default function AnalyticsPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Feedback Section */}
+                <div className="mb-4">
+                  <h2 className="text-lg font-bold text-[#304256]">AI Feedback</h2>
+                  <p className="text-sm text-gray-400">How helpful users find AI responses</p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="bg-white rounded-xl border border-[#E8ECF1] p-5">
+                    <div className="text-2xl font-bold text-[#27a28c]">
+                      {searchData.feedback.helpfulness_rate !== null ? `${searchData.feedback.helpfulness_rate}%` : "\u2014"}
+                    </div>
+                    <div className="text-sm text-gray-400 mt-1">Helpfulness Rate</div>
+                  </div>
+                  <div className="bg-white rounded-xl border border-[#E8ECF1] p-5">
+                    <div className="text-2xl font-bold text-[#304256]">{searchData.feedback.total_positive}</div>
+                    <div className="text-sm text-gray-400 mt-1">Thumbs Up</div>
+                  </div>
+                  <div className="bg-white rounded-xl border border-[#E8ECF1] p-5">
+                    <div className="text-2xl font-bold text-[#304256]">{searchData.feedback.total_negative}</div>
+                    <div className="text-sm text-gray-400 mt-1">Thumbs Down</div>
+                  </div>
+                </div>
+
+                {searchData.feedback.negative_queries.length > 0 && (
+                  <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden mb-8">
+                    <div className="px-5 py-4 border-b border-[#E8ECF1] flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-red-500" />
+                      <h2 className="font-semibold text-[#304256]">Content Gaps</h2>
+                      <span className="text-[10px] bg-red-50 text-red-600 rounded-full px-2 py-0.5 font-medium">
+                        {searchData.feedback.negative_queries.length}
+                      </span>
+                    </div>
+                    <p className="px-5 pt-3 text-xs text-gray-400">Questions that received negative feedback — consider adding or improving content for these topics</p>
+                    <div className="max-h-[300px] overflow-y-auto">
+                      {searchData.feedback.negative_queries.map((s) => (
+                        <div key={s.query} className="px-5 py-2.5 border-b border-gray-100 last:border-b-0 flex items-center justify-between">
+                          <span className="text-sm text-gray-800 truncate">{s.query}</span>
+                          <span className="text-xs font-semibold text-red-500 tabular-nums">{s.count}x</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </>

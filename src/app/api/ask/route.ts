@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     const email = session.user.email;
 
     // Fetch context from all relevant tables in parallel
-    const [wikiResult, coursesResult, calendarResult] = await Promise.all([
+    const [wikiResult, coursesResult, calendarResult, lessonsResult, quizResult] = await Promise.all([
       supabaseAdmin
         .from("wiki_nodes")
         .select("id, title, html_content")
@@ -40,11 +40,37 @@ export async function POST(req: NextRequest) {
         .gte("date_start", new Date().toISOString().slice(0, 10))
         .order("date_start")
         .limit(100),
+      // Fetch lessons from published courses (lessons → modules → courses)
+      supabaseAdmin
+        .from("lessons")
+        .select("id, title, html_content, transcript, module_id, modules!inner(id, course_id, courses!inner(id, is_published))")
+        .limit(50),
+      // Fetch quiz questions with correct answers (quiz_questions → quizzes → lessons → modules → courses)
+      supabaseAdmin
+        .from("quiz_questions")
+        .select("id, question_text, options, quizzes!inner(id, lesson_id, lessons!inner(id, module_id, modules!inner(id, course_id, courses!inner(id, is_published))))")
+        .limit(100),
     ]);
 
     const wikiArticles = wikiResult.data || [];
     const courses = coursesResult.data || [];
     const events = calendarResult.data || [];
+
+    // Filter lessons to only those from published courses
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const lessons = (lessonsResult.data || []).filter((l: any) => {
+      try {
+        return l.modules?.courses?.is_published === true;
+      } catch { return false; }
+    });
+
+    // Filter quiz questions to only those from published courses
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const quizQuestions = (quizResult.data || []).filter((q: any) => {
+      try {
+        return q.quizzes?.lessons?.modules?.courses?.is_published === true;
+      } catch { return false; }
+    });
 
     // Build context
     let context = "";
@@ -65,6 +91,32 @@ export async function POST(req: NextRequest) {
         context += `- **${course.title}** [COURSE_ID:${course.id}] (${course.category}): ${course.description || "No description"}\n`;
       }
       context += "\n";
+    }
+
+    if (lessons.length > 0) {
+      context += "## Lesson Content\n\n";
+      for (const lesson of lessons) {
+        const content = lesson.html_content ? stripHtml(lesson.html_content).slice(0, 300) : "";
+        const transcript = lesson.transcript ? stripHtml(lesson.transcript).slice(0, 500) : "";
+        if (content || transcript) {
+          context += `### ${lesson.title}\n`;
+          if (content) context += `${content}\n`;
+          if (transcript) context += `[Video transcript]: ${transcript}\n`;
+          context += "\n";
+        }
+      }
+    }
+
+    if (quizQuestions.length > 0) {
+      context += "## Quiz Questions & Answers\n\n";
+      for (const q of quizQuestions) {
+        const options = (q.options || []) as { id: string; text: string; is_correct?: boolean }[];
+        const correctOptions = options.filter((o) => o.is_correct);
+        const correctAnswer = correctOptions.map((o) => o.text).join(", ");
+        if (correctAnswer) {
+          context += `Q: ${q.question_text}\nA: ${correctAnswer}\n\n`;
+        }
+      }
     }
 
     if (events.length > 0) {

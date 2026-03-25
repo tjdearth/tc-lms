@@ -509,7 +509,7 @@ export default function ModuleLessonBuilder({
                       )}
 
                       {lesson.lesson_type === "video" && (
-                        <div className="mt-2">
+                        <div className="mt-2 space-y-2">
                           <input
                             type="text"
                             defaultValue={lesson.video_url || ""}
@@ -521,6 +521,20 @@ export default function ModuleLessonBuilder({
                             }
                             className="w-full px-3 py-1.5 text-xs border border-[#E8ECF1] rounded-lg outline-none focus:border-[#27a28c]"
                           />
+                          <div>
+                            <label className="block text-[10px] text-gray-400 mb-1">Transcript (for AI search — not displayed to learners)</label>
+                            <textarea
+                              defaultValue={lesson.transcript || ""}
+                              placeholder="Paste video transcript here..."
+                              rows={3}
+                              onBlur={(e) =>
+                                updateLesson(lesson.id, {
+                                  transcript: e.target.value || null,
+                                }, true)
+                              }
+                              className="w-full px-3 py-1.5 text-xs border border-[#E8ECF1] rounded-lg outline-none focus:border-[#27a28c] resize-y"
+                            />
+                          </div>
                         </div>
                       )}
 

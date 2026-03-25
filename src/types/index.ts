@@ -105,6 +105,7 @@ export interface Lesson {
   html_content: string | null;
   wiki_node_id: string | null;
   video_url: string | null;
+  transcript: string | null;
   estimated_minutes: number;
   sort_order: number;
   created_at: string;

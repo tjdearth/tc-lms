@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import AppShell from "@/components/AppShell";
 import { MarkdownText } from "@/lib/markdown";
@@ -8,12 +8,34 @@ import { MarkdownText } from "@/lib/markdown";
 interface Message {
   role: "user" | "assistant";
   content: string;
+  messageId?: string;
+}
+
+function ThumbsUpIcon({ filled }: { filled?: boolean }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? "#27a28c" : "none"} stroke="#27a28c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 22V11M2 13v7a2 2 0 0 0 2 2h12.6a2 2 0 0 0 2-1.7l1.4-8A2 2 0 0 0 18 10h-5.6l.9-4.3a1.5 1.5 0 0 0-1.5-1.7h-.3a1.5 1.5 0 0 0-1.2.6L7 11H4a2 2 0 0 0-2 2z" />
+    </svg>
+  );
+}
+
+function ThumbsDownIcon({ filled }: { filled?: boolean }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? "#27a28c" : "none"} stroke="#27a28c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 2V13M22 11V4a2 2 0 0 0-2-2H7.4a2 2 0 0 0-2 1.7L4 11.7A2 2 0 0 0 6 14h5.6l-.9 4.3a1.5 1.5 0 0 0 1.5 1.7h.3a1.5 1.5 0 0 0 1.2-.6L17 13h3a2 2 0 0 0 2-2z" />
+    </svg>
+  );
+}
+
+function generateMessageId() {
+  return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
 export default function AskAtlasPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<Record<string, "positive" | "negative">>({});
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -21,6 +43,21 @@ export default function AskAtlasPage() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, loading]);
+
+  const handleFeedback = useCallback((messageId: string, query: string, type: "positive" | "negative") => {
+    if (feedback[messageId]) return;
+    setFeedback((prev) => ({ ...prev, [messageId]: type }));
+    fetch("/api/search-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query,
+        source: "ai_chat",
+        feedback: type,
+        message_id: messageId,
+      }),
+    }).catch(() => {});
+  }, [feedback]);
 
   async function handleSend() {
     const q = input.trim();
@@ -48,12 +85,22 @@ export default function AskAtlasPage() {
         body: JSON.stringify({ question: q }),
       });
       const data = await res.json();
-      setMessages((prev) => [...prev, { role: "assistant", content: data.answer || "Sorry, I couldn't process that request." }]);
+      const messageId = generateMessageId();
+      setMessages((prev) => [...prev, { role: "assistant", content: data.answer || "Sorry, I couldn't process that request.", messageId }]);
     } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Something went wrong. Please try again." }]);
+      const messageId = generateMessageId();
+      setMessages((prev) => [...prev, { role: "assistant", content: "Something went wrong. Please try again.", messageId }]);
     } finally {
       setLoading(false);
     }
+  }
+
+  // Find the user query for a given assistant message index
+  function getUserQuery(msgIndex: number): string {
+    for (let i = msgIndex - 1; i >= 0; i--) {
+      if (messages[i].role === "user") return messages[i].content;
+    }
+    return "";
   }
 
   return (
@@ -80,21 +127,44 @@ export default function AskAtlasPage() {
             ) : (
               <>
                 {messages.map((msg, i) => (
-                  <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} gap-2.5`}>
-                    {msg.role === "assistant" && (
-                      <Image src="/claudette.png" alt="Claudette" width={36} height={36} className="rounded-full shrink-0 mt-1 w-9 h-9 object-cover object-top" />
-                    )}
-                    <div className={`max-w-[75%] rounded-xl px-4 py-3 ${
-                      msg.role === "user"
-                        ? "bg-[#27a28c] text-white rounded-br-sm"
-                        : "bg-white border border-[#E8ECF1] rounded-bl-sm shadow-sm"
-                    }`}>
-                      {msg.role === "assistant" ? (
-                        <MarkdownText text={msg.content} className="text-[13px] text-gray-600 leading-relaxed" />
-                      ) : (
-                        <p className="text-[13px] leading-relaxed">{msg.content}</p>
+                  <div key={i}>
+                    <div className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} gap-2.5`}>
+                      {msg.role === "assistant" && (
+                        <Image src="/claudette.png" alt="Claudette" width={36} height={36} className="rounded-full shrink-0 mt-1 w-9 h-9 object-cover object-top" />
                       )}
+                      <div className={`max-w-[75%] rounded-xl px-4 py-3 ${
+                        msg.role === "user"
+                          ? "bg-[#27a28c] text-white rounded-br-sm"
+                          : "bg-white border border-[#E8ECF1] rounded-bl-sm shadow-sm"
+                      }`}>
+                        {msg.role === "assistant" ? (
+                          <MarkdownText text={msg.content} className="text-[13px] text-gray-600 leading-relaxed" />
+                        ) : (
+                          <p className="text-[13px] leading-relaxed">{msg.content}</p>
+                        )}
+                      </div>
                     </div>
+                    {/* Feedback buttons for assistant messages */}
+                    {msg.role === "assistant" && msg.messageId && (
+                      <div className="flex items-center gap-1 ml-[46px] mt-1">
+                        <button
+                          onClick={() => handleFeedback(msg.messageId!, getUserQuery(i), "positive")}
+                          disabled={!!feedback[msg.messageId]}
+                          className="p-1 rounded hover:bg-gray-100 transition-colors disabled:cursor-default disabled:hover:bg-transparent"
+                          title="Helpful"
+                        >
+                          <ThumbsUpIcon filled={feedback[msg.messageId] === "positive"} />
+                        </button>
+                        <button
+                          onClick={() => handleFeedback(msg.messageId!, getUserQuery(i), "negative")}
+                          disabled={!!feedback[msg.messageId]}
+                          className="p-1 rounded hover:bg-gray-100 transition-colors disabled:cursor-default disabled:hover:bg-transparent"
+                          title="Not helpful"
+                        >
+                          <ThumbsDownIcon filled={feedback[msg.messageId] === "negative"} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {loading && (

@@ -6,9 +6,12 @@ create table if not exists search_logs (
   source        text,          -- 'wiki_search', 'global_search', 'ai_chat'
   results_count integer       default 0,
   clicked_result_id text,      -- if they clicked a result
+  feedback      text,          -- 'positive' or 'negative' (thumbs up/down on AI responses)
+  message_id    text,          -- unique ID per AI response for feedback tracking
   created_at    timestamptz   default now()
 );
 
 -- Index for analytics queries
 create index if not exists idx_search_logs_created_at on search_logs (created_at desc);
 create index if not exists idx_search_logs_query on search_logs (query);
+create index if not exists idx_search_logs_feedback on search_logs (feedback) where feedback is not null;
