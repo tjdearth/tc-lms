@@ -78,20 +78,11 @@ export default function ArticleViewer({ article, onBrowseClick, allNodes = [] }:
         {/* Breadcrumb */}
         {parentHeading && (
           <div className="flex items-center gap-2 text-sm text-gray-400 mb-4 overflow-hidden">
-            <span className="hidden md:inline">Salesforce Academy</span>
-            <span className="hidden md:inline">/</span>
             <span className="truncate">{parentHeading.title}</span>
             <span>/</span>
             <span className="text-gray-600 truncate">{article.title}</span>
           </div>
         )}
-
-        {/* Category badge */}
-        <div className="mb-3">
-          <span className="inline-block px-2.5 py-0.5 text-xs font-medium bg-accent/10 text-accent rounded-full">
-            Salesforce
-          </span>
-        </div>
 
         {/* Title */}
         <h1 className="text-xl md:text-2xl font-bold text-navy mb-3">{article.title}</h1>
