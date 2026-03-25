@@ -80,11 +80,14 @@ function EventPopover({
       <div className="max-h-[300px] overflow-y-auto">
         {events.map((ev) => {
           const colors = EVENT_TYPE_COLORS[ev.event_type] || EVENT_TYPE_COLORS.custom;
-          const startDate = new Date(ev.date_start);
-          const formattedDate = startDate.toLocaleDateString("en-GB", {
+          const startDate = new Date(ev.date_start + "T00:00:00");
+          const formattedStart = startDate.toLocaleDateString("en-GB", {
             day: "numeric",
             month: "short",
           });
+          const formattedDate = ev.date_end
+            ? `${formattedStart} – ${new Date(ev.date_end + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`
+            : formattedStart;
           return (
             <div key={ev.id} className="px-4 py-3 border-b border-gray-100 last:border-b-0 group/popitem">
               <div className="flex items-center gap-2 mb-1">
