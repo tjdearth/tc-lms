@@ -37,11 +37,13 @@ function EventPopover({
   anchorRect,
   onClose,
   onDelete,
+  onEdit,
 }: {
   events: CalendarEvent[];
   anchorRect: { top: number; left: number; width: number; bottom: number };
   onClose: () => void;
   onDelete?: (id: string) => void;
+  onEdit?: (event: CalendarEvent) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -95,6 +97,17 @@ function EventPopover({
                 <span className={`inline-block px-1.5 py-0.5 text-[10px] rounded-full ${colors.bg} ${colors.text}`}>
                   {EVENT_TYPE_LABELS[ev.event_type]}
                 </span>
+                {onEdit && (
+                  <button
+                    onClick={() => { onEdit(ev); onClose(); }}
+                    className="opacity-0 group-hover/popitem:opacity-100 text-gray-300 hover:text-[#27a28c] transition-all p-0.5"
+                    title="Edit event"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </button>
+                )}
                 {onDelete && (
                   <button
                     onClick={() => { if (confirm(`Delete "${ev.title}"?`)) onDelete(ev.id); }}
@@ -135,7 +148,7 @@ function EventPopover({
   );
 }
 
-export default function CalendarView({ events, onDelete, defaultBrand }: { events: CalendarEvent[]; onDelete?: (id: string) => void; defaultBrand?: string }) {
+export default function CalendarView({ events, onDelete, onEdit, defaultBrand }: { events: CalendarEvent[]; onDelete?: (id: string) => void; onEdit?: (event: CalendarEvent) => void; defaultBrand?: string }) {
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
   const [selectedBrand, setSelectedBrand] = useState<string>(defaultBrand || "all");
 
@@ -433,6 +446,17 @@ export default function CalendarView({ events, onDelete, defaultBrand }: { event
                     </span>
                   </div>
                 )}
+                {onEdit && (
+                  <button
+                    onClick={() => onEdit(event)}
+                    className="opacity-0 group-hover/row:opacity-100 text-gray-300 hover:text-[#27a28c] transition-all p-1 flex-shrink-0"
+                    title="Edit event"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </button>
+                )}
                 {onDelete && (
                   <button
                     onClick={() => { if (confirm(`Delete "${event.title}"?`)) onDelete(event.id); }}
@@ -621,6 +645,7 @@ export default function CalendarView({ events, onDelete, defaultBrand }: { event
           anchorRect={popover.rect}
           onClose={() => setPopover(null)}
           onDelete={onDelete ? (id) => { onDelete(id); setPopover(null); } : undefined}
+          onEdit={onEdit ? (ev) => { onEdit(ev); setPopover(null); } : undefined}
         />
       )}
 

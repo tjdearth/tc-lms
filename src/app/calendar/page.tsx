@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import AppShell from "@/components/AppShell";
 import CalendarView from "@/components/CalendarView";
+import EventModal, { EventFormData } from "@/components/EventModal";
 import { fetchCalendarEvents } from "@/lib/api";
 import { CalendarEvent } from "@/types";
 import { BRAND_NAMES, getBrandColor } from "@/lib/brands";
 import { useBrand } from "@/lib/brand-context";
+import { isAdmin } from "@/lib/admin";
 
 interface DiscoveredEvent {
   title: string;
@@ -37,10 +40,22 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
 };
 
 export default function CalendarPage() {
+  const { data: session } = useSession();
   const { brand } = useBrand();
   const isDmc = brand.mode !== "tc";
+  const userEmail = session?.user?.email || "";
+  const isAdminUser = isAdmin(userEmail);
+
+  // Users can add/edit events if they are in DMC mode (any team member for their brand)
+  // or in TC mode only if they are admin
+  const canManageEvents = isDmc || isAdminUser;
+
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Event modal state
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
 
   // AI Discover state
   const [showDiscover, setShowDiscover] = useState(false);
@@ -65,11 +80,69 @@ export default function CalendarPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       });
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete");
+      }
       setEvents((prev) => prev.filter((e) => e.id !== id));
     } catch (err) {
       console.error("Delete event error:", err);
-      alert("Failed to delete event. Please try again.");
+      alert(err instanceof Error ? err.message : "Failed to delete event. Please try again.");
+    }
+  };
+
+  const handleEditEvent = (event: CalendarEvent) => {
+    setEditingEvent(event);
+    setShowEventModal(true);
+  };
+
+  const handleOpenAddModal = () => {
+    setEditingEvent(null);
+    setShowEventModal(true);
+  };
+
+  const handleSaveEvent = async (formData: EventFormData) => {
+    if (formData.id) {
+      // PATCH — update existing
+      const res = await fetch("/api/calendar/events", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: formData.id,
+          title: formData.title,
+          event_type: formData.event_type,
+          date_start: formData.date_start,
+          date_end: formData.date_end || null,
+          description: formData.description || null,
+          brand: formData.brand,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update event");
+      // Update in local state
+      setEvents((prev) =>
+        prev.map((e) => (e.id === formData.id ? { ...e, ...data.event } : e))
+      );
+    } else {
+      // POST — create new
+      const res = await fetch("/api/calendar/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: {
+            title: formData.title,
+            event_type: formData.event_type,
+            date_start: formData.date_start,
+            date_end: formData.date_end || null,
+            description: formData.description || null,
+            brand: formData.brand,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to add event");
+      // Refresh events to get the new event with its ID
+      loadEvents();
     }
   };
 
@@ -175,21 +248,34 @@ export default function CalendarPage() {
               seasons, and cultural events.
             </p>
           </div>
-          <button
-            onClick={() => setShowDiscover(!showDiscover)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#304256] text-white text-sm font-medium rounded-lg hover:bg-[#3d5570] transition-colors whitespace-nowrap"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9.5 2a2.5 2.5 0 0 1 2.5 2.5v.5a2.5 2.5 0 0 1-2.5 2.5h-.5a2.5 2.5 0 0 1-2.5-2.5V4.5A2.5 2.5 0 0 1 9 2" />
-              <path d="M15 2a2.5 2.5 0 0 0-2.5 2.5v.5A2.5 2.5 0 0 0 15 7.5h.5A2.5 2.5 0 0 0 18 5V4.5A2.5 2.5 0 0 0 15.5 2" />
-              <path d="M6.5 7a2.5 2.5 0 0 0-2.5 2.5v.5a2.5 2.5 0 0 0 2.5 2.5h.5A2.5 2.5 0 0 0 9.5 10V9.5A2.5 2.5 0 0 0 7 7" />
-              <path d="M17.5 7a2.5 2.5 0 0 1 2.5 2.5v.5a2.5 2.5 0 0 1-2.5 2.5h-.5A2.5 2.5 0 0 1 14.5 10V9.5A2.5 2.5 0 0 1 17 7" />
-              <path d="M8 12.5a2.5 2.5 0 0 0-2.5 2.5v.5A2.5 2.5 0 0 0 8 18h.5a2.5 2.5 0 0 0 2.5-2.5v-.5A2.5 2.5 0 0 0 8.5 12.5" />
-              <path d="M16 12.5a2.5 2.5 0 0 1 2.5 2.5v.5A2.5 2.5 0 0 1 16 18h-.5a2.5 2.5 0 0 1-2.5-2.5v-.5a2.5 2.5 0 0 1 2.5-2.5" />
-              <path d="M10 18a2.5 2.5 0 0 0-2.5 2.5A2.5 2.5 0 0 0 10 23h4a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 14 18" />
-            </svg>
-            AI Event Discovery
-          </button>
+          <div className="flex items-center gap-2">
+            {canManageEvents && (
+              <button
+                onClick={handleOpenAddModal}
+                className="flex items-center gap-2 px-4 py-2 bg-[#27a28c] text-white text-sm font-medium rounded-lg hover:bg-[#1f8a76] transition-colors whitespace-nowrap"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add Event
+              </button>
+            )}
+            <button
+              onClick={() => setShowDiscover(!showDiscover)}
+              className="flex items-center gap-2 px-4 py-2 bg-[#304256] text-white text-sm font-medium rounded-lg hover:bg-[#3d5570] transition-colors whitespace-nowrap"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9.5 2a2.5 2.5 0 0 1 2.5 2.5v.5a2.5 2.5 0 0 1-2.5 2.5h-.5a2.5 2.5 0 0 1-2.5-2.5V4.5A2.5 2.5 0 0 1 9 2" />
+                <path d="M15 2a2.5 2.5 0 0 0-2.5 2.5v.5A2.5 2.5 0 0 0 15 7.5h.5A2.5 2.5 0 0 0 18 5V4.5A2.5 2.5 0 0 0 15.5 2" />
+                <path d="M6.5 7a2.5 2.5 0 0 0-2.5 2.5v.5a2.5 2.5 0 0 0 2.5 2.5h.5A2.5 2.5 0 0 0 9.5 10V9.5A2.5 2.5 0 0 0 7 7" />
+                <path d="M17.5 7a2.5 2.5 0 0 1 2.5 2.5v.5a2.5 2.5 0 0 1-2.5 2.5h-.5A2.5 2.5 0 0 1 14.5 10V9.5A2.5 2.5 0 0 1 17 7" />
+                <path d="M8 12.5a2.5 2.5 0 0 0-2.5 2.5v.5A2.5 2.5 0 0 0 8 18h.5a2.5 2.5 0 0 0 2.5-2.5v-.5A2.5 2.5 0 0 0 8.5 12.5" />
+                <path d="M16 12.5a2.5 2.5 0 0 1 2.5 2.5v.5A2.5 2.5 0 0 1 16 18h-.5a2.5 2.5 0 0 1-2.5-2.5v-.5a2.5 2.5 0 0 1 2.5-2.5" />
+                <path d="M10 18a2.5 2.5 0 0 0-2.5 2.5A2.5 2.5 0 0 0 10 23h4a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 14 18" />
+              </svg>
+              AI Event Discovery
+            </button>
+          </div>
         </div>
 
         {/* AI Discovery Panel */}
@@ -269,7 +355,7 @@ export default function CalendarPage() {
             {/* Added confirmation */}
             {addedCount > 0 && (
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 mb-4">
-                ✓ {addedCount} event{addedCount !== 1 ? "s" : ""} added to the calendar.
+                {addedCount} event{addedCount !== 1 ? "s" : ""} added to the calendar.
               </div>
             )}
 
@@ -338,7 +424,7 @@ export default function CalendarPage() {
                         <div className="flex items-center gap-3 text-xs text-gray-400 mb-1">
                           <span>
                             {formatDate(event.date_start)}
-                            {event.date_end ? ` — ${formatDate(event.date_end)}` : ""}
+                            {event.date_end ? ` -- ${formatDate(event.date_end)}` : ""}
                           </span>
                           <span>{event.country}</span>
                         </div>
@@ -365,9 +451,24 @@ export default function CalendarPage() {
             <p className="text-sm">Loading events...</p>
           </div>
         ) : (
-          <CalendarView events={filteredEvents} onDelete={handleDeleteEvent} defaultBrand={isDmc ? brand.name : undefined} />
+          <CalendarView
+            events={filteredEvents}
+            onDelete={canManageEvents ? handleDeleteEvent : undefined}
+            onEdit={canManageEvents ? handleEditEvent : undefined}
+            defaultBrand={isDmc ? brand.name : undefined}
+          />
         )}
       </div>
+
+      {/* Add / Edit Event Modal */}
+      <EventModal
+        open={showEventModal}
+        onClose={() => { setShowEventModal(false); setEditingEvent(null); }}
+        onSave={handleSaveEvent}
+        event={editingEvent}
+        lockedBrand={isDmc ? brand.name : undefined}
+        isAdminUser={isAdminUser}
+      />
     </AppShell>
   );
 }
