@@ -77,10 +77,10 @@ function buildDmcTheme(brandName: string): BrandTheme {
   const hex = brand.hex;
   const dark = isDarkColor(hex);
 
-  // Generate dark sidebar colors from the brand color
-  const sidebarBg = dark ? darken(hex, 0.25) : darken(hex, 0.15);
-  const sidebarBorder = dark ? darken(hex, 0.4) : darken(hex, 0.25);
-  const sidebarActiveBg = dark ? darken(hex, 0.55) : darken(hex, 0.35);
+  // Generate dark sidebar colors from the brand color (lighter tint)
+  const sidebarBg = dark ? darken(hex, 0.4) : darken(hex, 0.25);
+  const sidebarBorder = dark ? darken(hex, 0.55) : darken(hex, 0.35);
+  const sidebarActiveBg = dark ? darken(hex, 0.7) : darken(hex, 0.45);
 
   return {
     mode: brandName,
