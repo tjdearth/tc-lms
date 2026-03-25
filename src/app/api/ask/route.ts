@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     const email = session.user.email;
 
-    // Fetch context from all relevant tables in parallel
+    // Fetch context from all relevant tables in parallel (use allSettled so one failure doesn't break all)
     const [wikiResult, coursesResult, calendarResult, lessonsResult, quizResult] = await Promise.all([
       supabaseAdmin
         .from("wiki_nodes")
@@ -51,6 +51,12 @@ export async function POST(req: NextRequest) {
         .select("id, question_text, options, quizzes!inner(id, lesson_id, lessons!inner(id, module_id, modules!inner(id, course_id, courses!inner(id, is_published))))")
         .limit(100),
     ]);
+
+    if (wikiResult.error) console.error("Wiki fetch error:", wikiResult.error.message);
+    if (coursesResult.error) console.error("Courses fetch error:", coursesResult.error.message);
+    if (calendarResult.error) console.error("Calendar fetch error:", calendarResult.error.message);
+    if (lessonsResult.error) console.error("Lessons fetch error:", lessonsResult.error.message);
+    if (quizResult.error) console.error("Quiz fetch error:", quizResult.error.message);
 
     const wikiArticles = wikiResult.data || [];
     const courses = coursesResult.data || [];
@@ -129,7 +135,14 @@ export async function POST(req: NextRequest) {
       context += "\n";
     }
 
-    const systemPrompt = `You are Claudette, the AI assistant for Atlas — Travel Collection's internal knowledge and learning platform. Travel Collection is a luxury travel company operating 16 DMC (Destination Management Company) brands across 22 countries.
+    // Truncate context if too large (keep under ~50k chars to avoid timeout)
+    const maxContextChars = 50000;
+    if (context.length > maxContextChars) {
+      console.log(`Ask Atlas: context truncated from ${context.length} to ${maxContextChars} chars`);
+      context = context.slice(0, maxContextChars) + "\n\n[Context truncated for performance]";
+    }
+
+    const finalSystemPrompt = `You are Claudette, the AI assistant for Atlas — Travel Collection's internal knowledge and learning platform. Travel Collection is a luxury travel company operating 16 DMC (Destination Management Company) brands across 22 countries.
 
 You help employees find information about company processes, training courses, wiki articles, and upcoming events across the TC network.
 
@@ -150,7 +163,7 @@ ${context}`;
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 1024,
-      system: systemPrompt,
+      system: finalSystemPrompt,
       messages: [{ role: "user", content: question }],
     });
 
