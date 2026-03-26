@@ -6,6 +6,13 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: "openid email profile https://www.googleapis.com/auth/gmail.compose",
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
     }),
   ],
   pages: {
@@ -13,10 +20,48 @@ export const authOptions: NextAuthOptions = {
     error: "/login",
   },
   callbacks: {
+    async jwt({ token, account }) {
+      // Persist the Google access token and refresh token on first sign-in
+      if (account) {
+        token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token;
+        token.accessTokenExpires = account.expires_at ? account.expires_at * 1000 : 0;
+      }
+      // Return previous token if still valid
+      if (Date.now() < (token.accessTokenExpires as number || 0)) {
+        return token;
+      }
+      // Refresh the token if expired
+      if (token.refreshToken) {
+        try {
+          const res = await fetch("https://oauth2.googleapis.com/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              client_id: process.env.GOOGLE_CLIENT_ID!,
+              client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+              grant_type: "refresh_token",
+              refresh_token: token.refreshToken as string,
+            }),
+          });
+          const data = await res.json();
+          if (data.access_token) {
+            token.accessToken = data.access_token;
+            token.accessTokenExpires = Date.now() + (data.expires_in || 3600) * 1000;
+          }
+        } catch (err) {
+          console.error("Token refresh error:", err);
+        }
+      }
+      return token;
+    },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.sub || "";
       }
+      // Pass access token to session for server-side Gmail API calls
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (session as any).accessToken = token.accessToken;
       return session;
     },
   },

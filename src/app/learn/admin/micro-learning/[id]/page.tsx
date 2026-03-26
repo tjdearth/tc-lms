@@ -257,49 +257,48 @@ export default function MicroLessonEditor() {
     }
   }
 
-  function handleDraftEmail() {
+  const [drafting, setDrafting] = useState(false);
+
+  async function handleDraftEmail() {
     if (!savedId) {
       showToast("Please save the lesson first");
       return;
     }
-    const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://atlas.travelcollection.co";
-    const viewUrl = `${baseUrl}/learn/micro-learning/${savedId}`;
 
-    // Build a plain-text body for the Gmail compose URL
-    // Gmail compose doesn't support HTML in the body param, but the formatting is clean enough
-    const keyPointsText = keyPointsHtml
-      ? keyPointsHtml
-          .replace(/<br\s*\/?>/gi, "\n")
-          .replace(/<\/?(p|div|h[1-6]|li)[^>]*>/gi, "\n")
-          .replace(/<\/?(ul|ol)[^>]*>/gi, "\n")
-          .replace(/<[^>]*>/g, "")
-          .replace(/&amp;/g, "&")
-          .replace(/&lt;/g, "<")
-          .replace(/&gt;/g, ">")
-          .replace(/&quot;/g, '"')
-          .replace(/&#39;/g, "'")
-          .replace(/&mdash;/g, "—")
-          .replace(/&ndash;/g, "–")
-          .replace(/\n{3,}/g, "\n\n")
-          .trim()
-      : "";
+    setDrafting(true);
+    try {
+      const html = buildStandaloneEmailHtml({
+        title,
+        key_points_html: keyPointsHtml,
+        video_url: videoUrl,
+        thumbnail_url: thumbnailUrl || undefined,
+        id: savedId,
+      });
 
-    const body = [
-      `⚡ 5 MIN LESSON`,
-      ``,
-      `▶ Watch the video: ${videoUrl}`,
-      ``,
-      keyPointsText ? `---\n\n${keyPointsText}` : "",
-      ``,
-      `---`,
-      `View in Atlas: ${viewUrl}`,
-    ].filter(Boolean).join("\n");
+      const res = await fetch("/api/learn/micro-lessons/gmail-draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: `⚡ Micro-Learning: ${title}`,
+          html,
+        }),
+      });
 
-    const subject = `⚡ Micro-Learning: ${title}`;
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || "Failed to create draft");
+        return;
+      }
 
-    // Open Gmail compose with pre-filled subject and body
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(gmailUrl, "_blank");
+      // Open the draft in Gmail
+      window.open(`https://mail.google.com/mail/#drafts/${data.messageId}`, "_blank");
+      showToast("Draft created in Gmail!");
+    } catch (err) {
+      console.error("Draft error:", err);
+      showToast("Failed to create draft");
+    } finally {
+      setDrafting(false);
+    }
   }
 
   if (!canAccess) {
@@ -539,13 +538,22 @@ export default function MicroLessonEditor() {
                 </button>
                 <button
                   onClick={handleDraftEmail}
-                  disabled={!savedId}
+                  disabled={!savedId || drafting}
                   className="px-5 py-2.5 text-sm font-semibold text-[#304256] border border-[#E8ECF1] rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                  </svg>
-                  Draft in Gmail
+                  {drafting ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-[#304256]/30 border-t-[#304256] rounded-full animate-spin" />
+                      Creating Draft...
+                    </>
+                  ) : (
+                    <>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                      </svg>
+                      Draft in Gmail
+                    </>
+                  )}
                 </button>
               </div>
             </div>
