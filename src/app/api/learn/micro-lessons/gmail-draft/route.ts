@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     console.log("Gmail draft: accessToken present?", !!accessToken, "email:", session.user.email);
     if (!accessToken) {
       return NextResponse.json(
-        { error: "Gmail access not available. Please sign out and sign back in to grant email permissions." },
+        { error: "Gmail permission needed", code: "GMAIL_SCOPE_NEEDED" },
         { status: 401 }
       );
     }
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
       if (gmailRes.status === 401 || gmailRes.status === 403) {
         return NextResponse.json(
-          { error: "Gmail permission expired. Please sign out and sign back in." },
+          { error: "Gmail permission expired", code: "GMAIL_SCOPE_NEEDED" },
           { status: 401 }
         );
       }

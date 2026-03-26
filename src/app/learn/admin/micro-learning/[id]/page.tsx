@@ -333,6 +333,11 @@ export default function MicroLessonEditor() {
 
       const data = await res.json();
       if (!res.ok) {
+        if (data.code === "GMAIL_SCOPE_NEEDED") {
+          // Redirect to grant Gmail permissions
+          window.location.href = "/api/auth/gmail-scope";
+          return;
+        }
         showToast(data.error || "Failed to create draft");
         return;
       }

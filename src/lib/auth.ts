@@ -1,6 +1,9 @@
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
+// Gmail scope is requested separately via /api/auth/gmail-scope
+// Only @travelcollection.co users get the Gmail compose permission
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -8,7 +11,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          scope: "openid email profile https://www.googleapis.com/auth/gmail.compose",
+          scope: "openid email profile",
           access_type: "offline",
           prompt: "consent",
         },
