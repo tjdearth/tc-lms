@@ -135,17 +135,21 @@ export default function MicroLearningGallery() {
                 >
                   {/* Thumbnail */}
                   <div className="aspect-video bg-[#304256] relative flex items-center justify-center">
-                    {lesson.thumbnail_url ? (
-                      <img
-                        src={lesson.thumbnail_url}
-                        alt={lesson.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-white/30">
-                        <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
-                      </svg>
-                    )}
+                    {(() => {
+                      const driveMatch = lesson.video_url?.match(/\/d\/([^/]+)/);
+                      const thumbSrc = lesson.thumbnail_url || (driveMatch ? `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w400` : "");
+                      return thumbSrc ? (
+                        <img
+                          src={thumbSrc}
+                          alt={lesson.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-white/30">
+                          <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
+                        </svg>
+                      );
+                    })()}
                     {/* Duration badge */}
                     <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
                       <span>&#9889;</span> 5 min

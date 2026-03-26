@@ -329,13 +329,17 @@ export default function LearnDashboard() {
                     className="flex-shrink-0 w-[220px] bg-white border border-[#E8ECF1] rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left group"
                   >
                     <div className="aspect-video bg-[#304256] relative flex items-center justify-center">
-                      {ml.thumbnail_url ? (
-                        <img src={ml.thumbnail_url} alt={ml.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-white/30">
-                          <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
-                        </svg>
-                      )}
+                      {(() => {
+                        const driveMatch = ml.video_url?.match(/\/d\/([^/]+)/);
+                        const thumbSrc = ml.thumbnail_url || (driveMatch ? `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w300` : "");
+                        return thumbSrc ? (
+                          <img src={thumbSrc} alt={ml.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-white/30">
+                            <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
+                          </svg>
+                        );
+                      })()}
                       <div className="absolute top-1.5 right-1.5 bg-black/60 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
                         <span>&#9889;</span> 5 min
                       </div>

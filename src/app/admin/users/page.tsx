@@ -154,19 +154,19 @@ export default function AdminUsersPage() {
 
   return (
     <AppShell>
-      <div className="max-w-6xl mx-auto">
+      <div className="p-4 md:p-8 max-w-[1200px]">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold" style={{ color: "#304256" }}>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-[#304256] mb-1">
             User Access Management
           </h1>
-          <p className="text-sm mt-1" style={{ color: "#6B7D8F" }}>
+          <p className="text-gray-500">
             Manage admin, course creator, and wiki admin roles across Travel Collection and DMC brands.
           </p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
             { label: "Admins", value: stats.admins, color: "#304256" },
             { label: "Course Creators", value: stats.courseCreators, color: "#27a28c" },
@@ -175,13 +175,12 @@ export default function AdminUsersPage() {
           ].map((s) => (
             <div
               key={s.label}
-              className="rounded-xl p-4"
-              style={{ backgroundColor: "#fff", border: "1px solid #E8ECF1" }}
+              className="bg-white rounded-xl border border-[#E8ECF1] p-5"
             >
               <div className="text-2xl font-bold" style={{ color: s.color }}>
                 {s.value}
               </div>
-              <div className="text-xs font-medium mt-1" style={{ color: "#6B7D8F" }}>
+              <div className="text-sm text-gray-400 mt-1">
                 {s.label}
               </div>
             </div>
@@ -189,10 +188,7 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Add User Section */}
-        <div
-          className="rounded-xl p-5 mb-6"
-          style={{ backgroundColor: "#fff", border: "1px solid #E8ECF1" }}
-        >
+        <div className="bg-white rounded-xl border border-[#E8ECF1] p-5 mb-8">
           <h2 className="text-sm font-semibold mb-3" style={{ color: "#304256" }}>
             Add Role
           </h2>
@@ -259,32 +255,17 @@ export default function AdminUsersPage() {
         )}
 
         {/* Users Table */}
-        <div
-          className="rounded-xl overflow-hidden"
-          style={{ backgroundColor: "#fff", border: "1px solid #E8ECF1" }}
-        >
+        <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-sm">
               <thead>
-                <tr style={{ backgroundColor: "#F8FAFC" }}>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: "#6B7D8F" }}>
-                    Name
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: "#6B7D8F" }}>
-                    Email
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: "#6B7D8F" }}>
-                    Role
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: "#6B7D8F" }}>
-                    Brand
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: "#6B7D8F" }}>
-                    Source
-                  </th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: "#6B7D8F" }}>
-                    Actions
-                  </th>
+                <tr className="border-b border-[#E8ECF1] bg-gray-50/50">
+                  <th className="text-left px-5 py-3 font-medium text-gray-500">Name</th>
+                  <th className="text-left px-5 py-3 font-medium text-gray-500">Email</th>
+                  <th className="text-left px-5 py-3 font-medium text-gray-500">Role</th>
+                  <th className="text-left px-5 py-3 font-medium text-gray-500">Brand</th>
+                  <th className="text-left px-5 py-3 font-medium text-gray-500">Source</th>
+                  <th className="text-right px-5 py-3 font-medium text-gray-500">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -292,15 +273,15 @@ export default function AdminUsersPage() {
                   user.roles.map((role, ri) => (
                     <tr
                       key={`${user.email}-${role.role}-${role.brand}-${role.source}-${ri}`}
-                      style={{ borderTop: "1px solid #E8ECF1" }}
+                      className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50"
                     >
-                      <td className="px-4 py-3 text-sm" style={{ color: "#304256" }}>
+                      <td className="px-5 py-3 text-sm font-medium text-gray-800">
                         {ri === 0 ? (user.name || "-") : ""}
                       </td>
-                      <td className="px-4 py-3 text-sm" style={{ color: "#6B7D8F" }}>
+                      <td className="px-5 py-3 text-sm text-gray-400">
                         {ri === 0 ? user.email : ""}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-3">
                         <span
                           className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold"
                           style={{
@@ -311,10 +292,10 @@ export default function AdminUsersPage() {
                           {ROLE_LABELS[role.role] || role.role}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm" style={{ color: "#304256" }}>
+                      <td className="px-5 py-3 text-sm text-gray-600">
                         {role.brand || "Global"}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-3">
                         <span
                           className="inline-block px-2 py-0.5 rounded text-xs font-medium"
                           style={{
@@ -325,29 +306,18 @@ export default function AdminUsersPage() {
                           {SOURCE_STYLES[role.source]?.label || role.source}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-5 py-3 text-right">
                         {role.source === "database" && role.id ? (
                           <button
                             onClick={() => handleRemove(role.id!)}
-                            className="text-xs font-medium px-2.5 py-1 rounded-lg transition-colors"
-                            style={{ color: "#DC2626", backgroundColor: "#FEF2F2" }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = "#FEE2E2";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = "#FEF2F2";
-                            }}
+                            className="text-xs font-medium px-2.5 py-1 rounded-lg transition-colors bg-red-50 text-red-600 hover:bg-red-100"
                           >
                             Remove
                           </button>
                         ) : role.source === "system" ? (
-                          <span className="text-xs" style={{ color: "#9CA3AF" }}>
-                            Hardcoded
-                          </span>
+                          <span className="text-xs text-gray-400">Hardcoded</span>
                         ) : role.source === "hr" ? (
-                          <span className="text-xs" style={{ color: "#9CA3AF" }}>
-                            HR Hub
-                          </span>
+                          <span className="text-xs text-gray-400">HR Hub</span>
                         ) : null}
                       </td>
                     </tr>
@@ -355,7 +325,7 @@ export default function AdminUsersPage() {
                 )}
                 {users.length === 0 && !loading && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-sm" style={{ color: "#6B7D8F" }}>
+                    <td colSpan={6} className="px-5 py-8 text-center text-sm text-gray-400">
                       No elevated users found.
                     </td>
                   </tr>

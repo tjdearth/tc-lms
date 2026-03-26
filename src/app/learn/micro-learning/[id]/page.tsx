@@ -20,7 +20,7 @@ export default function MicroLessonViewer() {
   const id = params.id as string;
   const [lesson, setLesson] = useState<MicroLesson | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showTranscript, setShowTranscript] = useState(false);
+
 
   useEffect(() => {
     fetch("/api/learn/micro-lessons")
@@ -130,37 +130,7 @@ export default function MicroLessonViewer() {
             </div>
           )}
 
-          {/* Transcript toggle */}
-          {lesson.transcript && (
-            <div className="bg-white border border-[#E8ECF1] rounded-xl shadow-sm overflow-hidden">
-              <button
-                onClick={() => setShowTranscript(!showTranscript)}
-                className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
-              >
-                <span className="text-sm font-semibold text-[#304256]">View Transcript</span>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className={`text-gray-400 transition-transform ${showTranscript ? "rotate-180" : ""}`}
-                >
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </button>
-              {showTranscript && (
-                <div className="px-6 pb-6 border-t border-[#E8ECF1]">
-                  <p className="text-sm text-gray-600 whitespace-pre-wrap pt-4 leading-relaxed">
-                    {lesson.transcript}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Transcript hidden — used only for AI search, not displayed */}
         </div>
       </div>
     </AppShell>
