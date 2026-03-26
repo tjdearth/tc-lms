@@ -88,6 +88,7 @@ export default function DashboardPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [microLessons, setMicroLessons] = useState<MicroLesson[]>([]);
+  const [sfProfile, setSfProfile] = useState<{ full_name: string; sf_profile: string; sf_username: string; last_login: string; access_scope: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [quote] = useState(getRandomQuote);
   const [showAllEvents, setShowAllEvents] = useState(false);
@@ -99,12 +100,14 @@ export default function DashboardPage() {
       fetch("/api/learn/courses").then((r) => r.ok ? r.json() : []),
       fetch("/api/learn/enroll").then((r) => r.ok ? r.json() : []),
       fetch("/api/learn/micro-lessons").then((r) => r.ok ? r.json() : []),
-    ]).then(([tree, events, coursesData, enrollData, microData]) => {
+      fetch("/api/sf-profile").then((r) => r.ok ? r.json() : null),
+    ]).then(([tree, events, coursesData, enrollData, microData, profileData]) => {
       setWikiTree(tree);
       setCalendarEvents(events);
       setCourses(Array.isArray(coursesData) ? coursesData : []);
       setEnrollments(Array.isArray(enrollData) ? enrollData : []);
       setMicroLessons(Array.isArray(microData) ? microData : []);
+      setSfProfile(profileData || null);
       setLoading(false);
     });
   }, []);
@@ -236,6 +239,44 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
+
+        {/* Your Salesforce Profile */}
+        {!loading && sfProfile && (
+          <div className="mb-8 bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-xl bg-[#304256] flex items-center justify-center flex-shrink-0">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#304256]">Your Salesforce Profile</h3>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#27a28c]/10 text-[#27a28c]">
+                      {sfProfile.sf_profile}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      Access: {sfProfile.access_scope || "—"}
+                    </span>
+                    {sfProfile.last_login && (
+                      <>
+                        <span className="text-xs text-gray-300">·</span>
+                        <span className="text-xs text-gray-400">
+                          Last login: {new Date(sfProfile.last_login).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+              {/* TODO: Link to wiki article explaining roles */}
+              {/* <Link href="/wiki?article=ROLE_ARTICLE_ID" className="text-xs text-accent hover:underline flex-shrink-0">
+                What does this mean? &rarr;
+              </Link> */}
+            </div>
+          </div>
+        )}
 
         {/* Recent Micro-Learning */}
         {!loading && microLessons.length > 0 && (
