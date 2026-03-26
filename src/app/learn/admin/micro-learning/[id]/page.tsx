@@ -13,9 +13,15 @@ function buildStandaloneEmailHtml(lesson: {
   title: string;
   key_points_html: string;
   video_url: string;
+  thumbnail_url?: string;
   id: string;
 }): string {
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://atlas.travelcollection.co";
+  // Extract Google Drive file ID for thumbnail fallback
+  const driveMatch = lesson.video_url.match(/\/d\/([^/]+)/);
+  const driveThumbnail = driveMatch ? `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w600` : "";
+  const thumbnailSrc = lesson.thumbnail_url || driveThumbnail;
+
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -32,27 +38,31 @@ function buildStandaloneEmailHtml(lesson: {
       </td>
     </tr>
     <tr>
-      <td style="padding:16px 32px 8px;">
+      <td style="padding:16px 32px 12px;">
         <h2 style="margin:0;color:#304256;font-size:22px;font-weight:700;">${lesson.title}</h2>
       </td>
     </tr>
     <tr>
-      <td style="padding:8px 32px 24px;">
-        ${lesson.key_points_html}
+      <td style="padding:0 32px 20px;">
+        <a href="${lesson.video_url}" style="display:block;text-decoration:none;position:relative;">
+          <div style="position:relative;border-radius:8px;overflow:hidden;background:#0F1923;">
+            ${thumbnailSrc ? `<img src="${thumbnailSrc}" alt="${lesson.title}" style="width:100%;display:block;border-radius:8px;" />` : `<div style="height:200px;background:#0F1923;border-radius:8px;"></div>`}
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;background:rgba(39,162,140,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <div style="width:0;height:0;border-style:solid;border-width:12px 0 12px 20px;border-color:transparent transparent transparent #ffffff;margin-left:4px;"></div>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:8px;color:#27a28c;font-size:13px;font-weight:600;">&#9654; Watch the 5-minute video</div>
+        </a>
       </td>
     </tr>
     <tr>
       <td style="padding:0 32px 24px;">
-        <table cellpadding="0" cellspacing="0" border="0">
-          <tr>
-            <td style="padding-right:12px;">
-              <a href="${lesson.video_url}" style="display:inline-block;padding:12px 24px;background:#27a28c;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;">&#9654; Watch the Full Video</a>
-            </td>
-            <td>
-              <a href="${baseUrl}/learn/micro-learning/${lesson.id}" style="display:inline-block;padding:12px 24px;background:#304256;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;">View in Atlas</a>
-            </td>
-          </tr>
-        </table>
+        ${lesson.key_points_html}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 32px 24px;text-align:center;">
+        <a href="${baseUrl}/learn/micro-learning/${lesson.id}" style="display:inline-block;padding:10px 24px;background:#304256;color:#ffffff;text-decoration:none;border-radius:6px;font-size:13px;font-weight:600;">View in Atlas</a>
       </td>
     </tr>
     <tr>
@@ -256,6 +266,7 @@ export default function MicroLessonEditor() {
       title,
       key_points_html: keyPointsHtml,
       video_url: videoUrl,
+      thumbnail_url: thumbnailUrl || undefined,
       id: savedId,
     });
     // Copy as rich HTML so it pastes with formatting in Gmail
@@ -536,6 +547,7 @@ export default function MicroLessonEditor() {
                       title,
                       key_points_html: keyPointsHtml,
                       video_url: videoUrl,
+                      thumbnail_url: thumbnailUrl || undefined,
                       id: lessonId === "new" ? "preview" : String(lessonId),
                     }),
                   }}
