@@ -364,7 +364,7 @@ export default function MicroLessonEditor() {
               />
             </div>
 
-            {/* Video URL */}
+            {/* Video URL + Thumbnail */}
             <div className="bg-white border border-[#E8ECF1] rounded-xl p-6 shadow-sm">
               <label className="block text-xs font-semibold text-[#304256] uppercase tracking-wider mb-2">Google Drive Video URL *</label>
               <input
@@ -374,7 +374,19 @@ export default function MicroLessonEditor() {
                 placeholder="https://drive.google.com/file/d/XXXXX/view?usp=drive_link"
                 className="w-full px-3 py-2.5 border border-[#E8ECF1] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#27a28c]/30 focus:border-[#27a28c]"
               />
-              <p className="text-[11px] text-gray-400 mt-1">Paste a Google Drive sharing link. It will be auto-converted for embedding.</p>
+              <p className="text-[11px] text-gray-400 mt-1">Paste a Google Drive sharing link. A thumbnail is auto-generated from the video for the email and gallery.</p>
+
+              <div className="mt-4">
+                <label className="block text-xs font-semibold text-[#304256] uppercase tracking-wider mb-1">Custom Thumbnail URL</label>
+                <p className="text-[11px] text-gray-400 mb-2">Only needed if the auto-generated video thumbnail doesn&apos;t look good — check in Preview &amp; Send.</p>
+                <input
+                  type="text"
+                  value={thumbnailUrl}
+                  onChange={(e) => setThumbnailUrl(e.target.value)}
+                  placeholder="Leave blank to use auto-generated from video"
+                  className="w-full px-3 py-2.5 border border-[#E8ECF1] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#27a28c]/30 focus:border-[#27a28c]"
+                />
+              </div>
             </div>
 
             {/* Tags */}
@@ -457,36 +469,27 @@ export default function MicroLessonEditor() {
 
             {/* Brand + Thumbnail row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Brand */}
+              {/* Audience */}
               <div className="bg-white border border-[#E8ECF1] rounded-xl p-6 shadow-sm">
-                <label className="block text-xs font-semibold text-[#304256] uppercase tracking-wider mb-2">Brand</label>
+                <label className="block text-xs font-semibold text-[#304256] uppercase tracking-wider mb-1">Send to</label>
+                <p className="text-[11px] text-gray-400 mb-2">Who will receive this micro-lesson by email and see it in Atlas</p>
                 {userIsAdmin ? (
                   <select
                     value={lessonBrand}
                     onChange={(e) => setLessonBrand(e.target.value)}
                     className="w-full px-3 py-2.5 border border-[#E8ECF1] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#27a28c]/30 focus:border-[#27a28c]"
                   >
-                    <option value="tc">Travel Collection (all users)</option>
+                    <option value="tc">All Travel Collection users</option>
                     {BRAND_NAMES.map((b) => (
-                      <option key={b} value={b}>{b}</option>
+                      <option key={b} value={b}>{b} team only</option>
                     ))}
                   </select>
                 ) : (
-                  <p className="text-sm text-[#304256]">{lessonBrand === "tc" ? "Travel Collection" : lessonBrand}</p>
+                  <p className="text-sm text-[#304256]">{lessonBrand === "tc" ? "All Travel Collection users" : `${lessonBrand} team only`}</p>
                 )}
               </div>
 
-              {/* Thumbnail */}
-              <div className="bg-white border border-[#E8ECF1] rounded-xl p-6 shadow-sm">
-                <label className="block text-xs font-semibold text-[#304256] uppercase tracking-wider mb-2">Thumbnail URL</label>
-                <input
-                  type="text"
-                  value={thumbnailUrl}
-                  onChange={(e) => setThumbnailUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2.5 border border-[#E8ECF1] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#27a28c]/30 focus:border-[#27a28c]"
-                />
-              </div>
+              {/* Thumbnail removed — now combined with Video URL field above */}
             </div>
 
             {/* Action buttons */}
