@@ -182,6 +182,23 @@ export interface QuizAttempt {
   created_at: string;
 }
 
+export interface MicroLesson {
+  id: string;
+  title: string;
+  description: string | null;
+  video_url: string;
+  transcript: string | null;
+  key_points_html: string | null;
+  thumbnail_url: string | null;
+  tags: string[];
+  brand: string;
+  is_published: boolean;
+  sent_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CourseTemplate {
   name: string;
   description: string;

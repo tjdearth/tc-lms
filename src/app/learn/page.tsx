@@ -5,15 +5,18 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import CourseCard from "@/components/CourseCard";
-import type { LmsUser, Course, Enrollment } from "@/types";
+import { useBrand } from "@/lib/brand-context";
+import type { LmsUser, Course, Enrollment, MicroLesson } from "@/types";
 
 export default function LearnDashboard() {
   const { data: session } = useSession();
   const router = useRouter();
 
+  const { brand } = useBrand();
   const [user, setUser] = useState<LmsUser | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [microLessons, setMicroLessons] = useState<MicroLesson[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,16 +33,20 @@ export default function LearnDashboard() {
           return;
         }
 
-        // Fetch courses and enrollments
-        const [coursesRes, enrollmentsRes] = await Promise.all([
+        // Fetch courses, enrollments, and micro-lessons
+        const brandParam = brand.mode === "tc" ? "tc" : brand.mode;
+        const [coursesRes, enrollmentsRes, microRes] = await Promise.all([
           fetch("/api/learn/courses"),
           fetch("/api/learn/enroll"),
+          fetch(`/api/learn/micro-lessons?brand=${encodeURIComponent(brandParam)}`),
         ]);
         const coursesData: Course[] = await coursesRes.json();
         const enrollmentsData: Enrollment[] = await enrollmentsRes.json();
+        const microData = await microRes.json();
 
         setCourses(coursesData.filter((c) => c.is_published));
         setEnrollments(enrollmentsData);
+        if (Array.isArray(microData)) setMicroLessons(microData);
       } catch (err) {
         console.error("Dashboard load error:", err);
       } finally {
@@ -47,7 +54,7 @@ export default function LearnDashboard() {
       }
     }
     load();
-  }, [router]);
+  }, [router, brand.mode]);
 
   if (loading) {
     return (
@@ -295,6 +302,58 @@ export default function LearnDashboard() {
                       );
                     })}
                 </div>
+              </div>
+            </section>
+          )}
+
+          {/* Micro-Learning */}
+          {microLessons.length > 0 && (
+            <section className="mb-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">&#9889;</span>
+                  <h2 className="text-base font-semibold text-[#304256]">Micro-Learning</h2>
+                </div>
+                <button
+                  onClick={() => router.push("/learn/micro-learning")}
+                  className="text-xs font-medium text-[#27a28c] hover:underline"
+                >
+                  View All
+                </button>
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                {microLessons.slice(0, 8).map((ml) => (
+                  <button
+                    key={ml.id}
+                    onClick={() => router.push(`/learn/micro-learning/${ml.id}`)}
+                    className="flex-shrink-0 w-[220px] bg-white border border-[#E8ECF1] rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left group"
+                  >
+                    <div className="aspect-video bg-[#304256] relative flex items-center justify-center">
+                      {ml.thumbnail_url ? (
+                        <img src={ml.thumbnail_url} alt={ml.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-white/30">
+                          <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
+                        </svg>
+                      )}
+                      <div className="absolute top-1.5 right-1.5 bg-black/60 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                        <span>&#9889;</span> 5 min
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <h3 className="text-xs font-semibold text-[#304256] line-clamp-2 mb-1">{ml.title}</h3>
+                      {ml.tags && ml.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {ml.tags.slice(0, 2).map((tag) => (
+                            <span key={tag} className="px-1.5 py-0.5 text-[9px] font-medium rounded-full" style={{ backgroundColor: "#e0f7f3", color: "#27a28c" }}>
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
               </div>
             </section>
           )}
