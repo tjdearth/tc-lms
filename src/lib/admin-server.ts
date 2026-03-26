@@ -3,12 +3,25 @@ import { supabaseAdmin } from "./supabase-admin";
 
 /**
  * Check if a user is a wiki admin for a specific brand.
- * Returns true if the user is a global admin OR is a GM for the given brand.
+ * Returns true if the user is a global admin, has an atlas_roles entry
+ * for admin/wiki_admin (global or matching brand), or is a GM for the given brand.
  */
 export async function isWikiAdminForBrand(email: string, brand: string): Promise<boolean> {
   const e = email.toLowerCase();
   if (ADMIN_EMAILS.includes(e)) return true;
 
+  // Check atlas_roles for admin or wiki_admin (global or brand-specific)
+  const { data: roleData } = await supabaseAdmin
+    .from("atlas_roles")
+    .select("id")
+    .eq("email", e)
+    .in("role", ["admin", "wiki_admin"])
+    .or(`brand.is.null,brand.eq.${brand}`)
+    .limit(1);
+
+  if (roleData && roleData.length > 0) return true;
+
+  // Check if GM for the brand
   const { data } = await supabaseAdmin
     .from("hr_users")
     .select("id")
@@ -22,12 +35,25 @@ export async function isWikiAdminForBrand(email: string, brand: string): Promise
 
 /**
  * Check if a user can create/edit courses for a specific brand.
- * Returns true if the user is a global admin, global course creator, or GM for the given brand.
+ * Returns true if the user is a global admin, global course creator,
+ * has an atlas_roles entry, or is a GM for the given brand.
  */
 export async function isCourseCreatorForBrand(email: string, brand: string): Promise<boolean> {
   const e = email.toLowerCase();
   if (ADMIN_EMAILS.includes(e) || COURSE_CREATOR_EMAILS.includes(e)) return true;
 
+  // Check atlas_roles for admin or course_creator (global or brand-specific)
+  const { data: roleData } = await supabaseAdmin
+    .from("atlas_roles")
+    .select("id")
+    .eq("email", e)
+    .in("role", ["admin", "course_creator"])
+    .or(`brand.is.null,brand.eq.${brand}`)
+    .limit(1);
+
+  if (roleData && roleData.length > 0) return true;
+
+  // Check if GM for the brand
   const { data } = await supabaseAdmin
     .from("hr_users")
     .select("id")
