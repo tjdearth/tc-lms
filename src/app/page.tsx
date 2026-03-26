@@ -255,19 +255,9 @@ export default function DashboardPage() {
                   <h3 className="text-base font-bold text-white">{sfProfile.sf_profile}</h3>
                 </div>
               </div>
-              <div className="flex items-center gap-5">
-                <div className="text-right">
-                  <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Access</p>
-                  <p className="text-sm font-semibold text-white mt-0.5">{sfProfile.access_scope || "—"}</p>
-                </div>
-                {sfProfile.last_login && (
-                  <div className="text-right border-l border-white/10 pl-5">
-                    <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Last SF Login</p>
-                    <p className="text-sm font-semibold text-white mt-0.5">
-                      {new Date(sfProfile.last_login).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                    </p>
-                  </div>
-                )}
+              <div className="text-right">
+                <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Access</p>
+                <p className="text-sm font-semibold text-white mt-0.5">{sfProfile.access_scope || "—"}</p>
               </div>
             </div>
           </div>
