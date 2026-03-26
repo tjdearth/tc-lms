@@ -6,6 +6,19 @@ import AppShell from "@/components/AppShell";
 import { isCourseCreator, isAdmin } from "@/lib/admin";
 import { getBrandColor } from "@/lib/brands";
 
+interface KBHealth {
+  wiki_articles: number;
+  course_lessons: number;
+  lessons_with_content: number;
+  lessons_with_transcripts: number;
+  micro_lessons: number;
+  micro_with_transcripts: number;
+  quiz_questions: number;
+  estimated_context_chars: number;
+  context_limit: number;
+  usage_pct: number;
+}
+
 interface AnalyticsData {
   overview: {
     total_users: number;
@@ -34,6 +47,7 @@ interface AnalyticsData {
     enrolled: number;
     completed: number;
   }[];
+  kb_health?: KBHealth;
 }
 
 interface SearchAnalyticsData {
@@ -240,6 +254,103 @@ export default function AnalyticsPage() {
                 </div>
               </div>
             </div>
+
+            {/* KB Health (admin only) */}
+            {showSearchAnalytics && data.kb_health && (() => {
+              const kb = data.kb_health;
+              const pct = kb.usage_pct;
+              const status = pct < 50 ? "healthy" : pct < 75 ? "growing" : pct < 95 ? "attention" : "critical";
+              const statusConfig = {
+                healthy: { color: "#27a28c", bg: "bg-emerald-50", text: "text-emerald-700", label: "Healthy", barColor: "#27a28c" },
+                growing: { color: "#E8A838", bg: "bg-amber-50", text: "text-amber-700", label: "Growing", barColor: "#E8A838" },
+                attention: { color: "#F97316", bg: "bg-orange-50", text: "text-orange-700", label: "Needs Attention", barColor: "#F97316" },
+                critical: { color: "#DC2626", bg: "bg-red-50", text: "text-red-700", label: "Upgrade Needed", barColor: "#DC2626" },
+              }[status];
+              const totalContent = kb.wiki_articles + kb.course_lessons + kb.micro_lessons;
+
+              return (
+                <div className="mb-8">
+                  <div className="mb-4 mt-2">
+                    <h2 className="text-lg font-bold text-[#304256]">Atlas AI — Knowledge Base Health</h2>
+                    <p className="text-sm text-gray-400">Tracks KB size vs. context window. When it fills up, Atlas AI starts losing access to content.</p>
+                  </div>
+
+                  {/* Status banner */}
+                  <div className={`rounded-xl border p-5 mb-6 ${statusConfig.bg}`} style={{ borderColor: statusConfig.color + "30" }}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: statusConfig.color }} />
+                        <span className={`text-sm font-semibold ${statusConfig.text}`}>{statusConfig.label}</span>
+                      </div>
+                      <span className="text-sm font-bold" style={{ color: statusConfig.color }}>
+                        {pct}% used
+                      </span>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="w-full h-3 rounded-full bg-white/60 overflow-hidden mb-3">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: statusConfig.barColor }}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>{(kb.estimated_context_chars / 1000).toFixed(0)}K chars used</span>
+                      <span>{(kb.context_limit / 1000).toFixed(0)}K char context limit</span>
+                    </div>
+
+                    {pct >= 75 && (
+                      <p className={`text-xs mt-3 ${statusConfig.text}`}>
+                        {pct >= 95
+                          ? "⚠️ Context is full — Atlas AI is losing access to content. Time to implement vector search (RAG)."
+                          : "📈 Getting close to the context limit. Consider planning a migration to vector search soon."}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Content breakdown */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    {[
+                      { label: "Wiki Articles", value: kb.wiki_articles, icon: "📄" },
+                      { label: "Course Lessons", value: kb.course_lessons, sub: `${kb.lessons_with_transcripts} with transcripts` },
+                      { label: "Micro-Lessons", value: kb.micro_lessons, sub: `${kb.micro_with_transcripts} with transcripts` },
+                      { label: "Quiz Questions", value: kb.quiz_questions, icon: "❓" },
+                    ].map((item) => (
+                      <div key={item.label} className="bg-white rounded-xl border border-[#E8ECF1] p-4">
+                        <div className="text-xl font-bold text-[#304256]">{item.value}</div>
+                        <div className="text-xs text-gray-400 mt-0.5">{item.label}</div>
+                        {item.sub && <div className="text-[10px] text-gray-300 mt-1">{item.sub}</div>}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Threshold guide */}
+                  <div className="bg-white rounded-xl border border-[#E8ECF1] p-5">
+                    <h3 className="text-xs font-semibold text-[#304256] uppercase tracking-wider mb-3">Context Budget Guide</h3>
+                    <div className="space-y-2">
+                      {[
+                        { range: "0–50%", color: "#27a28c", label: "Healthy", desc: "Current approach works fine. All content fits in context." },
+                        { range: "50–75%", color: "#E8A838", label: "Growing", desc: "Still working but getting crowded. Start thinking about next steps." },
+                        { range: "75–95%", color: "#F97316", label: "Plan Upgrade", desc: "Content is being truncated. Begin implementing vector search (RAG)." },
+                        { range: "95%+", color: "#DC2626", label: "Upgrade Needed", desc: "Atlas AI can't see all content. Vector search is now essential." },
+                      ].map((t) => (
+                        <div key={t.range} className="flex items-start gap-3">
+                          <span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: t.color }} />
+                          <div>
+                            <span className="text-xs font-semibold text-gray-700">{t.range} — {t.label}</span>
+                            <p className="text-xs text-gray-400">{t.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-gray-300 mt-4">
+                      Total content items: {totalContent} | Estimated at ~{(kb.estimated_context_chars / totalContent || 0).toFixed(0)} chars avg per item
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Search Analytics (admin only) */}
             {showSearchAnalytics && searchData && (

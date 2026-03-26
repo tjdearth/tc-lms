@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { isCourseCreator } from "@/lib/admin";
+import { isCourseCreator, isAdmin } from "@/lib/admin";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+}
 
 export async function GET() {
   try {
@@ -10,6 +14,8 @@ export async function GET() {
     if (!session?.user?.email || !isCourseCreator(session.user.email)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
+
+    const userIsAdmin = isAdmin(session.user.email);
 
     const [usersResult, enrollmentsResult, coursesResult, quizResult] = await Promise.all([
       supabaseAdmin.from("lms_users").select("id, email, name, brand"),
@@ -86,6 +92,55 @@ export async function GET() {
       .map(([brand, stats]) => ({ brand, ...stats }))
       .sort((a, b) => b.enrolled - a.enrolled);
 
+    // KB Health stats (admin only) — estimate context size for Atlas AI
+    let kb_health = null;
+    if (userIsAdmin) {
+      const [wikiCount, lessonsFull, microCount, quizQCount] = await Promise.all([
+        supabaseAdmin.from("wiki_nodes").select("id, html_content", { count: "exact" }).eq("is_published", true).eq("node_type", "article"),
+        supabaseAdmin.from("lessons").select("id, html_content, transcript").limit(500),
+        supabaseAdmin.from("micro_lessons").select("id, transcript, key_points_html", { count: "exact" }).eq("is_published", true),
+        supabaseAdmin.from("quiz_questions").select("id", { count: "exact" }),
+      ]);
+
+      const wikiArticles = wikiCount.data || [];
+      const allLessons = lessonsFull.data || [];
+      const microLessons = microCount.data || [];
+
+      // Count lessons with actual transcript content
+      const lessonsWithTranscripts = allLessons.filter((l) => l.transcript && stripHtml(l.transcript).length > 50).length;
+      const lessonsWithContent = allLessons.filter((l) => l.html_content && stripHtml(l.html_content).length > 50).length;
+      const microWithTranscripts = microLessons.filter((l) => l.transcript && stripHtml(l.transcript).length > 50).length;
+
+      // Estimate total context chars (mirrors what /api/ask builds)
+      let estChars = 0;
+      for (const l of allLessons) {
+        if (l.html_content) estChars += Math.min(stripHtml(l.html_content).length, 1500);
+        if (l.transcript) estChars += Math.min(stripHtml(l.transcript).length, 2000);
+      }
+      for (const a of wikiArticles) {
+        if (a.html_content) estChars += Math.min(stripHtml(a.html_content).length, 500);
+      }
+      for (const m of microLessons) {
+        if (m.transcript) estChars += Math.min(stripHtml(m.transcript).length, 1500);
+        if (m.key_points_html) estChars += Math.min(stripHtml(m.key_points_html).length, 1000);
+      }
+
+      const contextLimit = 80000;
+
+      kb_health = {
+        wiki_articles: wikiCount.count || 0,
+        course_lessons: allLessons.length,
+        lessons_with_content: lessonsWithContent,
+        lessons_with_transcripts: lessonsWithTranscripts,
+        micro_lessons: microCount.count || 0,
+        micro_with_transcripts: microWithTranscripts,
+        quiz_questions: quizQCount.count || 0,
+        estimated_context_chars: estChars,
+        context_limit: contextLimit,
+        usage_pct: Math.round((estChars / contextLimit) * 100),
+      };
+    }
+
     return NextResponse.json({
       overview: {
         total_users: totalUsers,
@@ -97,6 +152,7 @@ export async function GET() {
       courses: courseStats,
       overdue,
       brand_breakdown: brandBreakdown,
+      ...(kb_health ? { kb_health } : {}),
     });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Unknown error";
