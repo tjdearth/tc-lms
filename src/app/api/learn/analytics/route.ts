@@ -144,7 +144,7 @@ export async function GET() {
       // Add ~10% overhead for markdown headers, labels, formatting
       estChars = Math.round(estChars * 1.1);
 
-      const contextLimit = 80000;
+      const contextLimit = 300000;
 
       kb_health = {
         wiki_articles: wikiCount.count || 0,

@@ -173,8 +173,9 @@ export async function POST(req: NextRequest) {
       context += "\n";
     }
 
-    // Truncate context if too large (keep under ~80k chars — Claude Sonnet handles this fine)
-    const maxContextChars = 80000;
+    // Truncate context if too large
+    // Claude Sonnet has 200K token context (~800K chars). 300K chars ≈ 75K tokens = safe headroom.
+    const maxContextChars = 300000;
     if (context.length > maxContextChars) {
       console.log(`Ask Atlas: context truncated from ${context.length} to ${maxContextChars} chars`);
       context = context.slice(0, maxContextChars) + "\n\n[Context truncated for performance]";
