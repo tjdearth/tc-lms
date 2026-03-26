@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const accessToken = (session as any).accessToken as string | undefined;
+    console.log("Gmail draft: accessToken present?", !!accessToken, "email:", session.user.email);
     if (!accessToken) {
       return NextResponse.json(
         { error: "Gmail access not available. Please sign out and sign back in to grant email permissions." },

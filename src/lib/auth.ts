@@ -23,6 +23,8 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account }) {
       // Persist the Google access token and refresh token on first sign-in
       if (account) {
+        console.log("Auth JWT: new sign-in, scopes:", account.scope);
+        console.log("Auth JWT: access_token present?", !!account.access_token, "refresh_token present?", !!account.refresh_token);
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
         token.accessTokenExpires = account.expires_at ? account.expires_at * 1000 : 0;
