@@ -28,6 +28,7 @@ export default function QuizPlayer({ quiz, lessonId, onComplete }: QuizPlayerPro
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const updateAnswer = (questionId: string, answer: string[]) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
@@ -48,10 +49,16 @@ export default function QuizPlayer({ quiz, lessonId, onComplete }: QuizPlayerPro
         body: JSON.stringify({ quiz_id: quiz.id, lesson_id: lessonId, answers }),
       });
       const data = await res.json();
+      if (!res.ok || data.error) {
+        setError(data.error || "Failed to submit quiz. Please try again.");
+        return;
+      }
+      setError(null);
       setResult(data);
       onComplete(data.passed, data.score_pct);
     } catch (err) {
       console.error("Quiz submit error:", err);
+      setError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -60,6 +67,7 @@ export default function QuizPlayer({ quiz, lessonId, onComplete }: QuizPlayerPro
   const handleRetry = () => {
     setAnswers({});
     setResult(null);
+    setError(null);
     setCurrentIdx(0);
   };
 
@@ -169,6 +177,11 @@ export default function QuizPlayer({ quiz, lessonId, onComplete }: QuizPlayerPro
           ))}
         </div>
 
+        {error && (
+          <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            {error}
+          </div>
+        )}
         <button
           onClick={handleSubmit}
           disabled={!allAnswered || submitting}
@@ -214,6 +227,12 @@ export default function QuizPlayer({ quiz, lessonId, onComplete }: QuizPlayerPro
         answer={answers[currentQ.id] || []}
         onChange={(a) => updateAnswer(currentQ.id, a)}
       />
+
+      {error && (
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* Navigation */}
       <div className="flex items-center justify-between mt-6">
