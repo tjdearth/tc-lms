@@ -242,38 +242,33 @@ export default function DashboardPage() {
 
         {/* Your Salesforce Profile */}
         {!loading && sfProfile && (
-          <div className="mb-8 bg-white rounded-xl border border-gray-200 p-5">
+          <div className="mb-8 bg-gradient-to-r from-[#304256] to-[#1e3044] rounded-xl p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-[#304256] flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-[#304256]">Your Salesforce Profile</h3>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#27a28c]/10 text-[#27a28c]">
-                      {sfProfile.sf_profile}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      Access: {sfProfile.access_scope || "—"}
-                    </span>
-                    {sfProfile.last_login && (
-                      <>
-                        <span className="text-xs text-gray-300">·</span>
-                        <span className="text-xs text-gray-400">
-                          Last login: {new Date(sfProfile.last_login).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                        </span>
-                      </>
-                    )}
-                  </div>
+                  <p className="text-[10px] font-semibold text-white/40 uppercase tracking-widest mb-1">Your Salesforce Profile</p>
+                  <h3 className="text-base font-bold text-white">{sfProfile.sf_profile}</h3>
                 </div>
               </div>
-              {/* TODO: Link to wiki article explaining roles */}
-              {/* <Link href="/wiki?article=ROLE_ARTICLE_ID" className="text-xs text-accent hover:underline flex-shrink-0">
-                What does this mean? &rarr;
-              </Link> */}
+              <div className="flex items-center gap-5">
+                <div className="text-right">
+                  <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Access</p>
+                  <p className="text-sm font-semibold text-white mt-0.5">{sfProfile.access_scope || "—"}</p>
+                </div>
+                {sfProfile.last_login && (
+                  <div className="text-right border-l border-white/10 pl-5">
+                    <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Last SF Login</p>
+                    <p className="text-sm font-semibold text-white mt-0.5">
+                      {new Date(sfProfile.last_login).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
