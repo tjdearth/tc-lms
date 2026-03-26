@@ -8,6 +8,29 @@ import { fetchWikiTree, fetchCalendarEvents, getAllArticles } from "@/lib/api";
 import { WikiNode, CalendarEvent, Course, Enrollment, MicroLesson } from "@/types";
 import { brandFromEmail } from "@/lib/brands";
 
+function VideoThumbnail({ videoUrl, thumbnailUrl, title, size = 32 }: { videoUrl: string; thumbnailUrl?: string; title: string; size?: number }) {
+  const [failed, setFailed] = useState(false);
+  const driveMatch = videoUrl?.match(/\/d\/([^/]+)/);
+  const thumbSrc = thumbnailUrl || (driveMatch ? `https://lh3.googleusercontent.com/d/${driveMatch[1]}=w400` : "");
+
+  if (!thumbSrc || failed) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className="text-white/30">
+        <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
+      </svg>
+    );
+  }
+
+  return (
+    <img
+      src={thumbSrc}
+      alt={title}
+      className="w-full h-full object-cover"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 const EVENT_TYPE_COLORS: Record<string, { dot: string }> = {
   public_holiday: { dot: "bg-blue-500" },
   festival: { dot: "bg-purple-500" },
@@ -228,8 +251,6 @@ export default function DashboardPage() {
             </div>
             <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
               {microLessons.slice(0, 8).map((lesson) => {
-                const driveMatch = lesson.video_url?.match(/\/d\/([^/]+)/);
-                const thumbSrc = lesson.thumbnail_url || (driveMatch ? `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w400` : "");
                 return (
                   <Link
                     key={lesson.id}
@@ -237,13 +258,7 @@ export default function DashboardPage() {
                     className="flex-shrink-0 w-[220px] bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group"
                   >
                     <div className="aspect-video bg-[#304256] relative flex items-center justify-center">
-                      {thumbSrc ? (
-                        <img src={thumbSrc} alt={lesson.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-white/30">
-                          <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
-                        </svg>
-                      )}
+                      <VideoThumbnail videoUrl={lesson.video_url} thumbnailUrl={lesson.thumbnail_url || undefined} title={lesson.title} />
                       <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
                         <span>&#9889;</span> 5 min
                       </div>

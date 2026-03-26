@@ -154,7 +154,7 @@ export default function AdminUsersPage() {
 
   return (
     <AppShell>
-      <div className="p-4 md:p-8 max-w-[1200px]">
+      <div className="p-4 md:p-8 max-w-[1200px] mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-[#304256] mb-1">
