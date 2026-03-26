@@ -258,8 +258,15 @@ export default function MicroLessonEditor() {
       video_url: videoUrl,
       id: savedId,
     });
-    navigator.clipboard.writeText(html).then(() => {
-      showToast("Email HTML copied to clipboard!");
+    // Copy as rich HTML so it pastes with formatting in Gmail
+    const blob = new Blob([html], { type: "text/html" });
+    const plainBlob = new Blob([html], { type: "text/plain" });
+    const clipboardItem = new ClipboardItem({
+      "text/html": blob,
+      "text/plain": plainBlob,
+    });
+    navigator.clipboard.write([clipboardItem]).then(() => {
+      showToast("Copied! Paste directly into Gmail with formatting.");
     });
   }
 
@@ -334,10 +341,15 @@ export default function MicroLessonEditor() {
               <label className="block text-xs font-semibold text-[#304256] uppercase tracking-wider mb-2">Description</label>
               <textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  e.target.style.height = "auto";
+                  e.target.style.height = e.target.scrollHeight + "px";
+                }}
+                ref={(el) => { if (el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; } }}
                 placeholder="Brief description of what this lesson covers..."
-                rows={3}
-                className="w-full px-3 py-2.5 border border-[#E8ECF1] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#27a28c]/30 focus:border-[#27a28c] resize-none"
+                rows={2}
+                className="w-full px-3 py-2.5 border border-[#E8ECF1] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#27a28c]/30 focus:border-[#27a28c] resize-none overflow-hidden"
               />
             </div>
 
@@ -402,10 +414,15 @@ export default function MicroLessonEditor() {
               </div>
               <textarea
                 value={transcript}
-                onChange={(e) => setTranscript(e.target.value)}
+                onChange={(e) => {
+                  setTranscript(e.target.value);
+                  e.target.style.height = "auto";
+                  e.target.style.height = Math.max(120, e.target.scrollHeight) + "px";
+                }}
+                ref={(el) => { if (el) { el.style.height = "auto"; el.style.height = Math.max(120, el.scrollHeight) + "px"; } }}
                 placeholder="Paste the video transcript here..."
-                rows={10}
-                className="w-full px-3 py-2.5 border border-[#E8ECF1] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#27a28c]/30 focus:border-[#27a28c] resize-y font-mono text-xs leading-relaxed"
+                rows={5}
+                className="w-full px-3 py-2.5 border border-[#E8ECF1] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#27a28c]/30 focus:border-[#27a28c] resize-none overflow-hidden font-mono text-xs leading-relaxed"
               />
             </div>
 
@@ -483,7 +500,7 @@ export default function MicroLessonEditor() {
                   disabled={!savedId || sending}
                   className="px-5 py-2.5 text-sm font-semibold text-white bg-[#304256] rounded-lg hover:bg-[#304256]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Send to All Users
+                  Preview &amp; Send
                 </button>
                 <button
                   onClick={handleCopyEmailHtml}
@@ -502,13 +519,29 @@ export default function MicroLessonEditor() {
 
         {/* Send confirmation modal */}
         {showSendModal && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
-              <h3 className="text-base font-semibold text-[#304256] mb-2">Send Email</h3>
-              <p className="text-sm text-gray-500 mb-4">
-                This will send the micro-lesson email to {lessonBrand === "tc" ? "all" : lessonBrand} users. Are you sure?
-              </p>
-              <div className="flex justify-end gap-2">
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full my-8">
+              <div className="p-6 border-b border-[#E8ECF1]">
+                <h3 className="text-base font-semibold text-[#304256]">Preview &amp; Send Email</h3>
+                <p className="text-xs text-gray-400 mt-1">
+                  This will be sent to {lessonBrand === "tc" ? "all" : lessonBrand} users
+                </p>
+              </div>
+              <div className="p-6 max-h-[60vh] overflow-y-auto bg-gray-50">
+                <div
+                  className="mx-auto bg-white rounded-lg shadow-sm border border-[#E8ECF1] overflow-hidden"
+                  style={{ maxWidth: 600 }}
+                  dangerouslySetInnerHTML={{
+                    __html: buildStandaloneEmailHtml({
+                      title,
+                      key_points_html: keyPointsHtml,
+                      video_url: videoUrl,
+                      id: lessonId === "new" ? "preview" : String(lessonId),
+                    }),
+                  }}
+                />
+              </div>
+              <div className="p-6 border-t border-[#E8ECF1] flex justify-end gap-2">
                 <button
                   onClick={() => setShowSendModal(false)}
                   className="px-4 py-2 text-sm font-medium text-gray-500 border border-[#E8ECF1] rounded-lg hover:bg-gray-50"
@@ -520,7 +553,7 @@ export default function MicroLessonEditor() {
                   disabled={sending}
                   className="px-4 py-2 text-sm font-semibold text-white bg-[#304256] rounded-lg hover:bg-[#304256]/90 disabled:opacity-50"
                 >
-                  {sending ? "Sending..." : "Yes, Send"}
+                  {sending ? "Sending..." : "Send to All Users"}
                 </button>
               </div>
             </div>
