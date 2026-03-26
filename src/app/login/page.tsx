@@ -1,11 +1,16 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 const TC_LOGO_URL =
   "https://lh7-rt.googleusercontent.com/docsz/AD_4nXcuZ3fOJUGrPHzT0Tu5n3IyhjOPWYUjkhaEcBcNhdpt2I5hcRLGyL_Sj635ZffMbHWB3xfPa8vnDZ06Pfl0ez9vedO8hDGzYaZxhKsj7yyVeyk-sUcbBz4G6KXjTCvXUgo48Y2n?key=5z7x5EJrcuoubrabZrlshg";
 
-export default function LoginPage() {
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
+
   return (
     <div
       className="min-h-screen flex items-center justify-center"
@@ -30,7 +35,7 @@ export default function LoginPage() {
           style={{ backgroundColor: "#1A2A3A", border: "1px solid #2A3F52" }}
         >
           <button
-            onClick={() => signIn("google", { callbackUrl: "/" })}
+            onClick={() => signIn("google", { callbackUrl })}
             className="w-full flex items-center justify-center gap-3 px-5 py-3 rounded-lg bg-white text-gray-800 font-medium text-sm cursor-pointer border border-gray-200 hover:bg-gray-50 transition-all active:scale-[0.98]"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -50,5 +55,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }

@@ -21,7 +21,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/login");
+      // Preserve the current URL so login can redirect back after auth
+      const returnUrl = window.location.pathname + window.location.search;
+      router.push(`/login?callbackUrl=${encodeURIComponent(returnUrl)}`);
     }
   }, [status, router]);
 
