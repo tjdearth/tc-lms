@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
 
     const email = session.user.email;
 
-    // Fetch context from all relevant tables in parallel (use allSettled so one failure doesn't break all)
-    const [wikiResult, coursesResult, calendarResult, lessonsResult, quizResult] = await Promise.all([
+    // Fetch context from all relevant tables in parallel
+    const [wikiResult, coursesResult, calendarResult, lessonsResult, quizResult, microResult] = await Promise.all([
       supabaseAdmin
         .from("wiki_nodes")
         .select("id, title, html_content")
@@ -43,16 +43,22 @@ export async function POST(req: NextRequest) {
         .gte("date_start", new Date().toISOString().slice(0, 10))
         .order("date_start")
         .limit(100),
-      // Fetch lessons from published courses (lessons → modules → courses)
+      // Fetch ALL lessons from published courses (no limit)
       supabaseAdmin
         .from("lessons")
-        .select("id, title, html_content, transcript, module_id, modules!inner(id, course_id, courses!inner(id, is_published))")
-        .limit(50),
-      // Fetch quiz questions with correct answers (quiz_questions → quizzes → lessons → modules → courses)
+        .select("id, title, html_content, transcript, module_id, modules!inner(id, course_id, courses!inner(id, title, is_published))")
+        .limit(200),
+      // Fetch quiz questions with correct answers
       supabaseAdmin
         .from("quiz_questions")
         .select("id, question_text, options, quizzes!inner(id, lesson_id, lessons!inner(id, module_id, modules!inner(id, course_id, courses!inner(id, is_published))))")
         .limit(100),
+      // Fetch published micro-learning lessons (new!)
+      supabaseAdmin
+        .from("micro_lessons")
+        .select("id, title, description, transcript, key_points_html, tags")
+        .eq("is_published", true)
+        .limit(50),
     ]);
 
     if (wikiResult.error) console.error("Wiki fetch error:", wikiResult.error.message);
@@ -60,10 +66,12 @@ export async function POST(req: NextRequest) {
     if (calendarResult.error) console.error("Calendar fetch error:", calendarResult.error.message);
     if (lessonsResult.error) console.error("Lessons fetch error:", lessonsResult.error.message);
     if (quizResult.error) console.error("Quiz fetch error:", quizResult.error.message);
+    if (microResult.error) console.error("Micro-lessons fetch error:", microResult.error.message);
 
     const wikiArticles = wikiResult.data || [];
     const courses = coursesResult.data || [];
     const events = calendarResult.data || [];
+    const microLessons = microResult.data || [];
 
     // Filter lessons to only those from published courses
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,9 +89,47 @@ export async function POST(req: NextRequest) {
       } catch { return false; }
     });
 
-    // Build context
+    // Build context — PRIORITY ORDER: lessons & transcripts first (richest content),
+    // then micro-learning, then wiki, then courses/quizzes/events
     let context = "";
 
+    // 1. Course lessons + video transcripts (highest priority — this is where deep knowledge lives)
+    if (lessons.length > 0) {
+      context += "## Course Lesson Content & Video Transcripts\n\n";
+      for (const lesson of lessons) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const courseName = (lesson as any).modules?.courses?.title || "";
+        const content = lesson.html_content ? stripHtml(lesson.html_content).slice(0, 1500) : "";
+        const transcript = lesson.transcript ? stripHtml(lesson.transcript).slice(0, 2000) : "";
+        if (content || transcript) {
+          context += `### ${lesson.title}`;
+          if (courseName) context += ` (Course: ${courseName})`;
+          context += "\n";
+          if (content) context += `${content}\n`;
+          if (transcript) context += `[Video transcript]: ${transcript}\n`;
+          context += "\n";
+        }
+      }
+    }
+
+    // 2. Micro-learning lessons (new!)
+    if (microLessons.length > 0) {
+      context += "## Micro-Learning Lessons\n\n";
+      for (const ml of microLessons) {
+        const keyPoints = ml.key_points_html ? stripHtml(ml.key_points_html).slice(0, 1000) : "";
+        const transcript = ml.transcript ? stripHtml(ml.transcript).slice(0, 1500) : "";
+        const tags = ml.tags ? (ml.tags as string[]).join(", ") : "";
+        context += `### ${ml.title} [MICRO_ID:${ml.id}]`;
+        if (tags) context += ` (Tags: ${tags})`;
+        context += "\n";
+        if (ml.description) context += `${ml.description}\n`;
+        if (keyPoints) context += `Key points: ${keyPoints}\n`;
+        if (transcript) context += `[Video transcript]: ${transcript}\n`;
+        context += "\n";
+      }
+    }
+
+    // 3. Wiki articles
     if (wikiArticles.length > 0) {
       context += "## Wiki Articles\n\n";
       for (const article of wikiArticles) {
@@ -94,6 +140,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 4. Course list
     if (courses.length > 0) {
       context += "## Available Courses\n\n";
       for (const course of courses) {
@@ -102,20 +149,7 @@ export async function POST(req: NextRequest) {
       context += "\n";
     }
 
-    if (lessons.length > 0) {
-      context += "## Lesson Content\n\n";
-      for (const lesson of lessons) {
-        const content = lesson.html_content ? stripHtml(lesson.html_content).slice(0, 300) : "";
-        const transcript = lesson.transcript ? stripHtml(lesson.transcript).slice(0, 500) : "";
-        if (content || transcript) {
-          context += `### ${lesson.title}\n`;
-          if (content) context += `${content}\n`;
-          if (transcript) context += `[Video transcript]: ${transcript}\n`;
-          context += "\n";
-        }
-      }
-    }
-
+    // 5. Quiz Q&A
     if (quizQuestions.length > 0) {
       context += "## Quiz Questions & Answers\n\n";
       for (const q of quizQuestions) {
@@ -128,6 +162,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 6. Calendar events
     if (events.length > 0) {
       context += "## Upcoming Calendar Events\n\n";
       for (const event of events.slice(0, 50)) {
@@ -138,8 +173,8 @@ export async function POST(req: NextRequest) {
       context += "\n";
     }
 
-    // Truncate context if too large (keep under ~50k chars to avoid timeout)
-    const maxContextChars = 50000;
+    // Truncate context if too large (keep under ~80k chars — Claude Sonnet handles this fine)
+    const maxContextChars = 80000;
     if (context.length > maxContextChars) {
       console.log(`Ask Atlas: context truncated from ${context.length} to ${maxContextChars} chars`);
       context = context.slice(0, maxContextChars) + "\n\n[Context truncated for performance]";
@@ -155,7 +190,12 @@ The user's email is "${email}".
 
 Use the following Atlas knowledge base to answer questions. If the answer is in the knowledge base, reference the relevant source with a hyperlink.
 
-IMPORTANT: When referencing wiki articles, link to them using this format: [Article Title](/wiki?article=ARTICLE_ID) — replace ARTICLE_ID with the ID shown in brackets like [WIKI_ID:xxx]. When referencing courses, link using: [Course Title](/learn/course/COURSE_ID). Always prefer linking to sources rather than just naming them.
+IMPORTANT LINKING FORMAT:
+- Wiki articles: [Article Title](/wiki?article=ARTICLE_ID) — replace ARTICLE_ID with the ID shown in brackets like [WIKI_ID:xxx]
+- Courses: [Course Title](/learn/course/COURSE_ID) — replace COURSE_ID with [COURSE_ID:xxx]
+- Micro-learning: [Lesson Title](/learn/micro-learning/LESSON_ID) — replace LESSON_ID with [MICRO_ID:xxx]
+
+Always prefer linking to sources rather than just naming them. When answering from video transcripts or lesson content, mention which course or lesson the information comes from.
 
 Be concise and use markdown formatting. Only introduce yourself if it seems like a first message.
 
