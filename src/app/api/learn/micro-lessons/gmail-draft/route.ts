@@ -25,15 +25,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Subject and HTML are required" }, { status: 400 });
     }
 
+    // RFC 2047 encode the subject for UTF-8 (emojis, special chars)
+    const encodedSubject = `=?UTF-8?B?${Buffer.from(subject, "utf-8").toString("base64")}?=`;
+
     // Build the raw RFC 2822 email message
     const rawMessage = [
       `From: ${session.user.email}`,
       `To: `,
-      `Subject: ${subject}`,
+      `Subject: ${encodedSubject}`,
       `MIME-Version: 1.0`,
       `Content-Type: text/html; charset="UTF-8"`,
+      `Content-Transfer-Encoding: base64`,
       ``,
-      html,
+      Buffer.from(html, "utf-8").toString("base64"),
     ].join("\r\n");
 
     // Base64url encode the message (Gmail API requirement)

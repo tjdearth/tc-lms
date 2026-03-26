@@ -44,15 +44,12 @@ function buildStandaloneEmailHtml(lesson: {
     </tr>
     <tr>
       <td style="padding:0 32px 20px;">
-        <a href="${lesson.video_url}" style="display:block;text-decoration:none;position:relative;">
-          <div style="position:relative;border-radius:8px;overflow:hidden;background:#0F1923;">
-            ${thumbnailSrc ? `<img src="${thumbnailSrc}" alt="${lesson.title}" style="width:100%;display:block;border-radius:8px;" />` : `<div style="height:200px;background:#0F1923;border-radius:8px;"></div>`}
-            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;background:rgba(39,162,140,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;">
-              <div style="width:0;height:0;border-style:solid;border-width:12px 0 12px 20px;border-color:transparent transparent transparent #ffffff;margin-left:4px;"></div>
-            </div>
-          </div>
-          <div style="text-align:center;margin-top:8px;color:#27a28c;font-size:13px;font-weight:600;">&#9654; Watch the 5-minute video</div>
+        <a href="${lesson.video_url}" style="display:block;text-decoration:none;">
+          ${thumbnailSrc ? `<img src="${thumbnailSrc}" alt="${lesson.title}" style="width:100%;display:block;border-radius:8px;" />` : `<div style="height:200px;background:#0F1923;border-radius:8px;"></div>`}
         </a>
+        <div style="text-align:center;margin-top:12px;">
+          <a href="${lesson.video_url}" style="display:inline-block;padding:10px 24px;background:#27a28c;color:#ffffff;text-decoration:none;border-radius:6px;font-size:13px;font-weight:600;">&#9654; Watch the 5-minute video</a>
+        </div>
       </td>
     </tr>
     <tr>
