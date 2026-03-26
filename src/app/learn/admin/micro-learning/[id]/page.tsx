@@ -269,34 +269,51 @@ export default function MicroLessonEditor() {
       thumbnail_url: thumbnailUrl || undefined,
       id: savedId,
     });
-    // Use a hidden contenteditable div + execCommand to copy rich HTML
-    // This method preserves formatting when pasting into Gmail
-    const container = document.createElement("div");
-    container.innerHTML = html;
-    container.style.position = "fixed";
-    container.style.left = "-9999px";
-    container.style.top = "0";
-    container.setAttribute("contenteditable", "true");
-    document.body.appendChild(container);
 
-    const range = document.createRange();
-    range.selectNodeContents(container);
-    const selection = window.getSelection();
-    selection?.removeAllRanges();
-    selection?.addRange(range);
+    // Use the Clipboard API to write both HTML and plain text
+    // This preserves formatting when pasting into Gmail compose
+    // We strip the doctype/html/head/body wrapper — Gmail needs just the content
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    const innerHtml = bodyMatch ? bodyMatch[1].trim() : html;
 
-    try {
-      document.execCommand("copy");
-      showToast("Copied! Paste directly into Gmail with formatting.");
-    } catch {
-      // Fallback to clipboard API
-      navigator.clipboard.writeText(html).then(() => {
-        showToast("Copied as HTML code — paste into Gmail source editor.");
-      });
-    } finally {
-      document.body.removeChild(container);
+    const blob = new Blob([innerHtml], { type: "text/html" });
+    const textBlob = new Blob([title], { type: "text/plain" });
+
+    navigator.clipboard.write([
+      new ClipboardItem({
+        "text/html": blob,
+        "text/plain": textBlob,
+      }),
+    ]).then(() => {
+      showToast("Copied! Paste directly into Gmail.");
+    }).catch(() => {
+      // Fallback: contenteditable copy
+      const container = document.createElement("div");
+      container.innerHTML = innerHtml;
+      container.style.position = "fixed";
+      container.style.left = "-9999px";
+      container.style.top = "0";
+      container.setAttribute("contenteditable", "true");
+      document.body.appendChild(container);
+
+      const range = document.createRange();
+      range.selectNodeContents(container);
+      const selection = window.getSelection();
       selection?.removeAllRanges();
-    }
+      selection?.addRange(range);
+
+      try {
+        document.execCommand("copy");
+        showToast("Copied! Paste directly into Gmail.");
+      } catch {
+        navigator.clipboard.writeText(html).then(() => {
+          showToast("Copied as HTML code — paste into Gmail source editor.");
+        });
+      } finally {
+        document.body.removeChild(container);
+        selection?.removeAllRanges();
+      }
+    });
   }
 
   if (!canAccess) {
