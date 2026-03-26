@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import AppShell from "@/components/AppShell";
 import { useBrand } from "@/lib/brand-context";
 import { isAdmin, isCourseCreator } from "@/lib/admin";
@@ -334,8 +334,12 @@ export default function MicroLessonEditor() {
       const data = await res.json();
       if (!res.ok) {
         if (data.code === "GMAIL_SCOPE_NEEDED") {
-          // Redirect to grant Gmail permissions
-          window.location.href = "/api/auth/gmail-scope";
+          // Re-auth with Gmail scope via NextAuth
+          signIn("google", { callbackUrl: window.location.href }, {
+            scope: "openid email profile https://www.googleapis.com/auth/gmail.compose",
+            prompt: "consent",
+            access_type: "offline",
+          });
           return;
         }
         showToast(data.error || "Failed to create draft");
