@@ -14,6 +14,8 @@ function buildStandaloneEmailHtml(lesson: {
   key_points_html: string;
   video_url: string;
   thumbnail_url?: string;
+  wiki_article_id?: string;
+  wiki_article_title?: string;
   id: string;
 }): string {
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://atlas.travelcollection.co";
@@ -57,6 +59,18 @@ function buildStandaloneEmailHtml(lesson: {
         ${lesson.key_points_html}
       </td>
     </tr>
+    ${lesson.wiki_article_id ? `<tr>
+      <td style="padding:0 32px 16px;">
+        <table cellpadding="0" cellspacing="0" style="width:100%;background:#f8f9fb;border-radius:8px;border:1px solid #E8ECF1;">
+          <tr>
+            <td style="padding:14px 16px;">
+              <div style="font-size:10px;font-weight:600;color:#8A9BB0;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Related Wiki Article</div>
+              <a href="${baseUrl}/wiki?article=${lesson.wiki_article_id}" style="color:#304256;font-size:14px;font-weight:600;text-decoration:none;">${lesson.wiki_article_title || "View Article"} &rarr;</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>` : ""}
     <tr>
       <td style="padding:0 32px 24px;text-align:center;">
         <a href="${baseUrl}/learn/micro-learning/${lesson.id}" style="display:inline-block;padding:10px 24px;background:#304256;color:#ffffff;text-decoration:none;border-radius:6px;font-size:13px;font-weight:600;">View in Atlas</a>
@@ -90,6 +104,8 @@ export default function MicroLessonEditor() {
   const [transcript, setTranscript] = useState("");
   const [keyPointsHtml, setKeyPointsHtml] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [wikiUrl, setWikiUrl] = useState("");
+  const [wikiArticleTitle, setWikiArticleTitle] = useState("");
   const [lessonBrand, setLessonBrand] = useState(brand.mode === "tc" ? "tc" : brand.mode);
   const [isPublished, setIsPublished] = useState(false);
   const [sentAt, setSentAt] = useState<string | null>(null);
@@ -107,6 +123,29 @@ export default function MicroLessonEditor() {
     setTimeout(() => setToast(null), 3000);
   }, []);
 
+  // Look up wiki article title when URL changes
+  useEffect(() => {
+    const match = wikiUrl.match(/article=([a-f0-9-]+)/i);
+    if (!match) { setWikiArticleTitle(""); return; }
+    const articleId = match[1];
+    fetch("/api/wiki?tree=true")
+      .then((r) => r.ok ? r.json() : [])
+      .then((tree) => {
+        function find(nodes: { id: string; title: string; children?: unknown[] }[]): string | null {
+          for (const n of nodes) {
+            if (n.id === articleId) return n.title;
+            if (Array.isArray(n.children)) {
+              const found = find(n.children as typeof nodes);
+              if (found) return found;
+            }
+          }
+          return null;
+        }
+        setWikiArticleTitle(find(tree) || "Wiki Article");
+      })
+      .catch(() => setWikiArticleTitle("Wiki Article"));
+  }, [wikiUrl]);
+
   // Load existing lesson
   useEffect(() => {
     if (!lessonId || isNew) return;
@@ -122,6 +161,7 @@ export default function MicroLessonEditor() {
           setTranscript(found.transcript || "");
           setKeyPointsHtml(found.key_points_html || "");
           setThumbnailUrl(found.thumbnail_url || "");
+          setWikiUrl(found.wiki_article_id ? `/wiki?article=${found.wiki_article_id}` : "");
           setLessonBrand(found.brand);
           setIsPublished(found.is_published);
           setSentAt(found.sent_at);
@@ -154,6 +194,13 @@ export default function MicroLessonEditor() {
         transcript: transcript.trim() || null,
         key_points_html: keyPointsHtml || null,
         thumbnail_url: thumbnailUrl.trim() || null,
+        wiki_article_id: (() => {
+          const url = wikiUrl.trim();
+          if (!url) return null;
+          // Extract article ID from URLs like /wiki?article=xxx or full URLs
+          const match = url.match(/article=([a-f0-9-]+)/i);
+          return match ? match[1] : null;
+        })(),
         tags: parseTags(),
         brand: lessonBrand,
         is_published: publish,
@@ -264,11 +311,14 @@ export default function MicroLessonEditor() {
 
     setDrafting(true);
     try {
+      const wikiId = wikiUrl.match(/article=([a-f0-9-]+)/i)?.[1] || undefined;
       const html = buildStandaloneEmailHtml({
         title,
         key_points_html: keyPointsHtml,
         video_url: videoUrl,
         thumbnail_url: thumbnailUrl || undefined,
+        wiki_article_id: wikiId,
+        wiki_article_title: wikiArticleTitle || undefined,
         id: savedId,
       });
 
@@ -428,6 +478,19 @@ export default function MicroLessonEditor() {
               )}
             </div>
 
+            {/* Related Wiki Article */}
+            <div className="bg-white border border-[#E8ECF1] rounded-xl p-6 shadow-sm">
+              <label className="block text-xs font-semibold text-[#304256] uppercase tracking-wider mb-2">Related Wiki Article</label>
+              <input
+                type="text"
+                value={wikiUrl}
+                onChange={(e) => setWikiUrl(e.target.value)}
+                placeholder="Paste wiki URL, e.g. /wiki?article=27ef6f36-... or leave blank"
+                className="w-full px-3 py-2.5 border border-[#E8ECF1] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#27a28c]/30 focus:border-[#27a28c]"
+              />
+              <p className="text-[11px] text-gray-400 mt-1">Optional — links to a wiki article in the email and lesson viewer</p>
+            </div>
+
             {/* Transcript */}
             <div className="bg-white border border-[#E8ECF1] rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-2">
@@ -577,6 +640,8 @@ export default function MicroLessonEditor() {
                       key_points_html: keyPointsHtml,
                       video_url: videoUrl,
                       thumbnail_url: thumbnailUrl || undefined,
+                      wiki_article_id: wikiUrl.match(/article=([a-f0-9-]+)/i)?.[1] || undefined,
+                      wiki_article_title: wikiArticleTitle || undefined,
                       id: lessonId === "new" ? "preview" : String(lessonId),
                     }),
                   }}

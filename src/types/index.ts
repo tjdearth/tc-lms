@@ -190,6 +190,7 @@ export interface MicroLesson {
   transcript: string | null;
   key_points_html: string | null;
   thumbnail_url: string | null;
+  wiki_article_id: string | null;
   tags: string[];
   brand: string;
   is_published: boolean;
