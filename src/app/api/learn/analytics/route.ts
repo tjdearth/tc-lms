@@ -93,43 +93,62 @@ export async function GET() {
       .sort((a, b) => b.enrolled - a.enrolled);
 
     // KB Health stats (admin only) — estimate context size for Atlas AI
+    // Must mirror exactly what /api/ask fetches to be accurate
     let kb_health = null;
     if (userIsAdmin) {
       const [wikiCount, lessonsFull, microCount, quizQCount] = await Promise.all([
         supabaseAdmin.from("wiki_nodes").select("id, html_content", { count: "exact" }).eq("is_published", true).eq("node_type", "article"),
-        supabaseAdmin.from("lessons").select("id, html_content, transcript").limit(500),
+        // Match /api/ask: only lessons from published courses via !inner join
+        supabaseAdmin
+          .from("lessons")
+          .select("id, html_content, transcript, modules!inner(id, course_id, courses!inner(id, is_published))")
+          .limit(200),
         supabaseAdmin.from("micro_lessons").select("id, transcript, key_points_html", { count: "exact" }).eq("is_published", true),
-        supabaseAdmin.from("quiz_questions").select("id", { count: "exact" }),
+        supabaseAdmin.from("quiz_questions").select("id, question_text, options", { count: "exact" }),
       ]);
 
       const wikiArticles = wikiCount.data || [];
-      const allLessons = lessonsFull.data || [];
+      // Filter to published courses only (same as /api/ask)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const publishedLessons = (lessonsFull.data || []).filter((l: any) => {
+        try { return l.modules?.courses?.is_published === true; } catch { return false; }
+      });
       const microLessons = microCount.data || [];
+      const quizQuestions = quizQCount.data || [];
 
       // Count lessons with actual transcript content
-      const lessonsWithTranscripts = allLessons.filter((l) => l.transcript && stripHtml(l.transcript).length > 50).length;
-      const lessonsWithContent = allLessons.filter((l) => l.html_content && stripHtml(l.html_content).length > 50).length;
+      const lessonsWithTranscripts = publishedLessons.filter((l) => l.transcript && stripHtml(l.transcript).length > 50).length;
+      const lessonsWithContent = publishedLessons.filter((l) => l.html_content && stripHtml(l.html_content).length > 50).length;
       const microWithTranscripts = microLessons.filter((l) => l.transcript && stripHtml(l.transcript).length > 50).length;
 
-      // Estimate total context chars (mirrors what /api/ask builds)
+      // Estimate total context chars — mirrors /api/ask build logic exactly
       let estChars = 0;
-      for (const l of allLessons) {
+      // Lessons (priority 1 in /api/ask)
+      for (const l of publishedLessons) {
         if (l.html_content) estChars += Math.min(stripHtml(l.html_content).length, 1500);
         if (l.transcript) estChars += Math.min(stripHtml(l.transcript).length, 2000);
       }
-      for (const a of wikiArticles) {
-        if (a.html_content) estChars += Math.min(stripHtml(a.html_content).length, 500);
-      }
+      // Micro-lessons (priority 2)
       for (const m of microLessons) {
         if (m.transcript) estChars += Math.min(stripHtml(m.transcript).length, 1500);
         if (m.key_points_html) estChars += Math.min(stripHtml(m.key_points_html).length, 1000);
       }
+      // Wiki articles (priority 3)
+      for (const a of wikiArticles) {
+        if (a.html_content) estChars += Math.min(stripHtml(a.html_content).length, 500);
+      }
+      // Quiz questions (priority 5 — small per item)
+      for (const q of quizQuestions) {
+        estChars += (q.question_text?.length || 0) + 50; // question + answer estimate
+      }
+      // Add ~10% overhead for markdown headers, labels, formatting
+      estChars = Math.round(estChars * 1.1);
 
       const contextLimit = 80000;
 
       kb_health = {
         wiki_articles: wikiCount.count || 0,
-        course_lessons: allLessons.length,
+        course_lessons: publishedLessons.length,
         lessons_with_content: lessonsWithContent,
         lessons_with_transcripts: lessonsWithTranscripts,
         micro_lessons: microCount.count || 0,
