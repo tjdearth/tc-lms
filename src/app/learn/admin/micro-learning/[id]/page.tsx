@@ -257,60 +257,49 @@ export default function MicroLessonEditor() {
     }
   }
 
-  function handleCopyEmailHtml() {
+  function handleDraftEmail() {
     if (!savedId) {
       showToast("Please save the lesson first");
       return;
     }
-    const html = buildStandaloneEmailHtml({
-      title,
-      key_points_html: keyPointsHtml,
-      video_url: videoUrl,
-      thumbnail_url: thumbnailUrl || undefined,
-      id: savedId,
-    });
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://atlas.travelcollection.co";
+    const viewUrl = `${baseUrl}/learn/micro-learning/${savedId}`;
 
-    // Strip the doctype/html/head/body wrapper — Gmail needs just the inner content
-    const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-    const innerHtml = bodyMatch ? bodyMatch[1].trim() : html;
+    // Build a plain-text body for the Gmail compose URL
+    // Gmail compose doesn't support HTML in the body param, but the formatting is clean enough
+    const keyPointsText = keyPointsHtml
+      ? keyPointsHtml
+          .replace(/<br\s*\/?>/gi, "\n")
+          .replace(/<\/?(p|div|h[1-6]|li)[^>]*>/gi, "\n")
+          .replace(/<\/?(ul|ol)[^>]*>/gi, "\n")
+          .replace(/<[^>]*>/g, "")
+          .replace(/&amp;/g, "&")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&mdash;/g, "—")
+          .replace(/&ndash;/g, "–")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim()
+      : "";
 
-    // Use contenteditable DOM copy as primary approach — most reliable for Gmail paste.
-    // The Clipboard API blob approach can cause Gmail to flicker between rich/plain text.
-    const container = document.createElement("div");
-    container.innerHTML = innerHtml;
-    container.style.position = "fixed";
-    container.style.left = "-9999px";
-    container.style.top = "0";
-    container.setAttribute("contenteditable", "true");
-    document.body.appendChild(container);
+    const body = [
+      `⚡ 5 MIN LESSON`,
+      ``,
+      `▶ Watch the video: ${videoUrl}`,
+      ``,
+      keyPointsText ? `---\n\n${keyPointsText}` : "",
+      ``,
+      `---`,
+      `View in Atlas: ${viewUrl}`,
+    ].filter(Boolean).join("\n");
 
-    const range = document.createRange();
-    range.selectNodeContents(container);
-    const selection = window.getSelection();
-    selection?.removeAllRanges();
-    selection?.addRange(range);
+    const subject = `⚡ Micro-Learning: ${title}`;
 
-    try {
-      document.execCommand("copy");
-      showToast("Copied! Paste directly into Gmail.");
-    } catch {
-      // Fallback: Clipboard API
-      navigator.clipboard.write([
-        new ClipboardItem({
-          "text/html": new Blob([innerHtml], { type: "text/html" }),
-          "text/plain": new Blob([title], { type: "text/plain" }),
-        }),
-      ]).then(() => {
-        showToast("Copied! Paste directly into Gmail.");
-      }).catch(() => {
-        navigator.clipboard.writeText(html).then(() => {
-          showToast("Copied as HTML code — paste into Gmail source editor.");
-        });
-      });
-    } finally {
-      document.body.removeChild(container);
-      selection?.removeAllRanges();
-    }
+    // Open Gmail compose with pre-filled subject and body
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(gmailUrl, "_blank");
   }
 
   if (!canAccess) {
@@ -549,14 +538,14 @@ export default function MicroLessonEditor() {
                   Preview &amp; Send
                 </button>
                 <button
-                  onClick={handleCopyEmailHtml}
+                  onClick={handleDraftEmail}
                   disabled={!savedId}
                   className="px-5 py-2.5 text-sm font-semibold text-[#304256] border border-[#E8ECF1] rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                   </svg>
-                  Copy to Email
+                  Draft in Gmail
                 </button>
               </div>
             </div>
