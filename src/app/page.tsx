@@ -214,6 +214,71 @@ export default function DashboardPage() {
           ))}
         </div>
 
+        {/* Recent Micro-Learning */}
+        {!loading && microLessons.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">&#9889;</span>
+                <h2 className="font-semibold text-navy">Recent Micro-Learning</h2>
+              </div>
+              <Link href="/learn/micro-learning" className="text-sm text-accent hover:underline">
+                View All &rarr;
+              </Link>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+              {microLessons.slice(0, 8).map((lesson) => {
+                const driveMatch = lesson.video_url?.match(/\/d\/([^/]+)/);
+                const thumbSrc = lesson.thumbnail_url || (driveMatch ? `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w400` : "");
+                return (
+                  <Link
+                    key={lesson.id}
+                    href={`/learn/micro-learning/${lesson.id}`}
+                    className="flex-shrink-0 w-[220px] bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group"
+                  >
+                    <div className="aspect-video bg-[#304256] relative flex items-center justify-center">
+                      {thumbSrc ? (
+                        <img src={thumbSrc} alt={lesson.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-white/30">
+                          <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
+                        </svg>
+                      )}
+                      <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span>&#9889;</span> 5 min
+                      </div>
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="#304256">
+                            <polygon points="6 3 20 12 6 21 6 3" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <h3 className="text-xs font-semibold text-[#304256] line-clamp-2 leading-snug">
+                        {lesson.title}
+                      </h3>
+                      {lesson.tags && lesson.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {lesson.tags.slice(0, 2).map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-[#e0f7f3] text-[#27a28c]"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Your Learning */}
         {!loading && activeEnrollments.length > 0 && (
           <div className="mb-8">
@@ -279,71 +344,6 @@ export default function DashboardPage() {
             </Link>
           ))}
         </div>
-
-        {/* Micro-Learning Carousel */}
-        {!loading && microLessons.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">&#9889;</span>
-                <h2 className="font-semibold text-navy">Micro-Learning</h2>
-              </div>
-              <Link href="/learn/micro-learning" className="text-sm text-accent hover:underline">
-                View All &rarr;
-              </Link>
-            </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-              {microLessons.slice(0, 8).map((lesson) => {
-                const driveMatch = lesson.video_url?.match(/\/d\/([^/]+)/);
-                const thumbSrc = lesson.thumbnail_url || (driveMatch ? `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w400` : "");
-                return (
-                  <Link
-                    key={lesson.id}
-                    href={`/learn/micro-learning/${lesson.id}`}
-                    className="flex-shrink-0 w-[220px] bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group"
-                  >
-                    <div className="aspect-video bg-[#304256] relative flex items-center justify-center">
-                      {thumbSrc ? (
-                        <img src={thumbSrc} alt={lesson.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-white/30">
-                          <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
-                        </svg>
-                      )}
-                      <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <span>&#9889;</span> 5 min
-                      </div>
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                        <div className="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="#304256">
-                            <polygon points="6 3 20 12 6 21 6 3" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-3">
-                      <h3 className="text-xs font-semibold text-[#304256] line-clamp-2 leading-snug">
-                        {lesson.title}
-                      </h3>
-                      {lesson.tags && lesson.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {lesson.tags.slice(0, 2).map((tag) => (
-                            <span
-                              key={tag}
-                              className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-[#e0f7f3] text-[#27a28c]"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
         {/* Two-column: Recent Articles + Upcoming Events */}
         <div className="grid md:grid-cols-2 gap-6">
