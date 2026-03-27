@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { isAdmin } from "@/lib/admin";
@@ -394,9 +394,19 @@ function AdminTreeNode({
 
 // ── Main Admin Page ──────────────────────────────────────
 
-export default function WikiAdminPage() {
+export default function WikiAdminPageWrapper() {
+  return (
+    <Suspense fallback={<AppShell><div className="flex items-center justify-center h-screen text-gray-400">Loading...</div></AppShell>}>
+      <WikiAdminPage />
+    </Suspense>
+  );
+}
+
+function WikiAdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const articleParam = searchParams.get("article");
   const { brand } = useBrand();
   const isDmc = brand.mode !== "tc";
   const wikiBrand = isDmc ? brand.mode : "tc";
@@ -449,6 +459,15 @@ export default function WikiAdminPage() {
   useEffect(() => {
     fetchNodes();
   }, [fetchNodes]);
+
+  // Auto-select article from URL param (e.g. ?article=uuid)
+  useEffect(() => {
+    if (!articleParam || flatNodes.length === 0) return;
+    const node = flatNodes.find((n) => n.id === articleParam);
+    if (node && !selectedNode) {
+      handleSelectNode(node);
+    }
+  }, [articleParam, flatNodes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch user permissions for GM check
   useEffect(() => {

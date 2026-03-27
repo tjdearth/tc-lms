@@ -8,10 +8,14 @@ import ArticleViewer from "@/components/ArticleViewer";
 import { fetchWikiTree, findArticleById } from "@/lib/api";
 import { WikiNode } from "@/types";
 import { useBrand } from "@/lib/brand-context";
+import { useSession } from "next-auth/react";
+import { isAdmin } from "@/lib/admin";
 
 function WikiContent() {
   const { brand } = useBrand();
   const isDmc = brand.mode !== "tc";
+  const { data: session } = useSession();
+  const userIsAdmin = isAdmin(session?.user?.email || "");
   const searchParams = useSearchParams();
   const articleParam = searchParams.get("article");
   const [activeArticle, setActiveArticle] = useState<WikiNode | null>(null);
@@ -106,6 +110,7 @@ function WikiContent() {
         article={activeArticle}
         onBrowseClick={() => setTreeOpen(true)}
         allNodes={wikiTree}
+        editUrl={userIsAdmin && activeArticle ? `/wiki/admin?article=${activeArticle.id}` : undefined}
       />
       </div>
     </div>
