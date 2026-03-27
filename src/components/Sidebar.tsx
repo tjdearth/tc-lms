@@ -172,16 +172,27 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
         ),
       },
     ] : []),
-    ...(globalAdmin ? [{
-      label: "User Access",
-      href: "/admin/users",
-      icon: (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          <path d="M9 12l2 2 4-4" />
-        </svg>
-      ),
-    }] : []),
+    ...(globalAdmin ? [
+      {
+        label: "User Access",
+        href: "/admin/users",
+        icon: (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <path d="M9 12l2 2 4-4" />
+          </svg>
+        ),
+      },
+      {
+        label: "Level II",
+        href: "/admin/level-ii",
+        icon: (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+          </svg>
+        ),
+      },
+    ] : []),
   ];
 
   const handleNavClick = () => {
