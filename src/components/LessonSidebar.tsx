@@ -8,6 +8,7 @@ interface LessonSidebarProps {
   currentLessonId?: string;
   onSelectLesson: (lessonId: string) => void;
   isSequential?: boolean;
+  courseCompleted?: boolean;
 }
 
 function StatusIcon({ status }: { status?: LessonStatus }) {
@@ -72,6 +73,7 @@ export default function LessonSidebar({
   currentLessonId,
   onSelectLesson,
   isSequential = false,
+  courseCompleted = false,
 }: LessonSidebarProps) {
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>(
     () => {
@@ -124,7 +126,7 @@ export default function LessonSidebar({
               {isExpanded &&
                 (mod.lessons || []).map((lesson) => {
                   const isCurrent = lesson.id === currentLessonId;
-                  const locked = isLessonLocked(modules, lesson.id, isSequential);
+                  const locked = courseCompleted ? false : isLessonLocked(modules, lesson.id, isSequential);
 
                   return (
                     <button

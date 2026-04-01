@@ -152,6 +152,7 @@ export default function LessonViewer() {
             currentLessonId={lessonId}
             onSelectLesson={handleSelectLesson}
             isSequential={course.is_sequential}
+            courseCompleted={course.enrollment?.status === "completed"}
           />
         </div>
 
