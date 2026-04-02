@@ -389,7 +389,7 @@ export const mockCalendarEvents: CalendarEvent[] = [
   },
   {
     id: "c5",
-    brand: "Kembali Indonesia",
+    brand: "Kembali Asia",
     title: "Nyepi (Day of Silence)",
     description: "Balinese New Year. Complete shutdown in Bali.",
     date_start: "2026-03-29",

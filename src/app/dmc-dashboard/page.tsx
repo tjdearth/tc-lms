@@ -11,7 +11,7 @@ const ALL_DMC_BRANDS = [
   "Unbox Spain & Portugal",
   "Truly Swahili",
   "Across Mexico",
-  "Kembali Indonesia",
+  "Kembali Asia",
   "Majlis Retreats",
   "Crown Journey",
   "Oshinobi Travel",

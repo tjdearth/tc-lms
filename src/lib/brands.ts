@@ -25,8 +25,8 @@ export const DMC_BRANDS: Record<string, DMCBrand> = {
     countries: ["Mexico"],
     hex: "#E56456",
   },
-  "Kembali Indonesia": {
-    name: "Kembali Indonesia",
+  "Kembali Asia": {
+    name: "Kembali Asia",
     countries: ["Indonesia", "Singapore", "Malaysia"],
     hex: "#ADA263",
   },
@@ -102,7 +102,7 @@ export const EMAIL_DOMAIN_TO_BRAND: Record<string, string> = {
   "crownjourney.com": "Crown Journey",
   "oshinobitravel.com": "Oshinobi Travel",
   "majlisretreats.com": "Majlis Retreats",
-  "kembaliindonesia.com": "Kembali Indonesia",
+  "kembaliasia.com": "Kembali Asia",
   "acrossmexico.com": "Across Mexico",
   "essentiallyfrench.com": "Essentially French",
   "eluraaustralia.com": "Elura Australia",
@@ -125,7 +125,7 @@ const BRAND_LOGOS: Record<string, string> = {
   "Unbox Spain & Portugal": "/logos/unbox-spain.png",
   "Truly Swahili": "/logos/truly-swahili.png",
   "Across Mexico": "/logos/across-mexico.png",
-  "Kembali Indonesia": "/logos/kembali-indonesia.png",
+  "Kembali Asia": "/logos/kembali-asia.png",
   "Majlis Retreats": "/logos/majlis-retreats.png",
   "Crown Journey": "/logos/crown-journey.png",
   "Oshinobi Travel": "/logos/oshinobi-travel.png",

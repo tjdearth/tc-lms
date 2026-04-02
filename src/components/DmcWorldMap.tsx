@@ -44,7 +44,7 @@ const DMC_BRANDS: DmcBrand[] = [
     markers: [{ city: "Mexico City", lat: 19.43, lon: -99.13 }],
   },
   {
-    name: "Kembali Indonesia",
+    name: "Kembali Asia",
     color: "#ADA263",
     countries: ["Indonesia", "Singapore", "Malaysia"],
     markers: [{ city: "Bali", lat: -8.34, lon: 115.09 }],

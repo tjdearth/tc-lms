@@ -24,7 +24,7 @@ const BRAND_LOGOS: Record<string, string> = {
   "Unbox Spain & Portugal": "/logos/unbox-spain.png",
   "Truly Swahili": "/logos/truly-swahili.png",
   "Across Mexico": "/logos/across-mexico.png",
-  "Kembali Indonesia": "/logos/kembali-indonesia.png",
+  "Kembali Asia": "/logos/kembali-asia.png",
   "Majlis Retreats": "/logos/majlis-retreats.png",
   "Crown Journey": "/logos/crown-journey.png",
   "Oshinobi Travel": "/logos/oshinobi-travel.png",

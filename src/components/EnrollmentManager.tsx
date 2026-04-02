@@ -7,7 +7,7 @@ const DMC_COLORS: Record<string, string> = {
   "Unbox Spain & Portugal": "#7C1137",
   "Truly Swahili": "#4F9E2D",
   "Across Mexico": "#E56456",
-  "Kembali Indonesia": "#ADA263",
+  "Kembali Asia": "#ADA263",
   "Majlis Retreats": "#B28A72",
   "Crown Journey": "#6D7581",
   "Oshinobi Travel": "#E9395E",
