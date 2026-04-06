@@ -8,11 +8,14 @@ import { isAdmin } from "@/lib/admin";
 /* ─────────────────── DATA ASSUMPTIONS (admin notes) ─────────────────── */
 // Data starts from 1 Jan 2025 when all leads began being stored in Salesforce.
 // Channel strategy is defined by Client Source + Agency:
+//   KimKim = B2C where Agency contains "kimkim"
+//   Zicasso = B2C where Agency contains "Zicasso"
+//   WendyPerrin = B2C where Agency contains "Wendy Perrin"
 //   B2B = all travel agencies (incl. Referral B2B)
-//   B2C = online platforms connecting to end travellers (Kimkim, Zicasso, Wendy Perrin — Designer Journeys removed)
 //   Direct = customers finding us directly (incl. Referral Direct, Other)
 //   DMC = combo trips with another TC brand (parent + child trip)
-//   Incentive House = MICE category (separate)
+//   MICE = Incentive House category (separate)
+// Any remaining B2C not matching above platforms → distribute to closest or treat as "Other B2C" (tiny numbers)
 // Estimated Sale Price = advisor's estimate; Sale Price = contracted amount
 // Proposals Count = number of SF proposals to confirm/lose
 // Total Active Proposal Time = efficiency metric (unit TBC)
@@ -21,18 +24,13 @@ import { isAdmin } from "@/lib/admin";
 // Loss Reason = dropdown (quality varies); Detailed Loss Reason = free text (quality varies)
 
 /* ─────────────────── CHANNEL GROUPING ─────────────────── */
-type ChannelGroup = "B2B" | "B2C" | "Direct" | "DMC" | "MICE";
-
-// Channel grouping logic (used when live data is connected):
-// B2B + Referral B2B → B2B
-// B2C + Referral B2C → B2C
-// Direct + Referral Direct + Other → Direct
-// DMC → DMC
-// Incentive House → MICE
+type ChannelGroup = "KimKim" | "Zicasso" | "WendyPerrin" | "B2B" | "Direct" | "DMC" | "MICE";
 
 const CHANNEL_GROUP_LABELS: Record<ChannelGroup, string> = {
+  "KimKim": "KimKim",
+  "Zicasso": "Zicasso",
+  "WendyPerrin": "Wendy Perrin",
   "B2B": "B2B (Travel Agencies)",
-  "B2C": "B2C (Online Platforms)",
   "Direct": "Direct Enquiries",
   "DMC": "DMC Combo Trips",
   "MICE": "MICE / Incentive",
@@ -106,8 +104,10 @@ const MOROCCO_ADVISORS: AdvisorData[] = [
     name: "Hajar WANNAS",
     totalTrips: 327, confirmed: 156, lost: 171, conversionRate: 47.7, totalSale: 3900000, avgSale: 25000, avgProposals: 3.7, avgProposalTime: 2890,
     channels: {
+      "KimKim": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "Zicasso": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "WendyPerrin": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
       "B2B": { trips: 324, won: 153, lost: 171, convRate: 47.2, avgSale: 25100 },
-      "B2C": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
       "Direct": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
       "DMC": { trips: 3, won: 3, lost: 0, convRate: 100, avgSale: 18500 },
       "MICE": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
@@ -118,8 +118,10 @@ const MOROCCO_ADVISORS: AdvisorData[] = [
     name: "Amal Amezargou",
     totalTrips: 411, confirmed: 172, lost: 239, conversionRate: 41.8, totalSale: 3885000, avgSale: 22588, avgProposals: 3.2, avgProposalTime: 2540,
     channels: {
+      "KimKim": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "Zicasso": { trips: 32, won: 11, lost: 21, convRate: 34.4, avgSale: 19500 },
+      "WendyPerrin": { trips: 17, won: 6, lost: 11, convRate: 35.3, avgSale: 17800 },
       "B2B": { trips: 323, won: 142, lost: 181, convRate: 44.0, avgSale: 23200 },
-      "B2C": { trips: 49, won: 17, lost: 32, convRate: 34.7, avgSale: 18900 },
       "Direct": { trips: 37, won: 11, lost: 26, convRate: 29.7, avgSale: 15200 },
       "DMC": { trips: 2, won: 2, lost: 0, convRate: 100, avgSale: 12000 },
       "MICE": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
@@ -130,8 +132,10 @@ const MOROCCO_ADVISORS: AdvisorData[] = [
     name: "Sara LAGHRIBI",
     totalTrips: 421, confirmed: 160, lost: 261, conversionRate: 38.0, totalSale: 3947000, avgSale: 24669, avgProposals: 3.0, avgProposalTime: 2710,
     channels: {
+      "KimKim": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "Zicasso": { trips: 40, won: 16, lost: 24, convRate: 40.0, avgSale: 21800 },
+      "WendyPerrin": { trips: 23, won: 10, lost: 13, convRate: 43.5, avgSale: 20200 },
       "B2B": { trips: 353, won: 130, lost: 223, convRate: 36.8, avgSale: 25800 },
-      "B2C": { trips: 63, won: 26, lost: 37, convRate: 41.3, avgSale: 21200 },
       "Direct": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
       "DMC": { trips: 2, won: 1, lost: 1, convRate: 50, avgSale: 14000 },
       "MICE": { trips: 3, won: 3, lost: 0, convRate: 100, avgSale: 32000 },
@@ -142,8 +146,10 @@ const MOROCCO_ADVISORS: AdvisorData[] = [
     name: "Oumaima TOUMLIK",
     totalTrips: 141, confirmed: 52, lost: 89, conversionRate: 36.9, totalSale: 2076776, avgSale: 39938, avgProposals: 0.0, avgProposalTime: 0,
     channels: {
+      "KimKim": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "Zicasso": { trips: 1, won: 0, lost: 1, convRate: 0, avgSale: 0 },
+      "WendyPerrin": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
       "B2B": { trips: 100, won: 42, lost: 58, convRate: 42.0, avgSale: 42100 },
-      "B2C": { trips: 1, won: 0, lost: 1, convRate: 0, avgSale: 0 },
       "Direct": { trips: 37, won: 10, lost: 27, convRate: 27.0, avgSale: 28400 },
       "DMC": { trips: 2, won: 0, lost: 2, convRate: 0, avgSale: 0 },
       "MICE": { trips: 1, won: 0, lost: 1, convRate: 0, avgSale: 0 },
@@ -154,8 +160,10 @@ const MOROCCO_ADVISORS: AdvisorData[] = [
     name: "Zainab TALMZI",
     totalTrips: 364, confirmed: 129, lost: 235, conversionRate: 35.4, totalSale: 2519499, avgSale: 19531, avgProposals: 3.9, avgProposalTime: 3120,
     channels: {
+      "KimKim": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "Zicasso": { trips: 1, won: 1, lost: 0, convRate: 100, avgSale: 15000 },
+      "WendyPerrin": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
       "B2B": { trips: 295, won: 114, lost: 181, convRate: 38.6, avgSale: 20100 },
-      "B2C": { trips: 1, won: 1, lost: 0, convRate: 100, avgSale: 15000 },
       "Direct": { trips: 58, won: 8, lost: 50, convRate: 13.8, avgSale: 12800 },
       "DMC": { trips: 3, won: 2, lost: 1, convRate: 66.7, avgSale: 22000 },
       "MICE": { trips: 7, won: 4, lost: 3, convRate: 57.1, avgSale: 45000 },
@@ -166,8 +174,10 @@ const MOROCCO_ADVISORS: AdvisorData[] = [
     name: "Hiba EL IKLIL",
     totalTrips: 439, confirmed: 116, lost: 323, conversionRate: 26.4, totalSale: 1270316, avgSale: 10951, avgProposals: 2.3, avgProposalTime: 1810,
     channels: {
+      "KimKim": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "Zicasso": { trips: 35, won: 3, lost: 32, convRate: 8.6, avgSale: 9200 },
+      "WendyPerrin": { trips: 15, won: 1, lost: 14, convRate: 6.7, avgSale: 7800 },
       "B2B": { trips: 103, won: 35, lost: 68, convRate: 34.0, avgSale: 14200 },
-      "B2C": { trips: 50, won: 4, lost: 46, convRate: 8.0, avgSale: 8900 },
       "Direct": { trips: 280, won: 73, lost: 207, convRate: 26.1, avgSale: 9500 },
       "DMC": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
       "MICE": { trips: 6, won: 4, lost: 2, convRate: 66.7, avgSale: 18000 },
@@ -178,8 +188,10 @@ const MOROCCO_ADVISORS: AdvisorData[] = [
     name: "Salma EL KHLYFI",
     totalTrips: 438, confirmed: 142, lost: 296, conversionRate: 32.4, totalSale: 2291738, avgSale: 16139, avgProposals: 2.2, avgProposalTime: 1980,
     channels: {
+      "KimKim": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "Zicasso": { trips: 87, won: 17, lost: 70, convRate: 19.5, avgSale: 14800 },
+      "WendyPerrin": { trips: 33, won: 9, lost: 24, convRate: 27.3, avgSale: 13100 },
       "B2B": { trips: 102, won: 42, lost: 60, convRate: 41.2, avgSale: 19800 },
-      "B2C": { trips: 120, won: 26, lost: 94, convRate: 21.7, avgSale: 14200 },
       "Direct": { trips: 206, won: 68, lost: 138, convRate: 33.0, avgSale: 13900 },
       "DMC": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
       "MICE": { trips: 10, won: 6, lost: 4, convRate: 60.0, avgSale: 28000 },
@@ -190,8 +202,10 @@ const MOROCCO_ADVISORS: AdvisorData[] = [
     name: "Loubna BOUANANI",
     totalTrips: 311, confirmed: 72, lost: 239, conversionRate: 23.2, totalSale: 876240, avgSale: 12170, avgProposals: 1.5, avgProposalTime: 980,
     channels: {
+      "KimKim": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "Zicasso": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "WendyPerrin": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
       "B2B": { trips: 278, won: 68, lost: 210, convRate: 24.5, avgSale: 12400 },
-      "B2C": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
       "Direct": { trips: 32, won: 3, lost: 29, convRate: 9.4, avgSale: 8200 },
       "DMC": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
       "MICE": { trips: 1, won: 1, lost: 0, convRate: 100, avgSale: 15000 },
@@ -200,10 +214,12 @@ const MOROCCO_ADVISORS: AdvisorData[] = [
   },
 ];
 
-// TC-wide channel benchmarks (global averages from all 6,665 trips)
+// TC-wide channel benchmarks (global averages — B2C split into 3 platforms)
 const TC_CHANNEL_BENCHMARKS: Record<ChannelGroup, { convRate: number; avgSale: number }> = {
+  "KimKim": { convRate: 17.6, avgSale: 15337 },
+  "Zicasso": { convRate: 19.3, avgSale: 19719 },
+  "WendyPerrin": { convRate: 52.0, avgSale: 22384 },
   "B2B": { convRate: 39.6, avgSale: 18311 },
-  "B2C": { convRate: 23.3, avgSale: 19567 },
   "Direct": { convRate: 32.3, avgSale: 13085 },
   "DMC": { convRate: 40.2, avgSale: 9939 },
   "MICE": { convRate: 46.6, avgSale: 36696 },
@@ -211,9 +227,11 @@ const TC_CHANNEL_BENCHMARKS: Record<ChannelGroup, { convRate: number; avgSale: n
 
 // Admin calibration targets (editable)
 const DEFAULT_CALIBRATION: Record<ChannelGroup, { targetConvRate: number; targetAvgSale: number; targetResponseHrs: number }> = {
-  "B2B": { targetConvRate: 40, targetAvgSale: 20000, targetResponseHrs: 6 },
-  "B2C": { targetConvRate: 25, targetAvgSale: 18000, targetResponseHrs: 4 },
-  "Direct": { targetConvRate: 30, targetAvgSale: 15000, targetResponseHrs: 12 },
+  "KimKim": { targetConvRate: 10, targetAvgSale: 15000, targetResponseHrs: 4 },
+  "Zicasso": { targetConvRate: 18, targetAvgSale: 18000, targetResponseHrs: 4 },
+  "WendyPerrin": { targetConvRate: 40, targetAvgSale: 22000, targetResponseHrs: 4 },
+  "B2B": { targetConvRate: 35, targetAvgSale: 20000, targetResponseHrs: 6 },
+  "Direct": { targetConvRate: 50, targetAvgSale: 15000, targetResponseHrs: 12 },
   "DMC": { targetConvRate: 50, targetAvgSale: 15000, targetResponseHrs: 24 },
   "MICE": { targetConvRate: 45, targetAvgSale: 30000, targetResponseHrs: 24 },
 };
@@ -234,8 +252,10 @@ const MOROCCO_DATA: SubsidiaryData = {
   avgNights: 7.4,
   avgTravelers: 3.8,
   channels: {
+    "KimKim": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+    "Zicasso": { trips: 220, won: 50, lost: 170, convRate: 22.7, avgSale: 20764 },
+    "WendyPerrin": { trips: 79, won: 34, lost: 45, convRate: 43.0, avgSale: 22384 },
     "B2B": { trips: 2097, won: 811, lost: 1286, convRate: 38.7, avgSale: 21362 },
-    "B2C": { trips: 287, won: 75, lost: 212, convRate: 26.1, avgSale: 20764 },
     "Direct": { trips: 762, won: 213, lost: 549, convRate: 28.0, avgSale: 14832 },
     "DMC": { trips: 12, won: 8, lost: 4, convRate: 66.7, avgSale: 18200 },
     "MICE": { trips: 36, won: 35, lost: 1, convRate: 97.2, avgSale: 42000 },
@@ -302,6 +322,8 @@ const NAV_ITEMS: { id: NavSection; label: string; icon: string }[] = [
   { id: "calibration", label: "Calibration", icon: "sliders" },
   { id: "notes", label: "Data Notes", icon: "info" },
 ];
+
+const ALL_CHANNELS: ChannelGroup[] = ["KimKim", "Zicasso", "WendyPerrin", "B2B", "Direct", "DMC", "MICE"];
 
 /* ─────────────────── COMPONENT ─────────────────── */
 export default function SalesEnablementPage() {
@@ -420,11 +442,11 @@ export default function SalesEnablementPage() {
               </tr>
             </thead>
             <tbody>
-              {(["B2B", "B2C", "Direct", "DMC", "MICE"] as ChannelGroup[]).map((ch) => {
+              {(ALL_CHANNELS).map((ch) => {
                 const b = TC_CHANNEL_BENCHMARKS[ch];
                 const cal = calibration[ch];
-                const trips = ch === "B2B" ? 3899 : ch === "B2C" ? 1714 : ch === "Direct" ? 866 : ch === "DMC" ? 127 : 58;
-                const won = ch === "B2B" ? 1553 : ch === "B2C" ? 411 : ch === "Direct" ? 283 : ch === "DMC" ? 51 : 27;
+                const trips = ch === "KimKim" ? 529 : ch === "Zicasso" ? 874 : ch === "WendyPerrin" ? 271 : ch === "B2B" ? 3899 : ch === "Direct" ? 866 : ch === "DMC" ? 127 : 58;
+                const won = ch === "KimKim" ? 93 : ch === "Zicasso" ? 169 : ch === "WendyPerrin" ? 141 : ch === "B2B" ? 1553 : ch === "Direct" ? 283 : ch === "DMC" ? 51 : 27;
                 return (
                   <tr key={ch} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50">
                     <td className="px-5 py-3">
@@ -550,7 +572,7 @@ export default function SalesEnablementPage() {
                 </tr>
               </thead>
               <tbody>
-                {(["B2B", "B2C", "Direct", "DMC", "MICE"] as ChannelGroup[]).filter(ch => d.channels[ch].trips > 0).map((ch) => {
+                {(ALL_CHANNELS).filter(ch => d.channels[ch].trips > 0).map((ch) => {
                   const c = d.channels[ch];
                   const cal = calibration[ch];
                   const tcAvg = TC_CHANNEL_BENCHMARKS[ch];
@@ -678,7 +700,7 @@ export default function SalesEnablementPage() {
             <p className="text-xs text-gray-400 mt-0.5">Compared against DMC average and admin-set targets</p>
           </div>
           <div className="space-y-0">
-            {(["B2B", "B2C", "Direct", "DMC", "MICE"] as ChannelGroup[]).filter(ch => adv.channels[ch].trips > 0).map((ch) => {
+            {(ALL_CHANNELS).filter(ch => adv.channels[ch].trips > 0).map((ch) => {
               const c = adv.channels[ch];
               const dmcCh = dmcAvg.channels[ch];
               const cal = calibration[ch];
@@ -908,7 +930,7 @@ export default function SalesEnablementPage() {
               </tr>
             </thead>
             <tbody>
-              {(["B2B", "B2C", "Direct", "DMC", "MICE"] as ChannelGroup[]).map((ch) => {
+              {(ALL_CHANNELS).map((ch) => {
                 const cal = calibration[ch];
                 const actual = TC_CHANNEL_BENCHMARKS[ch];
                 return (
@@ -974,15 +996,17 @@ export default function SalesEnablementPage() {
         </div>
         <div className="p-5 space-y-3">
           {[
+            { ch: "KimKim", desc: "B2C platform connecting end travellers to local experts. Matched by Agency containing &ldquo;kimkim&rdquo;. Operates in most destinations but not Morocco." },
+            { ch: "Zicasso", desc: "B2C luxury travel platform matching travellers with specialists. Matched by Agency containing &ldquo;Zicasso&rdquo;. Our highest-volume B2C platform." },
+            { ch: "Wendy Perrin", desc: "B2C platform curated by travel journalist Wendy Perrin. Matched by Agency containing &ldquo;Wendy Perrin&rdquo;. Highest conversion of all B2C channels." },
             { ch: "B2B", desc: "All travel agencies we work with, including Referral B2B. Our largest channel by volume." },
-            { ch: "B2C", desc: "Online platforms connecting us directly to end travellers. Key partners: Kimkim, Zicasso, Wendy Perrin. Designer Journeys has been removed." },
             { ch: "Direct", desc: "Customers finding us directly with no intermediary. Includes Referral Direct and Other sources." },
             { ch: "DMC", desc: "Combo trips with another TC brand involving parent + child trip for multi-destination itineraries." },
             { ch: "MICE", desc: "Meetings, Incentives, Conferences & Events. Managed through Incentive House partners." },
           ].map((item) => (
             <div key={item.ch} className="flex gap-3">
-              <span className="text-xs font-semibold text-[#27a28c] w-16 flex-shrink-0 pt-0.5">{item.ch}</span>
-              <p className="text-sm text-gray-600">{item.desc}</p>
+              <span className="text-xs font-semibold text-[#27a28c] w-24 flex-shrink-0 pt-0.5">{item.ch}</span>
+              <p className="text-sm text-gray-600" dangerouslySetInnerHTML={{ __html: item.desc }} />
             </div>
           ))}
         </div>
@@ -1003,17 +1027,17 @@ export default function SalesEnablementPage() {
           { title: "Data Period", text: "Starts 1 January 2025 — the date Travel Collection began storing all leads in Salesforce." },
           { title: "Source", text: "Salesforce via Google Sheet sync (AppScript → Supabase). Data is refreshed daily." },
           { title: "Status Filter", text: "Only Confirmed and Lost trips are included. Inquiry, Cancelled, and Postponed are excluded (could be added later)." },
-          { title: "Channel Strategy", text: "Defined by Client Source + Agency fields. Grouped into B2B, B2C, Direct, DMC, and MICE." },
+          { title: "Channel Strategy", text: "Defined by Client Source + Agency fields. B2C is split into three platforms: KimKim (Agency contains &ldquo;kimkim&rdquo;), Zicasso (Agency contains &ldquo;Zicasso&rdquo;), and Wendy Perrin (Agency contains &ldquo;Wendy Perrin&rdquo;). Remaining channels: B2B, Direct, DMC, and MICE." },
           { title: "Pricing Fields", text: "Estimated Sale Price is the advisor's pre-quote estimate. Sale Price is the final contracted amount. Revenue calculations use Sale Price where available." },
           { title: "Proposals Count", text: "Number of formal SF proposals created per trip. Won trips average 4.8 proposals vs 1.6 for lost — higher effort correlates with conversion." },
           { title: "Total Active Proposal Time", text: "An efficiency metric representing time spent creating proposals. Unit needs confirmation — currently treated as minutes." },
-          { title: "Loss Reason Quality", text: "Dropdown selection quality varies by advisor. 'Other' is overused (21.7%). Detailed Loss Reason is free-text and inconsistently filled." },
+          { title: "Loss Reason Quality", text: "Dropdown selection quality varies by advisor. &ldquo;Other&rdquo; is overused (21.7%). Detailed Loss Reason is free-text and inconsistently filled." },
           { title: "DMC Combo Trips", text: "When two TC brands collaborate on a multi-destination trip. Counted under the primary DMC's stats." },
           { title: "New DMCs", text: "Several subsidiaries (Colombia, Peru, Thailand, Greece, Turkey, Australia) have very low trip volumes (<20) as they are newer or smaller operations. Performance data should be interpreted with caution." },
         ].map((note) => (
           <div key={note.title}>
             <h4 className="text-sm font-semibold text-[#304256] mb-1">{note.title}</h4>
-            <p className="text-sm text-gray-500 leading-relaxed">{note.text}</p>
+            <p className="text-sm text-gray-500 leading-relaxed" dangerouslySetInnerHTML={{ __html: note.text }} />
           </div>
         ))}
       </div>
