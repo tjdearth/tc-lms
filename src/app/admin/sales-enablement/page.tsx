@@ -1233,11 +1233,32 @@ export default function SalesEnablementPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-5 py-3 border-t border-[#E8ECF1] bg-gray-50/50">
-            <p className="text-xs text-gray-500 leading-relaxed">
-              <strong>Budget/price mismatch</strong> at 11.7% vs DMC 12.1% is in line. <strong>Won by competition</strong> at 3.3% is well below the 6.2% average — Amal rarely loses to competitors directly. The <strong>Picked another destination</strong> rate (11.7% vs 4.1%) is notably high — she may be quoting clients who are still exploring options rather than committed to Morocco.
-            </p>
-          </div>
+          {(() => {
+            const reasons = getComparativeLossReasons();
+            const flagged = reasons.filter(r => r.delta >= 5);
+            const good = reasons.filter(r => r.delta <= -5);
+            if (flagged.length === 0 && good.length === 0) return null;
+            return (
+              <div className="px-5 py-3 border-t border-[#E8ECF1] bg-gray-50/50">
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  {flagged.length > 0 && (<>
+                    <strong>Above average: </strong>
+                    {flagged.map((r, i) => (
+                      <span key={r.reason}>{i > 0 ? "; " : ""}<strong>{r.reason}</strong> at {r.advPct.toFixed(1)}% vs DMC {r.dmcPct.toFixed(1)}% (+{r.delta.toFixed(1)}pts)</span>
+                    ))}
+                    {". "}
+                  </>)}
+                  {good.length > 0 && (<>
+                    <strong>Below average: </strong>
+                    {good.map((r, i) => (
+                      <span key={r.reason}>{i > 0 ? "; " : ""}<strong>{r.reason}</strong> at {r.advPct.toFixed(1)}% vs DMC {r.dmcPct.toFixed(1)}% ({r.delta.toFixed(1)}pts)</span>
+                    ))}
+                    {"."}
+                  </>)}
+                </p>
+              </div>
+            );
+          })()}
         </div>
       </div>
     );
