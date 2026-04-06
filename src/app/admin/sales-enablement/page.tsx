@@ -441,6 +441,7 @@ export default function SalesEnablementPage() {
   const [panelWidth, setPanelWidth] = useState(260);
   const [calibration, setCalibration] = useState(DEFAULT_CALIBRATION);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("all");
+  const [engagementChannel, setEngagementChannel] = useState<"all" | "B2B" | "B2C" | "Direct">("all");
   const isDragging = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(260);
@@ -987,92 +988,186 @@ export default function SalesEnablementPage() {
 
         {/* ═══════ DEEP INSIGHTS ═══════ */}
 
-        {/* INSIGHT 1: Deal Engagement — proposal count × loss reason cross-reference */}
-        <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E8ECF1]">
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-              </span>
-              <h3 className="font-semibold text-[#304256]">Deal Engagement Signal</h3>
-            </div>
-            <p className="text-xs text-gray-400 mt-1">Proposal count × loss reason — diagnosing where deals die</p>
-          </div>
-          <div className="p-5">
-            {/* Win rate by proposal count — compact summary row */}
-            <div className="grid grid-cols-4 gap-3 mb-4">
-              {[
-                { label: "0 proposals", winRate: 0, lost: 66, total: 66, flag: true },
-                { label: "1-2 proposals", winRate: 18, lost: 126, total: 153, flag: false },
-                { label: "3-4 proposals", winRate: 61, lost: 31, total: 79, flag: false },
-                { label: "5+ proposals", winRate: 86, lost: 16, total: 113, flag: false },
-              ].map(b => (
-                <div key={b.label} className={`rounded-lg p-3 text-center ${b.winRate < 20 ? "bg-red-50 border border-red-100" : b.winRate < 50 ? "bg-amber-50 border border-amber-100" : "bg-green-50 border border-green-100"}`}>
-                  <p className={`text-lg font-bold ${b.winRate < 20 ? "text-red-600" : b.winRate < 50 ? "text-amber-600" : "text-[#27a28c]"}`}>{b.winRate}%</p>
-                  <p className="text-[11px] font-medium text-[#304256]">{b.label}</p>
-                  <p className="text-[10px] text-gray-400">{b.lost} lost of {b.total}</p>
-                  {b.flag && <p className="text-[9px] text-amber-600 mt-0.5">* see data note</p>}
+        {/* INSIGHT 1: Deal Engagement — proposal count × loss reason, filtered by channel */}
+        {(() => {
+          // Real data from SF export for Amal, broken down by channel group
+          const engagementData: Record<"all" | "B2B" | "B2C" | "Direct", {
+            summary: { label: string; winRate: number; lost: number; total: number }[];
+            rows: { reason: string; p0: number; p12: number; p34: number; p5: number; diagnosis: string; flag: boolean }[];
+            narrative: string;
+          }> = {
+            all: {
+              summary: [
+                { label: "0 proposals", winRate: 0, lost: 66, total: 66 },
+                { label: "1-2 proposals", winRate: 18, lost: 126, total: 153 },
+                { label: "3-4 proposals", winRate: 61, lost: 31, total: 79 },
+                { label: "5+ proposals", winRate: 86, lost: 16, total: 113 },
+              ],
+              rows: [
+                { reason: "Unresponsive end customer", p0: 26, p12: 21, p34: 1, p5: 1, diagnosis: "Includes B2C platform noise", flag: false },
+                { reason: "Unresponsive agent", p0: 8, p12: 26, p34: 1, p5: 6, diagnosis: "Agent dropped after 1st proposal", flag: true },
+                { reason: "Budget/price mismatch", p0: 3, p12: 17, p34: 7, p5: 1, diagnosis: "Price rejected at proposal stage", flag: true },
+                { reason: "Picked another destination", p0: 7, p12: 16, p34: 5, p5: 0, diagnosis: "Lost interest in Morocco", flag: false },
+                { reason: "Other / uncategorised", p0: 17, p12: 33, p34: 9, p5: 4, diagnosis: "Data quality gap", flag: false },
+                { reason: "Won by competition", p0: 2, p12: 4, p34: 2, p5: 0, diagnosis: "Competitive loss", flag: false },
+                { reason: "Postponed / Cancelled", p0: 3, p12: 9, p34: 6, p5: 4, diagnosis: "Timing issue", flag: false },
+              ],
+              narrative: "All-channel view is noisy — B2C platforms (KimKim, Zicasso) naturally have high unresponsive rates. Filter to B2B for the clearest coaching signal.",
+            },
+            B2B: {
+              summary: [
+                { label: "0 proposals", winRate: 0, lost: 30, total: 30 },
+                { label: "1-2 proposals", winRate: 17, lost: 104, total: 125 },
+                { label: "3-4 proposals", winRate: 64, lost: 26, total: 72 },
+                { label: "5+ proposals", winRate: 86, lost: 14, total: 96 },
+              ],
+              rows: [
+                { reason: "Unresponsive agent", p0: 6, p12: 25, p34: 1, p5: 6, diagnosis: "Agent saw proposal and walked away", flag: true },
+                { reason: "Budget/price mismatch", p0: 3, p12: 17, p34: 7, p5: 1, diagnosis: "Missed budget before 1st proposal", flag: true },
+                { reason: "Picked another destination", p0: 6, p12: 14, p34: 4, p5: 0, diagnosis: "Morocco wasn\u2019t the right fit", flag: false },
+                { reason: "Other / uncategorised", p0: 14, p12: 31, p34: 7, p5: 4, diagnosis: "Data quality gap", flag: false },
+                { reason: "Unresponsive end customer", p0: 3, p12: 8, p34: 1, p5: 0, diagnosis: "End traveller went cold", flag: false },
+                { reason: "Postponed / Cancelled", p0: 1, p12: 8, p34: 4, p5: 4, diagnosis: "Timing issue", flag: false },
+              ],
+              narrative: "B2B is where the actionable signal lives. 42 deals lost at 1-2 proposals to \u201cunresponsive agent\u201d (25) or \u201cbudget mismatch\u201d (17). These are real agency relationships where the agent saw the first proposal and disengaged \u2014 either the price was off or the itinerary didn\u2019t match the brief. Coaching focus: confirm budget expectations before sending the first proposal; follow up within 24h.",
+            },
+            B2C: {
+              summary: [
+                { label: "0 proposals", winRate: 0, lost: 30, total: 30 },
+                { label: "1-2 proposals", winRate: 22, lost: 14, total: 18 },
+                { label: "3-4 proposals", winRate: 57, lost: 3, total: 7 },
+                { label: "5+ proposals", winRate: 100, lost: 0, total: 10 },
+              ],
+              rows: [
+                { reason: "Unresponsive end customer", p0: 15, p12: 6, p34: 0, p5: 0, diagnosis: "Platform leads going cold — expected", flag: false },
+                { reason: "Won by competition", p0: 2, p12: 3, p34: 1, p5: 0, diagnosis: "Zicasso/WP comparison shoppers", flag: false },
+                { reason: "Picked another destination", p0: 1, p12: 1, p34: 1, p5: 0, diagnosis: "Not committed to Morocco", flag: false },
+                { reason: "Other / uncategorised", p0: 2, p12: 2, p34: 1, p5: 0, diagnosis: "—", flag: false },
+              ],
+              narrative: "B2C platform leads (KimKim, Zicasso, Wendy Perrin) have naturally high drop-off — 15 of 30 zero-proposal losses are \u201cunresponsive end customer\u201d. This is the platform model: travellers submit to multiple DMCs and go with whoever responds best. Low signal here for coaching; focus on response speed instead.",
+            },
+            Direct: {
+              summary: [
+                { label: "0 proposals", winRate: 0, lost: 11, total: 11 },
+                { label: "1-2 proposals", winRate: 27, lost: 8, total: 11 },
+                { label: "3-4 proposals", winRate: 40, lost: 3, total: 5 },
+                { label: "5+ proposals", winRate: 71, lost: 2, total: 7 },
+              ],
+              rows: [
+                { reason: "Unresponsive end customer", p0: 8, p12: 7, p34: 0, p5: 1, diagnosis: "Lead went cold", flag: false },
+                { reason: "Unresponsive agent", p0: 1, p12: 1, p34: 0, p5: 0, diagnosis: "—", flag: false },
+                { reason: "Other", p0: 1, p12: 0, p34: 1, p5: 0, diagnosis: "—", flag: false },
+                { reason: "Picked another destination", p0: 0, p12: 1, p34: 0, p5: 0, diagnosis: "—", flag: false },
+              ],
+              narrative: "Direct enquiries are mostly unresponsive end customers — leads who found Morocco online but didn\u2019t commit. Small sample (34 trips) so limited signal. The 27% win rate at 1-2 proposals vs 71% at 5+ still shows that engaged direct clients convert well.",
+            },
+          };
+
+          const d = engagementData[engagementChannel];
+          const channelTabs: { key: "all" | "B2B" | "B2C" | "Direct"; label: string; count: number }[] = [
+            { key: "all", label: "All Channels", count: 239 },
+            { key: "B2B", label: "B2B Agencies", count: 179 },
+            { key: "B2C", label: "B2C Platforms", count: 37 },
+            { key: "Direct", label: "Direct", count: 23 },
+          ];
+
+          return (
+            <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
+              <div className="px-5 py-4 border-b border-[#E8ECF1]">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                      </span>
+                      <h3 className="font-semibold text-[#304256]">Deal Engagement Signal</h3>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">Proposal count × loss reason — filtered by channel</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-
-            {/* Data quality note for 0 proposals */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 mb-4 flex items-start gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" className="flex-shrink-0 mt-0.5"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-              <p className="text-xs text-amber-800 leading-relaxed">
-                <strong>Data note:</strong> 18.6% of all TC trips (1,237 of 6,665) have 0 proposals — but 143 of those are <em>confirmed</em> deals. Some advisors don&apos;t log proposals in SF, and group trips (high traveller count) often skip the proposal workflow. Treat &ldquo;0 proposals&rdquo; as partly a data gap, not purely cold leads.
-              </p>
-            </div>
-
-            {/* Cross-reference: proposal count × loss reason */}
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Lost deals: proposal count × loss reason</p>
-            <div className="overflow-x-auto mb-4">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[#E8ECF1] bg-gray-50/50">
-                    <th className="text-left px-3 py-2 font-medium text-gray-500 text-xs">Loss Reason</th>
-                    <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">0 props</th>
-                    <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">1-2 props</th>
-                    <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">3-4 props</th>
-                    <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">5+ props</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-500 text-xs w-40">Diagnosis</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { reason: "Unresponsive end customer", p0: 26, p12: 21, p34: 1, p5: 1, diagnosis: "Customer never engaged", flag: false, flagCol: "p0" },
-                    { reason: "Unresponsive agent", p0: 8, p12: 26, p34: 1, p5: 6, diagnosis: "Agent dropped off after 1st proposal", flag: true, flagCol: "p12" },
-                    { reason: "Budget/price mismatch", p0: 3, p12: 17, p34: 7, p5: 1, diagnosis: "Price rejected at proposal stage", flag: true, flagCol: "p12" },
-                    { reason: "Picked another destination", p0: 7, p12: 16, p34: 5, p5: 0, diagnosis: "Lost interest in Morocco", flag: false, flagCol: "" },
-                    { reason: "Won by competition", p0: 2, p12: 4, p34: 2, p5: 0, diagnosis: "Competitor won the deal", flag: false, flagCol: "" },
-                    { reason: "Other / uncategorised", p0: 17, p12: 33, p34: 9, p5: 4, diagnosis: "Data quality gap", flag: false, flagCol: "p0" },
-                    { reason: "Postponed / Cancelled", p0: 3, p12: 9, p34: 6, p5: 4, diagnosis: "Timing issue", flag: false, flagCol: "" },
-                  ].map(r => (
-                    <tr key={r.reason} className={`border-b border-gray-50 last:border-b-0 ${r.flag ? "bg-red-50/30" : ""}`}>
-                      <td className="px-3 py-2 text-xs text-[#304256] font-medium">{r.reason}</td>
-                      <td className={`px-3 py-2 text-center text-xs tabular-nums ${r.flagCol === "p0" && r.p0 >= 15 ? "font-bold text-red-600" : r.p0 >= 20 ? "font-bold text-amber-600" : "text-gray-500"}`}>{r.p0}</td>
-                      <td className={`px-3 py-2 text-center text-xs tabular-nums ${r.flagCol === "p12" || r.p12 >= 20 ? "font-bold text-amber-600" : "text-gray-500"}`}>{r.p12}</td>
-                      <td className="px-3 py-2 text-center text-xs tabular-nums text-gray-400">{r.p34}</td>
-                      <td className="px-3 py-2 text-center text-xs tabular-nums text-gray-400">{r.p5}</td>
-                      <td className="px-3 py-2">
-                        {r.flag ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-semibold">{r.diagnosis}</span>
-                        ) : (
-                          <span className="text-[10px] text-gray-400">{r.diagnosis}</span>
-                        )}
-                      </td>
-                    </tr>
+                {/* Channel filter tabs */}
+                <div className="flex gap-1 mt-3">
+                  {channelTabs.map(t => (
+                    <button
+                      key={t.key}
+                      onClick={() => setEngagementChannel(t.key)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        engagementChannel === t.key
+                          ? "bg-[#304256] text-white"
+                          : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                      }`}
+                    >
+                      {t.label} <span className="opacity-60">({t.count})</span>
+                    </button>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              </div>
+              <div className="p-5">
+                {/* Win rate by proposal count */}
+                <div className="grid grid-cols-4 gap-3 mb-4">
+                  {d.summary.map((b, i) => (
+                    <div key={b.label} className={`rounded-lg p-3 text-center ${b.winRate < 20 ? "bg-red-50 border border-red-100" : b.winRate < 50 ? "bg-amber-50 border border-amber-100" : "bg-green-50 border border-green-100"}`}>
+                      <p className={`text-lg font-bold ${b.winRate < 20 ? "text-red-600" : b.winRate < 50 ? "text-amber-600" : "text-[#27a28c]"}`}>{b.winRate}%</p>
+                      <p className="text-[11px] font-medium text-[#304256]">{b.label}</p>
+                      <p className="text-[10px] text-gray-400">{b.lost} lost of {b.total}</p>
+                      {i === 0 && engagementChannel === "all" && <p className="text-[9px] text-amber-600 mt-0.5">* see data note</p>}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Data quality note — only show on All */}
+                {engagementChannel === "all" && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 mb-4 flex items-start gap-2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" className="flex-shrink-0 mt-0.5"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                      <strong>Data note:</strong> 18.6% of all TC trips have 0 proposals — but 143 are <em>confirmed</em> deals. Some advisors don&apos;t log proposals in SF, and group trips skip the proposal workflow. B2C platforms also inflate &ldquo;unresponsive&rdquo; numbers. <strong>Filter to B2B for the clearest coaching signal.</strong>
+                    </p>
+                  </div>
+                )}
+
+                {/* Cross-reference table */}
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Lost deals: proposal count × loss reason</p>
+                <div className="overflow-x-auto mb-4">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[#E8ECF1] bg-gray-50/50">
+                        <th className="text-left px-3 py-2 font-medium text-gray-500 text-xs">Loss Reason</th>
+                        <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">0 props</th>
+                        <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">1-2 props</th>
+                        <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">3-4 props</th>
+                        <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">5+ props</th>
+                        <th className="text-left px-3 py-2 font-medium text-gray-500 text-xs w-44">Diagnosis</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {d.rows.map(r => (
+                        <tr key={r.reason} className={`border-b border-gray-50 last:border-b-0 ${r.flag ? "bg-red-50/30" : ""}`}>
+                          <td className="px-3 py-2 text-xs text-[#304256] font-medium">{r.reason}</td>
+                          <td className={`px-3 py-2 text-center text-xs tabular-nums ${r.p0 >= 10 ? "font-bold text-red-600" : "text-gray-500"}`}>{r.p0}</td>
+                          <td className={`px-3 py-2 text-center text-xs tabular-nums ${r.p12 >= 15 ? "font-bold text-amber-600" : "text-gray-500"}`}>{r.p12}</td>
+                          <td className="px-3 py-2 text-center text-xs tabular-nums text-gray-400">{r.p34}</td>
+                          <td className="px-3 py-2 text-center text-xs tabular-nums text-gray-400">{r.p5}</td>
+                          <td className="px-3 py-2">
+                            {r.flag ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-semibold">{r.diagnosis}</span>
+                            ) : (
+                              <span className="text-[10px] text-gray-400">{r.diagnosis}</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className={`rounded-lg p-3 ${engagementChannel === "B2B" ? "bg-blue-50 border border-blue-200" : engagementChannel === "B2C" ? "bg-purple-50 border border-purple-200" : engagementChannel === "Direct" ? "bg-gray-50 border border-gray-200" : "bg-blue-50 border border-blue-200"}`}>
+                  <p className={`text-sm leading-relaxed ${engagementChannel === "B2B" ? "text-blue-800" : engagementChannel === "B2C" ? "text-purple-800" : engagementChannel === "Direct" ? "text-gray-700" : "text-blue-800"}`}>
+                    {d.narrative}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm text-blue-800 leading-relaxed">
-                <strong>The signal is at 1-2 proposals, not zero.</strong> At 0 proposals, most losses are unresponsive customers (26) or uncategorised (17) — leads that likely never engaged at all. The actionable pattern: <strong>43 deals lost at 1-2 proposals to &ldquo;unresponsive agent&rdquo; (26) or &ldquo;budget mismatch&rdquo; (17)</strong>. These are agents/customers who saw the first proposal and walked away — either the price was off or the brief wasn&apos;t matched. <strong>Coaching focus:</strong> confirm budget expectations before sending the first proposal; follow up within 24h of proposal send to keep the agent engaged.
-              </p>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* INSIGHT 2: Agency Intelligence */}
         <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
