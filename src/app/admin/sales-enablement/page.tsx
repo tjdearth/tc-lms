@@ -1000,23 +1000,32 @@ export default function SalesEnablementPage() {
           </div>
           <div className="p-5">
             {/* Win rate by proposal count — compact summary row */}
-            <div className="grid grid-cols-4 gap-3 mb-5">
+            <div className="grid grid-cols-4 gap-3 mb-4">
               {[
-                { label: "0 proposals", winRate: 0, lost: 66, total: 66 },
-                { label: "1-2 proposals", winRate: 18, lost: 126, total: 153 },
-                { label: "3-4 proposals", winRate: 61, lost: 31, total: 79 },
-                { label: "5+ proposals", winRate: 86, lost: 16, total: 113 },
+                { label: "0 proposals", winRate: 0, lost: 66, total: 66, flag: true },
+                { label: "1-2 proposals", winRate: 18, lost: 126, total: 153, flag: false },
+                { label: "3-4 proposals", winRate: 61, lost: 31, total: 79, flag: false },
+                { label: "5+ proposals", winRate: 86, lost: 16, total: 113, flag: false },
               ].map(b => (
                 <div key={b.label} className={`rounded-lg p-3 text-center ${b.winRate < 20 ? "bg-red-50 border border-red-100" : b.winRate < 50 ? "bg-amber-50 border border-amber-100" : "bg-green-50 border border-green-100"}`}>
                   <p className={`text-lg font-bold ${b.winRate < 20 ? "text-red-600" : b.winRate < 50 ? "text-amber-600" : "text-[#27a28c]"}`}>{b.winRate}%</p>
                   <p className="text-[11px] font-medium text-[#304256]">{b.label}</p>
                   <p className="text-[10px] text-gray-400">{b.lost} lost of {b.total}</p>
+                  {b.flag && <p className="text-[9px] text-amber-600 mt-0.5">* see data note</p>}
                 </div>
               ))}
             </div>
 
+            {/* Data quality note for 0 proposals */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 mb-4 flex items-start gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" className="flex-shrink-0 mt-0.5"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+              <p className="text-xs text-amber-800 leading-relaxed">
+                <strong>Data note:</strong> 18.6% of all TC trips (1,237 of 6,665) have 0 proposals — but 143 of those are <em>confirmed</em> deals. Some advisors don&apos;t log proposals in SF, and group trips (high traveller count) often skip the proposal workflow. Treat &ldquo;0 proposals&rdquo; as partly a data gap, not purely cold leads.
+              </p>
+            </div>
+
             {/* Cross-reference: proposal count × loss reason */}
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Why do low-proposal deals die?</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Lost deals: proposal count × loss reason</p>
             <div className="overflow-x-auto mb-4">
               <table className="w-full text-sm">
                 <thead>
@@ -1026,22 +1035,23 @@ export default function SalesEnablementPage() {
                     <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">1-2 props</th>
                     <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">3-4 props</th>
                     <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">5+ props</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-500 text-xs w-36">Diagnosis</th>
+                    <th className="text-left px-3 py-2 font-medium text-gray-500 text-xs w-40">Diagnosis</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[
-                    { reason: "Budget/price mismatch", p0: 18, p12: 14, p34: 8, p5: 5, diagnosis: "Missed budget upfront", flag: true },
-                    { reason: "Unresponsive agent", p0: 22, p12: 11, p34: 2, p5: 0, diagnosis: "Low-intent lead", flag: true },
-                    { reason: "Unresponsive end customer", p0: 14, p12: 38, p34: 10, p5: 6, diagnosis: "Client went cold", flag: false },
-                    { reason: "Won by competition", p0: 4, p12: 18, p34: 8, p5: 4, diagnosis: "Competitive loss", flag: false },
-                    { reason: "Picked another destination", p0: 5, p12: 24, p34: 2, p5: 1, diagnosis: "Brief mismatch", flag: false },
-                    { reason: "Other / unknown", p0: 3, p12: 21, p34: 1, p5: 0, diagnosis: "—", flag: false },
+                    { reason: "Unresponsive end customer", p0: 26, p12: 21, p34: 1, p5: 1, diagnosis: "Customer never engaged", flag: false, flagCol: "p0" },
+                    { reason: "Unresponsive agent", p0: 8, p12: 26, p34: 1, p5: 6, diagnosis: "Agent dropped off after 1st proposal", flag: true, flagCol: "p12" },
+                    { reason: "Budget/price mismatch", p0: 3, p12: 17, p34: 7, p5: 1, diagnosis: "Price rejected at proposal stage", flag: true, flagCol: "p12" },
+                    { reason: "Picked another destination", p0: 7, p12: 16, p34: 5, p5: 0, diagnosis: "Lost interest in Morocco", flag: false, flagCol: "" },
+                    { reason: "Won by competition", p0: 2, p12: 4, p34: 2, p5: 0, diagnosis: "Competitor won the deal", flag: false, flagCol: "" },
+                    { reason: "Other / uncategorised", p0: 17, p12: 33, p34: 9, p5: 4, diagnosis: "Data quality gap", flag: false, flagCol: "p0" },
+                    { reason: "Postponed / Cancelled", p0: 3, p12: 9, p34: 6, p5: 4, diagnosis: "Timing issue", flag: false, flagCol: "" },
                   ].map(r => (
                     <tr key={r.reason} className={`border-b border-gray-50 last:border-b-0 ${r.flag ? "bg-red-50/30" : ""}`}>
                       <td className="px-3 py-2 text-xs text-[#304256] font-medium">{r.reason}</td>
-                      <td className={`px-3 py-2 text-center text-xs tabular-nums ${r.p0 >= 15 ? "font-bold text-red-600" : "text-gray-500"}`}>{r.p0}</td>
-                      <td className={`px-3 py-2 text-center text-xs tabular-nums ${r.p12 >= 20 ? "font-bold text-amber-600" : "text-gray-500"}`}>{r.p12}</td>
+                      <td className={`px-3 py-2 text-center text-xs tabular-nums ${r.flagCol === "p0" && r.p0 >= 15 ? "font-bold text-red-600" : r.p0 >= 20 ? "font-bold text-amber-600" : "text-gray-500"}`}>{r.p0}</td>
+                      <td className={`px-3 py-2 text-center text-xs tabular-nums ${r.flagCol === "p12" || r.p12 >= 20 ? "font-bold text-amber-600" : "text-gray-500"}`}>{r.p12}</td>
                       <td className="px-3 py-2 text-center text-xs tabular-nums text-gray-400">{r.p34}</td>
                       <td className="px-3 py-2 text-center text-xs tabular-nums text-gray-400">{r.p5}</td>
                       <td className="px-3 py-2">
@@ -1058,7 +1068,7 @@ export default function SalesEnablementPage() {
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-blue-800 leading-relaxed">
-                <strong>40 of 66 zero-proposal losses (61%) are budget mismatch or unresponsive agent</strong> — these deals died before a single proposal was sent. Budget mismatch at 0 proposals means the advisor likely missed the client&apos;s budget in the first interaction. Unresponsive agent at 0 proposals suggests the lead was low-intent or the brief wasn&apos;t compelling enough to keep the agent engaged. <strong>Coaching focus:</strong> qualify budget and intent in the first response before investing in itinerary design.
+                <strong>The signal is at 1-2 proposals, not zero.</strong> At 0 proposals, most losses are unresponsive customers (26) or uncategorised (17) — leads that likely never engaged at all. The actionable pattern: <strong>43 deals lost at 1-2 proposals to &ldquo;unresponsive agent&rdquo; (26) or &ldquo;budget mismatch&rdquo; (17)</strong>. These are agents/customers who saw the first proposal and walked away — either the price was off or the brief wasn&apos;t matched. <strong>Coaching focus:</strong> confirm budget expectations before sending the first proposal; follow up within 24h of proposal send to keep the agent engaged.
               </p>
             </div>
           </div>
