@@ -411,7 +411,7 @@ export default function SalesEnablementPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: "Total Trips", value: "6,664", sub: "Confirmed + Lost" },
-          { label: "Overall Conversion", value: "34.5%", sub: "2,325 confirmed" },
+          { label: "Overall Win Rate", value: "34.5%", sub: "2,325 won of 6,664" },
           { label: "Total Revenue", value: "$41.4M", sub: "Contracted sale price" },
           { label: "Avg Trip Value", value: "$17.8K", sub: "Per confirmed trip" },
         ].map((s) => (
@@ -435,7 +435,7 @@ export default function SalesEnablementPage() {
                 <th className="text-left px-5 py-3 font-medium text-gray-500">Channel</th>
                 <th className="text-right px-5 py-3 font-medium text-gray-500">Trips</th>
                 <th className="text-right px-5 py-3 font-medium text-gray-500">Won</th>
-                <th className="text-right px-5 py-3 font-medium text-gray-500">Conversion</th>
+                <th className="text-right px-5 py-3 font-medium text-gray-500">Win Rate</th>
                 <th className="text-right px-5 py-3 font-medium text-gray-500">Target</th>
                 <th className="text-right px-5 py-3 font-medium text-gray-500">Revenue</th>
                 <th className="text-right px-5 py-3 font-medium text-gray-500">Avg Sale</th>
@@ -481,7 +481,7 @@ export default function SalesEnablementPage() {
               <tr className="border-b border-[#E8ECF1] bg-gray-50/50">
                 <th className="text-left px-5 py-3 font-medium text-gray-500">DMC</th>
                 <th className="text-right px-5 py-3 font-medium text-gray-500">Trips</th>
-                <th className="text-right px-5 py-3 font-medium text-gray-500">Conversion</th>
+                <th className="text-right px-5 py-3 font-medium text-gray-500">Win Rate</th>
                 <th className="text-right px-5 py-3 font-medium text-gray-500">Revenue</th>
                 <th className="text-right px-5 py-3 font-medium text-gray-500">Avg Sale</th>
                 <th className="text-right px-5 py-3 font-medium text-gray-500">Advisors</th>
@@ -540,7 +540,7 @@ export default function SalesEnablementPage() {
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
-            { label: "Conversion", value: fmtPct(d.conversionRate) },
+            { label: "Win Rate", value: fmtPct(d.conversionRate) },
             { label: "Revenue", value: fmtCurrency(d.totalSale) },
             { label: "Avg Sale", value: fmtCurrency(d.avgSale) },
             { label: "Avg Days to Close", value: `${d.avgDaysToClose}d` },
@@ -565,7 +565,7 @@ export default function SalesEnablementPage() {
                   <th className="text-left px-5 py-3 font-medium text-gray-500">Channel</th>
                   <th className="text-right px-5 py-3 font-medium text-gray-500">Trips</th>
                   <th className="text-right px-5 py-3 font-medium text-gray-500">Won</th>
-                  <th className="text-right px-5 py-3 font-medium text-gray-500">Conversion</th>
+                  <th className="text-right px-5 py-3 font-medium text-gray-500">Win Rate</th>
                   <th className="text-right px-5 py-3 font-medium text-gray-500">vs Target</th>
                   <th className="text-right px-5 py-3 font-medium text-gray-500">vs TC Avg</th>
                   <th className="text-right px-5 py-3 font-medium text-gray-500">Avg Sale</th>
@@ -617,7 +617,7 @@ export default function SalesEnablementPage() {
                 <tr className="border-b border-[#E8ECF1] bg-gray-50/50">
                   <th className="text-left px-5 py-3 font-medium text-gray-500">Advisor</th>
                   <th className="text-right px-5 py-3 font-medium text-gray-500">Trips</th>
-                  <th className="text-right px-5 py-3 font-medium text-gray-500">Conversion</th>
+                  <th className="text-right px-5 py-3 font-medium text-gray-500">Win Rate</th>
                   <th className="text-right px-5 py-3 font-medium text-gray-500">Avg Sale</th>
                   <th className="text-right px-5 py-3 font-medium text-gray-500">Revenue</th>
                   <th className="text-right px-5 py-3 font-medium text-gray-500">Avg Proposals</th>
@@ -680,7 +680,7 @@ export default function SalesEnablementPage() {
         {/* Summary stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: "Conversion", value: fmtPct(adv.conversionRate), vs: `DMC avg: ${fmtPct(dmcAvg.conversionRate)}`, good: adv.conversionRate >= dmcAvg.conversionRate },
+            { label: "Win Rate", value: fmtPct(adv.conversionRate), vs: `DMC avg: ${fmtPct(dmcAvg.conversionRate)}`, good: adv.conversionRate >= dmcAvg.conversionRate },
             { label: "Avg Sale", value: fmtCurrency(adv.avgSale), vs: `DMC avg: ${fmtCurrency(dmcAvg.avgSale)}`, good: adv.avgSale >= dmcAvg.avgSale },
             { label: "Total Revenue", value: fmtCurrency(adv.totalSale), vs: `${adv.confirmed} confirmed trips`, good: true },
             { label: "Avg Proposals", value: adv.avgProposals.toFixed(1), vs: "Per trip", good: true },
@@ -712,9 +712,9 @@ export default function SalesEnablementPage() {
                     <span className="text-xs text-gray-400">{c.trips} trips</span>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
-                    {/* Conversion */}
+                    {/* Win Rate */}
                     <div>
-                      <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-1">Conversion</p>
+                      <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-1">Win Rate</p>
                       <div className="flex items-baseline gap-2">
                         <span className={`text-lg font-bold tabular-nums ${convColor(c.convRate, cal.targetConvRate)}`}>
                           {fmtPct(c.convRate)}
@@ -851,7 +851,7 @@ export default function SalesEnablementPage() {
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
             <h4 className="font-semibold text-amber-800 mb-2">Controllable Losses: 29.1%</h4>
             <p className="text-sm text-amber-700 leading-relaxed">
-              <strong>Budget/price mismatch</strong> (12.1%) and <strong>Won by competition</strong> (6.2%) represent losses where we had an opportunity to convert.
+              <strong>Budget/price mismatch</strong> (12.1%) and <strong>Won by competition</strong> (6.2%) represent losses where we had an opportunity to win.
               Combined with <strong>Unresponsive agent</strong> (17.0%), nearly a third of losses are potentially addressable through faster response times and pricing flexibility.
             </p>
           </div>
@@ -910,7 +910,7 @@ export default function SalesEnablementPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold text-[#304256] mb-1">Channel Calibration</h2>
-        <p className="text-sm text-gray-500">Set expected conversion rates and targets per channel. These benchmarks are used to assess advisor performance across all DMCs.</p>
+        <p className="text-sm text-gray-500">Set expected win rates and targets per channel. These benchmarks are used to assess advisor performance across all DMCs.</p>
       </div>
 
       <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
@@ -923,7 +923,7 @@ export default function SalesEnablementPage() {
             <thead>
               <tr className="border-b border-[#E8ECF1] bg-gray-50/50">
                 <th className="text-left px-5 py-3 font-medium text-gray-500">Channel</th>
-                <th className="text-center px-5 py-3 font-medium text-gray-500">Target Conversion</th>
+                <th className="text-center px-5 py-3 font-medium text-gray-500">Target Win Rate</th>
                 <th className="text-center px-5 py-3 font-medium text-gray-500">Target Avg Sale</th>
                 <th className="text-center px-5 py-3 font-medium text-gray-500">Target Response (hrs)</th>
                 <th className="text-center px-5 py-3 font-medium text-gray-500">Actual (TC-wide)</th>
@@ -998,7 +998,7 @@ export default function SalesEnablementPage() {
           {[
             { ch: "KimKim", desc: "B2C platform connecting end travellers to local experts. Matched by Agency containing &ldquo;kimkim&rdquo;. Operates in most destinations but not Morocco." },
             { ch: "Zicasso", desc: "B2C luxury travel platform matching travellers with specialists. Matched by Agency containing &ldquo;Zicasso&rdquo;. Our highest-volume B2C platform." },
-            { ch: "Wendy Perrin", desc: "B2C platform curated by travel journalist Wendy Perrin. Matched by Agency containing &ldquo;Wendy Perrin&rdquo;. Highest conversion of all B2C channels." },
+            { ch: "Wendy Perrin", desc: "B2C platform curated by travel journalist Wendy Perrin. Matched by Agency containing &ldquo;Wendy Perrin&rdquo;. Highest win rate of all B2C channels." },
             { ch: "B2B", desc: "All travel agencies we work with, including Referral B2B. Our largest channel by volume." },
             { ch: "Direct", desc: "Customers finding us directly with no intermediary. Includes Referral Direct and Other sources." },
             { ch: "DMC", desc: "Combo trips with another TC brand involving parent + child trip for multi-destination itineraries." },
@@ -1029,7 +1029,7 @@ export default function SalesEnablementPage() {
           { title: "Status Filter", text: "Only Confirmed and Lost trips are included. Inquiry, Cancelled, and Postponed are excluded (could be added later)." },
           { title: "Channel Strategy", text: "Defined by Client Source + Agency fields. B2C is split into three platforms: KimKim (Agency contains &ldquo;kimkim&rdquo;), Zicasso (Agency contains &ldquo;Zicasso&rdquo;), and Wendy Perrin (Agency contains &ldquo;Wendy Perrin&rdquo;). Remaining channels: B2B, Direct, DMC, and MICE." },
           { title: "Pricing Fields", text: "Estimated Sale Price is the advisor's pre-quote estimate. Sale Price is the final contracted amount. Revenue calculations use Sale Price where available." },
-          { title: "Proposals Count", text: "Number of formal SF proposals created per trip. Won trips average 4.8 proposals vs 1.6 for lost — higher effort correlates with conversion." },
+          { title: "Proposals Count", text: "Number of formal SF proposals created per trip. Won trips average 4.8 proposals vs 1.6 for lost — higher effort correlates with winning." },
           { title: "Total Active Proposal Time", text: "An efficiency metric representing time spent creating proposals. Unit needs confirmation — currently treated as minutes." },
           { title: "Loss Reason Quality", text: "Dropdown selection quality varies by advisor. &ldquo;Other&rdquo; is overused (21.7%). Detailed Loss Reason is free-text and inconsistently filled." },
           { title: "DMC Combo Trips", text: "When two TC brands collaborate on a multi-destination trip. Counted under the primary DMC's stats." },
