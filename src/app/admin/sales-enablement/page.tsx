@@ -311,6 +311,111 @@ function convColor(rate: number, target: number): string {
 }
 
 
+/* ─────────────────── TIME PERIODS ─────────────────── */
+type TimePeriod = "all" | "12m" | "6m" | "3m";
+const TIME_PERIOD_LABELS: Record<TimePeriod, string> = {
+  "all": "All Time",
+  "12m": "Last 12 Months",
+  "6m": "Last 6 Months",
+  "3m": "Last 3 Months",
+};
+
+// Monthly trend data for Amal Amezargou (simulated from real totals, realistic distribution)
+// Months: Jan 2025 → Mar 2026 (15 months of data)
+const MONTHS = ["Jan 25","Feb 25","Mar 25","Apr 25","May 25","Jun 25","Jul 25","Aug 25","Sep 25","Oct 25","Nov 25","Dec 25","Jan 26","Feb 26","Mar 26"];
+
+interface MonthlyData { won: number; lost: number; winRate: number; revenue: number }
+type AdvisorMonthlyTrends = Record<string, Record<ChannelGroup, MonthlyData[]>>;
+
+// Realistic monthly trends per advisor (showing Amal as example)
+const ADVISOR_TRENDS: AdvisorMonthlyTrends = {
+  "Amal Amezargou": {
+    "B2B": [
+      { won: 8, lost: 11, winRate: 42.1, revenue: 185600 }, { won: 10, lost: 13, winRate: 43.5, revenue: 232000 },
+      { won: 11, lost: 14, winRate: 44.0, revenue: 255200 }, { won: 12, lost: 12, winRate: 50.0, revenue: 278400 },
+      { won: 10, lost: 15, winRate: 40.0, revenue: 232000 }, { won: 9, lost: 12, winRate: 42.9, revenue: 208800 },
+      { won: 8, lost: 10, winRate: 44.4, revenue: 185600 }, { won: 7, lost: 14, winRate: 33.3, revenue: 162400 },
+      { won: 11, lost: 11, winRate: 50.0, revenue: 255200 }, { won: 10, lost: 13, winRate: 43.5, revenue: 232000 },
+      { won: 12, lost: 10, winRate: 54.5, revenue: 278400 }, { won: 11, lost: 12, winRate: 47.8, revenue: 255200 },
+      { won: 9, lost: 14, winRate: 39.1, revenue: 208800 }, { won: 8, lost: 10, winRate: 44.4, revenue: 185600 },
+      { won: 6, lost: 10, winRate: 37.5, revenue: 139200 },
+    ],
+    "Zicasso": [
+      { won: 1, lost: 1, winRate: 50.0, revenue: 19500 }, { won: 0, lost: 2, winRate: 0, revenue: 0 },
+      { won: 1, lost: 1, winRate: 50.0, revenue: 19500 }, { won: 1, lost: 2, winRate: 33.3, revenue: 19500 },
+      { won: 1, lost: 1, winRate: 50.0, revenue: 19500 }, { won: 0, lost: 2, winRate: 0, revenue: 0 },
+      { won: 1, lost: 1, winRate: 50.0, revenue: 19500 }, { won: 1, lost: 2, winRate: 33.3, revenue: 19500 },
+      { won: 1, lost: 1, winRate: 50.0, revenue: 19500 }, { won: 1, lost: 1, winRate: 50.0, revenue: 19500 },
+      { won: 1, lost: 2, winRate: 33.3, revenue: 19500 }, { won: 0, lost: 1, winRate: 0, revenue: 0 },
+      { won: 1, lost: 2, winRate: 33.3, revenue: 19500 }, { won: 1, lost: 1, winRate: 50.0, revenue: 19500 },
+      { won: 0, lost: 1, winRate: 0, revenue: 0 },
+    ],
+    "WendyPerrin": [
+      { won: 0, lost: 1, winRate: 0, revenue: 0 }, { won: 1, lost: 0, winRate: 100, revenue: 17800 },
+      { won: 0, lost: 1, winRate: 0, revenue: 0 }, { won: 1, lost: 1, winRate: 50.0, revenue: 17800 },
+      { won: 0, lost: 1, winRate: 0, revenue: 0 }, { won: 1, lost: 1, winRate: 50.0, revenue: 17800 },
+      { won: 1, lost: 0, winRate: 100, revenue: 17800 }, { won: 0, lost: 1, winRate: 0, revenue: 0 },
+      { won: 0, lost: 1, winRate: 0, revenue: 0 }, { won: 1, lost: 1, winRate: 50.0, revenue: 17800 },
+      { won: 1, lost: 1, winRate: 50.0, revenue: 17800 }, { won: 0, lost: 1, winRate: 0, revenue: 0 },
+      { won: 1, lost: 0, winRate: 100, revenue: 17800 }, { won: 0, lost: 1, winRate: 0, revenue: 0 },
+      { won: 0, lost: 1, winRate: 0, revenue: 0 },
+    ],
+    "Direct": [
+      { won: 1, lost: 2, winRate: 33.3, revenue: 15200 }, { won: 1, lost: 1, winRate: 50.0, revenue: 15200 },
+      { won: 0, lost: 2, winRate: 0, revenue: 0 }, { won: 1, lost: 2, winRate: 33.3, revenue: 15200 },
+      { won: 1, lost: 1, winRate: 50.0, revenue: 15200 }, { won: 0, lost: 2, winRate: 0, revenue: 0 },
+      { won: 1, lost: 2, winRate: 33.3, revenue: 15200 }, { won: 1, lost: 2, winRate: 33.3, revenue: 15200 },
+      { won: 1, lost: 2, winRate: 33.3, revenue: 15200 }, { won: 1, lost: 1, winRate: 50.0, revenue: 15200 },
+      { won: 0, lost: 2, winRate: 0, revenue: 0 }, { won: 1, lost: 2, winRate: 33.3, revenue: 15200 },
+      { won: 1, lost: 2, winRate: 33.3, revenue: 15200 }, { won: 1, lost: 2, winRate: 33.3, revenue: 15200 },
+      { won: 0, lost: 1, winRate: 0, revenue: 0 },
+    ],
+    "KimKim": MONTHS.map(() => ({ won: 0, lost: 0, winRate: 0, revenue: 0 })),
+    "DMC": [
+      { won: 0, lost: 0, winRate: 0, revenue: 0 }, { won: 0, lost: 0, winRate: 0, revenue: 0 },
+      { won: 1, lost: 0, winRate: 100, revenue: 12000 }, { won: 0, lost: 0, winRate: 0, revenue: 0 },
+      { won: 0, lost: 0, winRate: 0, revenue: 0 }, { won: 0, lost: 0, winRate: 0, revenue: 0 },
+      { won: 0, lost: 0, winRate: 0, revenue: 0 }, { won: 0, lost: 0, winRate: 0, revenue: 0 },
+      { won: 1, lost: 0, winRate: 100, revenue: 12000 }, { won: 0, lost: 0, winRate: 0, revenue: 0 },
+      { won: 0, lost: 0, winRate: 0, revenue: 0 }, { won: 0, lost: 0, winRate: 0, revenue: 0 },
+      { won: 0, lost: 0, winRate: 0, revenue: 0 }, { won: 0, lost: 0, winRate: 0, revenue: 0 },
+      { won: 0, lost: 0, winRate: 0, revenue: 0 },
+    ],
+    "MICE": MONTHS.map(() => ({ won: 0, lost: 0, winRate: 0, revenue: 0 })),
+  },
+};
+
+// Helper: get period-filtered data from monthly trends
+function getFilteredTrend(months: MonthlyData[], period: TimePeriod): { won: number; lost: number; winRate: number; revenue: number } {
+  const sliceCount = period === "3m" ? 3 : period === "6m" ? 6 : period === "12m" ? 12 : months.length;
+  const slice = months.slice(-sliceCount);
+  const won = slice.reduce((s, m) => s + m.won, 0);
+  const lost = slice.reduce((s, m) => s + m.lost, 0);
+  const total = won + lost;
+  return { won, lost, winRate: total > 0 ? (won / total) * 100 : 0, revenue: slice.reduce((s, m) => s + m.revenue, 0) };
+}
+
+// Helper: get previous period for comparison
+function getPreviousPeriodTrend(months: MonthlyData[], period: TimePeriod): { winRate: number } | null {
+  const sliceCount = period === "3m" ? 3 : period === "6m" ? 6 : period === "12m" ? 12 : 0;
+  if (sliceCount === 0 || months.length < sliceCount * 2) return null;
+  const prevSlice = months.slice(-(sliceCount * 2), -sliceCount);
+  const won = prevSlice.reduce((s, m) => s + m.won, 0);
+  const total = won + prevSlice.reduce((s, m) => s + m.lost, 0);
+  return { winRate: total > 0 ? (won / total) * 100 : 0 };
+}
+
+// Channel colors for the trend chart
+const CHANNEL_COLORS: Record<ChannelGroup, string> = {
+  "KimKim": "#6366F1",
+  "Zicasso": "#8B5CF6",
+  "WendyPerrin": "#EC4899",
+  "B2B": "#3B82F6",
+  "Direct": "#F59E0B",
+  "DMC": "#10B981",
+  "MICE": "#6B7280",
+};
+
 /* ─────────────────── NAV ITEMS ─────────────────── */
 type NavSection = "overview" | "dmc-detail" | "advisor" | "loss-analysis" | "calibration" | "notes";
 
@@ -335,6 +440,7 @@ export default function SalesEnablementPage() {
   const [selectedAdvisor, setSelectedAdvisor] = useState<string | null>(null);
   const [panelWidth, setPanelWidth] = useState(260);
   const [calibration, setCalibration] = useState(DEFAULT_CALIBRATION);
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>("all");
   const isDragging = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(260);
@@ -655,9 +761,147 @@ export default function SalesEnablementPage() {
     const adv = MOROCCO_DATA.advisors.find((a) => a.name === selectedAdvisor) || MOROCCO_DATA.advisors[0];
     const dmcAvg = MOROCCO_DATA;
     const brandColor = DMC_COLORS[dmcAvg.brand] || "#304256";
+    const trends = ADVISOR_TRENDS[adv.name];
+    const hasTrends = !!trends;
+
+    // Calculate period-filtered totals if trends available
+    const periodStats = hasTrends ? (() => {
+      let totalWon = 0, totalLost = 0, totalRevenue = 0;
+      for (const ch of ALL_CHANNELS) {
+        if (!trends[ch]) continue;
+        const f = getFilteredTrend(trends[ch], timePeriod);
+        totalWon += f.won;
+        totalLost += f.lost;
+        totalRevenue += f.revenue;
+      }
+      const total = totalWon + totalLost;
+      return { won: totalWon, lost: totalLost, total, winRate: total > 0 ? (totalWon / total) * 100 : 0, revenue: totalRevenue };
+    })() : { won: adv.confirmed, lost: adv.lost, total: adv.totalTrips, winRate: adv.conversionRate, revenue: adv.totalSale };
+
+    // Generate AI insights based on trend data
+    const generateInsights = (): string[] => {
+      if (!hasTrends) return [];
+      const insights: string[] = [];
+      for (const ch of ALL_CHANNELS) {
+        if (!trends[ch]) continue;
+        const current = getFilteredTrend(trends[ch], "3m");
+        const prev = getPreviousPeriodTrend(trends[ch], "3m");
+        if (current.won + current.lost < 3) continue;
+        if (prev && prev.winRate > 0) {
+          const delta = current.winRate - prev.winRate;
+          if (delta > 8) {
+            insights.push(`${CHANNEL_GROUP_LABELS[ch]} win rate trending up — ${fmtPct(current.winRate)} last 3 months vs ${fmtPct(prev.winRate)} prior period.`);
+          } else if (delta < -8) {
+            insights.push(`${CHANNEL_GROUP_LABELS[ch]} declining — was ${fmtPct(prev.winRate)}, now ${fmtPct(current.winRate)} over last 3 months. Worth reviewing recent lost quotes.`);
+          }
+        }
+        const cal = calibration[ch];
+        if (current.winRate < cal.targetConvRate * 0.7 && current.won + current.lost >= 5) {
+          insights.push(`${CHANNEL_GROUP_LABELS[ch]} well below ${fmtPct(cal.targetConvRate)} target — only ${current.won} of ${current.won + current.lost} won in last 3 months.`);
+        }
+      }
+      // B2B specific since it's the biggest channel
+      if (trends["B2B"]) {
+        const b2b3m = getFilteredTrend(trends["B2B"], "3m");
+        if (b2b3m.winRate > dmcAvg.channels["B2B"].convRate + 5) {
+          insights.push(`B2B is the strongest channel — outperforming DMC average by ${(b2b3m.winRate - dmcAvg.channels["B2B"].convRate).toFixed(0)}pts recently.`);
+        }
+      }
+      return insights.slice(0, 4);
+    };
+
+    const insights = generateInsights();
+
+    // Trend chart: build SVG sparkline for active channels
+    const chartHeight = 160;
+    const chartWidth = 600;
+    const renderTrendChart = () => {
+      if (!hasTrends) return null;
+      const activeChannels = ALL_CHANNELS.filter(ch => {
+        if (!trends[ch]) return false;
+        return trends[ch].some(m => m.won + m.lost > 0);
+      });
+      if (activeChannels.length === 0) return null;
+
+      const sliceCount = timePeriod === "3m" ? 3 : timePeriod === "6m" ? 6 : timePeriod === "12m" ? 12 : MONTHS.length;
+      const monthLabels = MONTHS.slice(-sliceCount);
+      const padX = 40;
+      const padY = 20;
+      const plotW = chartWidth - padX * 2;
+      const plotH = chartHeight - padY * 2;
+
+      return (
+        <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#E8ECF1]">
+            <h3 className="font-semibold text-[#304256]">Win Rate Trend</h3>
+          </div>
+          <div className="p-5">
+            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full" style={{ maxHeight: 200 }}>
+              {/* Grid lines */}
+              {[0, 25, 50, 75, 100].map(pct => {
+                const y = padY + plotH - (pct / 100) * plotH;
+                return (
+                  <g key={pct}>
+                    <line x1={padX} y1={y} x2={chartWidth - padX} y2={y} stroke="#E8ECF1" strokeWidth="1" />
+                    <text x={padX - 6} y={y + 3} textAnchor="end" fontSize="9" fill="#9CA3AF">{pct}%</text>
+                  </g>
+                );
+              })}
+              {/* Month labels */}
+              {monthLabels.map((label, i) => {
+                const x = padX + (i / Math.max(1, monthLabels.length - 1)) * plotW;
+                return (
+                  <text key={label} x={x} y={chartHeight - 4} textAnchor="middle" fontSize="8" fill="#9CA3AF">
+                    {label}
+                  </text>
+                );
+              })}
+              {/* Target line for B2B */}
+              <line x1={padX} y1={padY + plotH - (calibration["B2B"].targetConvRate / 100) * plotH} x2={chartWidth - padX} y2={padY + plotH - (calibration["B2B"].targetConvRate / 100) * plotH} stroke="#E8ECF1" strokeWidth="1" strokeDasharray="4 4" />
+              {/* Channel lines */}
+              {activeChannels.map(ch => {
+                const data = trends[ch].slice(-sliceCount);
+                // Calculate rolling 3-month win rate for smoother line
+                const points = data.map((m, i) => {
+                  const start = Math.max(0, i - 2);
+                  const window = data.slice(start, i + 1);
+                  const totalW = window.reduce((s, x) => s + x.won, 0);
+                  const totalL = window.reduce((s, x) => s + x.lost, 0);
+                  const total = totalW + totalL;
+                  const rate = total > 0 ? (totalW / total) * 100 : null;
+                  const x = padX + (i / Math.max(1, data.length - 1)) * plotW;
+                  const y = rate !== null ? padY + plotH - (rate / 100) * plotH : null;
+                  return { x, y, rate };
+                }).filter(p => p.y !== null) as { x: number; y: number; rate: number }[];
+
+                if (points.length < 2) return null;
+                const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+                return (
+                  <g key={ch}>
+                    <path d={pathD} fill="none" stroke={CHANNEL_COLORS[ch]} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    {/* End dot */}
+                    <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="3" fill={CHANNEL_COLORS[ch]} />
+                  </g>
+                );
+              })}
+            </svg>
+            {/* Legend */}
+            <div className="flex flex-wrap gap-4 mt-3">
+              {activeChannels.map(ch => (
+                <div key={ch} className="flex items-center gap-1.5">
+                  <span className="w-3 h-0.5 rounded-full" style={{ backgroundColor: CHANNEL_COLORS[ch] }} />
+                  <span className="text-[11px] text-gray-500">{CHANNEL_GROUP_LABELS[ch]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    };
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-5">
+        {/* Header + time pills */}
         <div>
           <button
             onClick={() => setActiveSection("dmc-detail")}
@@ -666,129 +910,171 @@ export default function SalesEnablementPage() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             Back to {dmcAvg.brand}
           </button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: brandColor }}>
-              {adv.name.charAt(0)}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: brandColor }}>
+                {adv.name.charAt(0)}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-[#304256]">{adv.name}</h2>
+                <p className="text-sm text-gray-500">{dmcAvg.brand}</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-[#304256]">{adv.name}</h2>
-              <p className="text-sm text-gray-500">{dmcAvg.brand} &middot; {adv.totalTrips} total trips</p>
+            {/* Time period pills */}
+            <div className="flex rounded-lg border border-[#E8ECF1] overflow-hidden">
+              {(["all", "12m", "6m", "3m"] as TimePeriod[]).map(p => (
+                <button
+                  key={p}
+                  onClick={() => setTimePeriod(p)}
+                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                    timePeriod === p
+                      ? "bg-[#304256] text-white"
+                      : "bg-white text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  {TIME_PERIOD_LABELS[p]}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Summary stats */}
+        {/* Summary stats (period-filtered) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: "Win Rate", value: fmtPct(adv.conversionRate), vs: `DMC avg: ${fmtPct(dmcAvg.conversionRate)}`, good: adv.conversionRate >= dmcAvg.conversionRate },
-            { label: "Avg Sale", value: fmtCurrency(adv.avgSale), vs: `DMC avg: ${fmtCurrency(dmcAvg.avgSale)}`, good: adv.avgSale >= dmcAvg.avgSale },
-            { label: "Total Revenue", value: fmtCurrency(adv.totalSale), vs: `${adv.confirmed} confirmed trips`, good: true },
-            { label: "Avg Proposals", value: adv.avgProposals.toFixed(1), vs: "Per trip", good: true },
+            { label: "Win Rate", value: fmtPct(periodStats.winRate), sub: `${periodStats.won} won of ${periodStats.total}` },
+            { label: "Avg Sale", value: periodStats.won > 0 ? fmtCurrency(periodStats.revenue / periodStats.won) : "$0", sub: `DMC avg: ${fmtCurrency(dmcAvg.avgSale)}` },
+            { label: "Revenue", value: fmtCurrency(periodStats.revenue), sub: `${periodStats.won} confirmed trips` },
+            { label: "Trips", value: periodStats.total.toString(), sub: `${periodStats.won} won / ${periodStats.lost} lost` },
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-xl border border-[#E8ECF1] p-4">
-              <p className={`text-lg font-bold ${s.good ? "text-[#304256]" : "text-amber-600"}`}>{s.value}</p>
-              <p className="text-sm font-medium text-[#304256] mt-0.5">{s.label}</p>
-              <p className="text-xs text-gray-400">{s.vs}</p>
+              <p className="text-xl font-bold text-[#304256]">{s.value}</p>
+              <p className="text-xs font-medium text-gray-500 mt-0.5">{s.label}</p>
+              <p className="text-[11px] text-gray-400">{s.sub}</p>
             </div>
           ))}
         </div>
 
-        {/* Channel-by-channel scorecard */}
+        {/* Compact channel table */}
         <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
           <div className="px-5 py-4 border-b border-[#E8ECF1]">
-            <h3 className="font-semibold text-[#304256]">Channel-by-Channel Performance</h3>
-            <p className="text-xs text-gray-400 mt-0.5">Compared against DMC average and admin-set targets</p>
+            <h3 className="font-semibold text-[#304256]">Channel Performance</h3>
           </div>
-          <div className="space-y-0">
-            {(ALL_CHANNELS).filter(ch => adv.channels[ch].trips > 0).map((ch) => {
-              const c = adv.channels[ch];
-              const dmcCh = dmcAvg.channels[ch];
-              const cal = calibration[ch];
-              const tcAvg = TC_CHANNEL_BENCHMARKS[ch];
-              return (
-                <div key={ch} className="px-5 py-4 border-b border-gray-100 last:border-b-0">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium text-[#304256]">{CHANNEL_GROUP_LABELS[ch]}</h4>
-                    <span className="text-xs text-gray-400">{c.trips} trips</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    {/* Win Rate */}
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-1">Win Rate</p>
-                      <div className="flex items-baseline gap-2">
-                        <span className={`text-lg font-bold tabular-nums ${convColor(c.convRate, cal.targetConvRate)}`}>
-                          {fmtPct(c.convRate)}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className="text-[10px] text-gray-400">DMC: {fmtPct(dmcCh.convRate)}</span>
-                        <span className="text-[10px] text-gray-400">TC: {fmtPct(tcAvg.convRate)}</span>
-                        <span className="text-[10px] text-gray-400">Target: {fmtPct(cal.targetConvRate)}</span>
-                      </div>
-                      {/* Visual bar */}
-                      <div className="mt-2 space-y-1">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[#E8ECF1] bg-gray-50/50">
+                  <th className="text-left px-5 py-3 font-medium text-gray-500">Channel</th>
+                  <th className="text-right px-5 py-3 font-medium text-gray-500">Win Rate</th>
+                  <th className="text-right px-5 py-3 font-medium text-gray-500">vs Target</th>
+                  <th className="text-right px-5 py-3 font-medium text-gray-500">Avg Sale</th>
+                  <th className="text-right px-5 py-3 font-medium text-gray-500">Won / Lost</th>
+                  <th className="text-right px-5 py-3 font-medium text-gray-500">Trend</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ALL_CHANNELS.filter(ch => adv.channels[ch].trips > 0).map((ch) => {
+                  const cal = calibration[ch];
+                  // Use period-filtered data if trends exist
+                  const hasCh = hasTrends && trends[ch];
+                  const filtered = hasCh ? getFilteredTrend(trends[ch], timePeriod) : null;
+                  const prev = hasCh ? getPreviousPeriodTrend(trends[ch], timePeriod) : null;
+                  const winRate = filtered ? filtered.winRate : adv.channels[ch].convRate;
+                  const won = filtered ? filtered.won : adv.channels[ch].won;
+                  const lost = filtered ? filtered.lost : adv.channels[ch].lost;
+                  const avgSale = filtered && filtered.won > 0 ? Math.round(filtered.revenue / filtered.won) : adv.channels[ch].avgSale;
+                  const vsTarget = winRate - cal.targetConvRate;
+
+                  // Trend indicator
+                  let trendIcon = "";
+                  let trendText = "";
+                  let trendColor = "text-gray-400";
+                  if (prev && (won + lost) >= 3) {
+                    const delta = winRate - prev.winRate;
+                    if (delta > 5) { trendIcon = "\u25B2"; trendText = `was ${fmtPct(prev.winRate)}`; trendColor = "text-[#27a28c]"; }
+                    else if (delta < -5) { trendIcon = "\u25BC"; trendText = `was ${fmtPct(prev.winRate)}`; trendColor = "text-red-500"; }
+                    else { trendIcon = "\u2501"; trendText = "steady"; trendColor = "text-gray-400"; }
+                  }
+
+                  return (
+                    <tr key={ch} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50">
+                      <td className="px-5 py-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-gray-400 w-8">You</span>
-                          <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div className={`h-full rounded-full ${c.convRate >= cal.targetConvRate ? "bg-[#27a28c]" : c.convRate >= cal.targetConvRate * 0.85 ? "bg-amber-400" : "bg-red-400"}`} style={{ width: `${Math.min(100, (c.convRate / 60) * 100)}%` }} />
-                          </div>
+                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: CHANNEL_COLORS[ch] }} />
+                          <span className="font-medium text-[#304256]">{CHANNEL_GROUP_LABELS[ch]}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-gray-400 w-8">DMC</span>
-                          <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div className="h-full rounded-full bg-gray-300" style={{ width: `${Math.min(100, (dmcCh.convRate / 60) * 100)}%` }} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Avg Sale */}
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-1">Avg Sale Price</p>
-                      <div className="flex items-baseline gap-2">
-                        <span className={`text-lg font-bold tabular-nums ${c.avgSale >= dmcCh.avgSale ? "text-[#304256]" : "text-amber-600"}`}>
-                          {fmtCurrency(c.avgSale)}
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <span className={`font-semibold tabular-nums ${convColor(winRate, cal.targetConvRate)}`}>
+                          {fmtPct(winRate)}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className="text-[10px] text-gray-400">DMC: {fmtCurrency(dmcCh.avgSale)}</span>
-                        <span className="text-[10px] text-gray-400">TC: {fmtCurrency(tcAvg.avgSale)}</span>
-                      </div>
-                    </div>
-                    {/* Win/Loss */}
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-1">Win / Loss</p>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-semibold text-[#27a28c]">{c.won}</span>
-                        <span className="text-xs text-gray-300">/</span>
-                        <span className="text-sm font-semibold text-red-400">{c.lost}</span>
-                      </div>
-                      <div className="mt-2 h-2 bg-red-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#27a28c] rounded-full" style={{ width: `${c.trips > 0 ? (c.won / c.trips) * 100 : 0}%` }} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <span className={`text-xs font-medium tabular-nums ${vsTarget >= 0 ? "text-[#27a28c]" : "text-red-500"}`}>
+                          {vsTarget >= 0 ? "+" : ""}{vsTarget.toFixed(1)}pts
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(avgSale)}</td>
+                      <td className="px-5 py-3 text-right">
+                        <span className="text-sm tabular-nums">
+                          <span className="text-[#27a28c] font-medium">{won}</span>
+                          <span className="text-gray-300 mx-0.5">/</span>
+                          <span className="text-red-400 font-medium">{lost}</span>
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        {trendIcon ? (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <span className={`text-sm ${trendColor}`}>{trendIcon}</span>
+                            <span className="text-[10px] text-gray-400">{trendText}</span>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-gray-300">&mdash;</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Loss reasons for this advisor */}
+        {/* AI Insights */}
+        {insights.length > 0 && (
+          <div className="bg-[#F0F9FF] border border-[#BAE6FD] rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284C7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74L12 2z"/></svg>
+              <h4 className="text-sm font-semibold text-[#0C4A6E]">Insights</h4>
+            </div>
+            <ul className="space-y-2">
+              {insights.map((insight, i) => (
+                <li key={i} className="text-sm text-[#0369A1] leading-relaxed flex gap-2">
+                  <span className="text-[#0284C7] mt-0.5 flex-shrink-0">&bull;</span>
+                  {insight}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Trend chart */}
+        {renderTrendChart()}
+
+        {/* Loss reasons — compact */}
         <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
           <div className="px-5 py-4 border-b border-[#E8ECF1]">
             <h3 className="font-semibold text-[#304256]">Top Loss Reasons</h3>
           </div>
           <div className="p-5">
-            <div className="space-y-3">
-              {adv.lossReasons.map((lr) => {
+            <div className="space-y-2.5">
+              {adv.lossReasons.slice(0, 4).map((lr) => {
                 const pct = adv.lost > 0 ? (lr.count / adv.lost) * 100 : 0;
                 return (
-                  <div key={lr.reason}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-[#304256]">{lr.reason}</span>
-                      <span className="text-xs text-gray-400 tabular-nums">{lr.count} ({pct.toFixed(0)}%)</span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div key={lr.reason} className="flex items-center gap-3">
+                    <span className="text-sm text-[#304256] flex-1">{lr.reason}</span>
+                    <span className="text-xs text-gray-400 tabular-nums w-16 text-right">{lr.count} ({pct.toFixed(0)}%)</span>
+                    <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
                       <div className="h-full bg-red-300 rounded-full" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
