@@ -987,7 +987,7 @@ export default function SalesEnablementPage() {
 
         {/* ═══════ DEEP INSIGHTS ═══════ */}
 
-        {/* INSIGHT 1: Deal Engagement — proposal count as signal */}
+        {/* INSIGHT 1: Deal Engagement — proposal count × loss reason cross-reference */}
         <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
           <div className="px-5 py-4 border-b border-[#E8ECF1]">
             <div className="flex items-center gap-2">
@@ -996,32 +996,69 @@ export default function SalesEnablementPage() {
               </span>
               <h3 className="font-semibold text-[#304256]">Deal Engagement Signal</h3>
             </div>
-            <p className="text-xs text-gray-400 mt-1">Proposal count as an indicator of client engagement</p>
+            <p className="text-xs text-gray-400 mt-1">Proposal count × loss reason — diagnosing where deals die</p>
           </div>
           <div className="p-5">
-            <div className="grid grid-cols-4 gap-3 mb-4">
+            {/* Win rate by proposal count — compact summary row */}
+            <div className="grid grid-cols-4 gap-3 mb-5">
               {[
-                { label: "0 proposals", winRate: 0, won: 0, total: 66 },
-                { label: "1-2 proposals", winRate: 18, won: 27, total: 153 },
-                { label: "3-4 proposals", winRate: 61, won: 48, total: 79 },
-                { label: "5+ proposals", winRate: 86, won: 97, total: 113 },
+                { label: "0 proposals", winRate: 0, lost: 66, total: 66 },
+                { label: "1-2 proposals", winRate: 18, lost: 126, total: 153 },
+                { label: "3-4 proposals", winRate: 61, lost: 31, total: 79 },
+                { label: "5+ proposals", winRate: 86, lost: 16, total: 113 },
               ].map(b => (
-                <div key={b.label} className="text-center">
-                  <div className="relative mx-auto w-14 h-14 mb-2">
-                    <svg viewBox="0 0 36 36" className="w-14 h-14 -rotate-90">
-                      <circle cx="18" cy="18" r="14" fill="none" stroke="#E8ECF1" strokeWidth="3" />
-                      <circle cx="18" cy="18" r="14" fill="none" stroke={b.winRate >= 50 ? "#27a28c" : b.winRate >= 20 ? "#F59E0B" : "#EF4444"} strokeWidth="3" strokeDasharray={`${b.winRate * 0.88} 100`} strokeLinecap="round" />
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[#304256]">{b.winRate}%</span>
-                  </div>
+                <div key={b.label} className={`rounded-lg p-3 text-center ${b.winRate < 20 ? "bg-red-50 border border-red-100" : b.winRate < 50 ? "bg-amber-50 border border-amber-100" : "bg-green-50 border border-green-100"}`}>
+                  <p className={`text-lg font-bold ${b.winRate < 20 ? "text-red-600" : b.winRate < 50 ? "text-amber-600" : "text-[#27a28c]"}`}>{b.winRate}%</p>
                   <p className="text-[11px] font-medium text-[#304256]">{b.label}</p>
-                  <p className="text-[10px] text-gray-400">{b.won} of {b.total}</p>
+                  <p className="text-[10px] text-gray-400">{b.lost} lost of {b.total}</p>
                 </div>
               ))}
             </div>
+
+            {/* Cross-reference: proposal count × loss reason */}
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Why do low-proposal deals die?</p>
+            <div className="overflow-x-auto mb-4">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#E8ECF1] bg-gray-50/50">
+                    <th className="text-left px-3 py-2 font-medium text-gray-500 text-xs">Loss Reason</th>
+                    <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">0 props</th>
+                    <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">1-2 props</th>
+                    <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">3-4 props</th>
+                    <th className="text-center px-3 py-2 font-medium text-gray-500 text-xs">5+ props</th>
+                    <th className="text-left px-3 py-2 font-medium text-gray-500 text-xs w-36">Diagnosis</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { reason: "Budget/price mismatch", p0: 18, p12: 14, p34: 8, p5: 5, diagnosis: "Missed budget upfront", flag: true },
+                    { reason: "Unresponsive agent", p0: 22, p12: 11, p34: 2, p5: 0, diagnosis: "Low-intent lead", flag: true },
+                    { reason: "Unresponsive end customer", p0: 14, p12: 38, p34: 10, p5: 6, diagnosis: "Client went cold", flag: false },
+                    { reason: "Won by competition", p0: 4, p12: 18, p34: 8, p5: 4, diagnosis: "Competitive loss", flag: false },
+                    { reason: "Picked another destination", p0: 5, p12: 24, p34: 2, p5: 1, diagnosis: "Brief mismatch", flag: false },
+                    { reason: "Other / unknown", p0: 3, p12: 21, p34: 1, p5: 0, diagnosis: "—", flag: false },
+                  ].map(r => (
+                    <tr key={r.reason} className={`border-b border-gray-50 last:border-b-0 ${r.flag ? "bg-red-50/30" : ""}`}>
+                      <td className="px-3 py-2 text-xs text-[#304256] font-medium">{r.reason}</td>
+                      <td className={`px-3 py-2 text-center text-xs tabular-nums ${r.p0 >= 15 ? "font-bold text-red-600" : "text-gray-500"}`}>{r.p0}</td>
+                      <td className={`px-3 py-2 text-center text-xs tabular-nums ${r.p12 >= 20 ? "font-bold text-amber-600" : "text-gray-500"}`}>{r.p12}</td>
+                      <td className="px-3 py-2 text-center text-xs tabular-nums text-gray-400">{r.p34}</td>
+                      <td className="px-3 py-2 text-center text-xs tabular-nums text-gray-400">{r.p5}</td>
+                      <td className="px-3 py-2">
+                        {r.flag ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-semibold">{r.diagnosis}</span>
+                        ) : (
+                          <span className="text-[10px] text-gray-400">{r.diagnosis}</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-blue-800 leading-relaxed">
-                <strong>Proposal count reflects how engaged the client or agent is</strong> — not just advisor effort. Trips with 3+ proposals signal an actively negotiating client and win at 72%. The 66 trips with zero proposals are leads that went cold before any engagement. The 153 trips stuck at 1-2 proposals (18% win rate) suggest the client or agent disengaged early — worth qualifying leads faster to avoid investing time in low-intent enquiries.
+                <strong>40 of 66 zero-proposal losses (61%) are budget mismatch or unresponsive agent</strong> — these deals died before a single proposal was sent. Budget mismatch at 0 proposals means the advisor likely missed the client&apos;s budget in the first interaction. Unresponsive agent at 0 proposals suggests the lead was low-intent or the brief wasn&apos;t compelling enough to keep the agent engaged. <strong>Coaching focus:</strong> qualify budget and intent in the first response before investing in itinerary design.
               </p>
             </div>
           </div>
