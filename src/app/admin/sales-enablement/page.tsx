@@ -987,24 +987,24 @@ export default function SalesEnablementPage() {
 
         {/* ═══════ DEEP INSIGHTS ═══════ */}
 
-        {/* INSIGHT 1: Effort vs Outcome — proposals sweet spot */}
+        {/* INSIGHT 1: Deal Engagement — proposal count as signal */}
         <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
           <div className="px-5 py-4 border-b border-[#E8ECF1]">
             <div className="flex items-center gap-2">
               <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
               </span>
-              <h3 className="font-semibold text-[#304256]">Effort vs Outcome</h3>
+              <h3 className="font-semibold text-[#304256]">Deal Engagement Signal</h3>
             </div>
-            <p className="text-xs text-gray-400 mt-1">How many proposals does it take to win?</p>
+            <p className="text-xs text-gray-400 mt-1">Proposal count as an indicator of client engagement</p>
           </div>
           <div className="p-5">
             <div className="grid grid-cols-4 gap-3 mb-4">
               {[
-                { label: "0 proposals", winRate: 0, won: 0, total: 66, color: "bg-gray-200" },
-                { label: "1-2 proposals", winRate: 18, won: 27, total: 153, color: "bg-red-400" },
-                { label: "3-4 proposals", winRate: 61, won: 48, total: 79, color: "bg-amber-400" },
-                { label: "5+ proposals", winRate: 86, won: 97, total: 113, color: "bg-[#27a28c]" },
+                { label: "0 proposals", winRate: 0, won: 0, total: 66 },
+                { label: "1-2 proposals", winRate: 18, won: 27, total: 153 },
+                { label: "3-4 proposals", winRate: 61, won: 48, total: 79 },
+                { label: "5+ proposals", winRate: 86, won: 97, total: 113 },
               ].map(b => (
                 <div key={b.label} className="text-center">
                   <div className="relative mx-auto w-14 h-14 mb-2">
@@ -1021,7 +1021,7 @@ export default function SalesEnablementPage() {
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-blue-800 leading-relaxed">
-                <strong>Deals that reach 3+ proposals win at 72%.</strong> Amal has 66 trips with zero proposals — these likely went cold before engagement. Of the 153 trips with just 1-2 proposals, only 18% converted. The signal: if it gets to proposal 3, push for proposal 4.
+                <strong>Proposal count reflects how engaged the client or agent is</strong> — not just advisor effort. Trips with 3+ proposals signal an actively negotiating client and win at 72%. The 66 trips with zero proposals are leads that went cold before any engagement. The 153 trips stuck at 1-2 proposals (18% win rate) suggest the client or agent disengaged early — worth qualifying leads faster to avoid investing time in low-intent enquiries.
               </p>
             </div>
           </div>
