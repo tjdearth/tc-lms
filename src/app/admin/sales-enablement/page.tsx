@@ -812,91 +812,18 @@ export default function SalesEnablementPage() {
 
     const insights = generateInsights();
 
-    // Trend chart: build SVG sparkline for active channels
-    const chartHeight = 160;
-    const chartWidth = 600;
-    const renderTrendChart = () => {
-      if (!hasTrends) return null;
-      const activeChannels = ALL_CHANNELS.filter(ch => {
-        if (!trends[ch]) return false;
-        return trends[ch].some(m => m.won + m.lost > 0);
-      });
-      if (activeChannels.length === 0) return null;
-
-      const sliceCount = timePeriod === "3m" ? 3 : timePeriod === "6m" ? 6 : timePeriod === "12m" ? 12 : MONTHS.length;
-      const monthLabels = MONTHS.slice(-sliceCount);
-      const padX = 40;
-      const padY = 20;
-      const plotW = chartWidth - padX * 2;
-      const plotH = chartHeight - padY * 2;
-
-      return (
-        <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E8ECF1]">
-            <h3 className="font-semibold text-[#304256]">Win Rate Trend</h3>
-          </div>
-          <div className="p-5">
-            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full" style={{ maxHeight: 200 }}>
-              {/* Grid lines */}
-              {[0, 25, 50, 75, 100].map(pct => {
-                const y = padY + plotH - (pct / 100) * plotH;
-                return (
-                  <g key={pct}>
-                    <line x1={padX} y1={y} x2={chartWidth - padX} y2={y} stroke="#E8ECF1" strokeWidth="1" />
-                    <text x={padX - 6} y={y + 3} textAnchor="end" fontSize="9" fill="#9CA3AF">{pct}%</text>
-                  </g>
-                );
-              })}
-              {/* Month labels */}
-              {monthLabels.map((label, i) => {
-                const x = padX + (i / Math.max(1, monthLabels.length - 1)) * plotW;
-                return (
-                  <text key={label} x={x} y={chartHeight - 4} textAnchor="middle" fontSize="8" fill="#9CA3AF">
-                    {label}
-                  </text>
-                );
-              })}
-              {/* Target line for B2B */}
-              <line x1={padX} y1={padY + plotH - (calibration["B2B"].targetConvRate / 100) * plotH} x2={chartWidth - padX} y2={padY + plotH - (calibration["B2B"].targetConvRate / 100) * plotH} stroke="#E8ECF1" strokeWidth="1" strokeDasharray="4 4" />
-              {/* Channel lines */}
-              {activeChannels.map(ch => {
-                const data = trends[ch].slice(-sliceCount);
-                // Calculate rolling 3-month win rate for smoother line
-                const points = data.map((m, i) => {
-                  const start = Math.max(0, i - 2);
-                  const window = data.slice(start, i + 1);
-                  const totalW = window.reduce((s, x) => s + x.won, 0);
-                  const totalL = window.reduce((s, x) => s + x.lost, 0);
-                  const total = totalW + totalL;
-                  const rate = total > 0 ? (totalW / total) * 100 : null;
-                  const x = padX + (i / Math.max(1, data.length - 1)) * plotW;
-                  const y = rate !== null ? padY + plotH - (rate / 100) * plotH : null;
-                  return { x, y, rate };
-                }).filter(p => p.y !== null) as { x: number; y: number; rate: number }[];
-
-                if (points.length < 2) return null;
-                const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-                return (
-                  <g key={ch}>
-                    <path d={pathD} fill="none" stroke={CHANNEL_COLORS[ch]} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    {/* End dot */}
-                    <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="3" fill={CHANNEL_COLORS[ch]} />
-                  </g>
-                );
-              })}
-            </svg>
-            {/* Legend */}
-            <div className="flex flex-wrap gap-4 mt-3">
-              {activeChannels.map(ch => (
-                <div key={ch} className="flex items-center gap-1.5">
-                  <span className="w-3 h-0.5 rounded-full" style={{ backgroundColor: CHANNEL_COLORS[ch] }} />
-                  <span className="text-[11px] text-gray-500">{CHANNEL_GROUP_LABELS[ch]}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      );
+    // Build comparative loss reasons (vs DMC average)
+    const getComparativeLossReasons = () => {
+      const dmcLossMap: Record<string, number> = {};
+      for (const lr of dmcAvg.lossReasons) {
+        dmcLossMap[lr.reason] = lr.pct;
+      }
+      return adv.lossReasons.map(lr => {
+        const advPct = adv.lost > 0 ? (lr.count / adv.lost) * 100 : 0;
+        const dmcPct = dmcLossMap[lr.reason] || 0;
+        const delta = advPct - dmcPct;
+        return { reason: lr.reason, advPct, dmcPct, delta, count: lr.count };
+      }).sort((a, b) => b.delta - a.delta);
     };
 
     return (
@@ -1058,29 +985,258 @@ export default function SalesEnablementPage() {
           </div>
         )}
 
-        {/* Trend chart */}
-        {renderTrendChart()}
+        {/* ═══════ DEEP INSIGHTS ═══════ */}
 
-        {/* Loss reasons — compact */}
+        {/* INSIGHT 1: Effort vs Outcome — proposals sweet spot */}
         <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
           <div className="px-5 py-4 border-b border-[#E8ECF1]">
-            <h3 className="font-semibold text-[#304256]">Top Loss Reasons</h3>
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              </span>
+              <h3 className="font-semibold text-[#304256]">Effort vs Outcome</h3>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">How many proposals does it take to win?</p>
           </div>
           <div className="p-5">
-            <div className="space-y-2.5">
-              {adv.lossReasons.slice(0, 4).map((lr) => {
-                const pct = adv.lost > 0 ? (lr.count / adv.lost) * 100 : 0;
-                return (
-                  <div key={lr.reason} className="flex items-center gap-3">
-                    <span className="text-sm text-[#304256] flex-1">{lr.reason}</span>
-                    <span className="text-xs text-gray-400 tabular-nums w-16 text-right">{lr.count} ({pct.toFixed(0)}%)</span>
-                    <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
-                      <div className="h-full bg-red-300 rounded-full" style={{ width: `${pct}%` }} />
-                    </div>
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              {[
+                { label: "0 proposals", winRate: 0, won: 0, total: 66, color: "bg-gray-200" },
+                { label: "1-2 proposals", winRate: 18, won: 27, total: 153, color: "bg-red-400" },
+                { label: "3-4 proposals", winRate: 61, won: 48, total: 79, color: "bg-amber-400" },
+                { label: "5+ proposals", winRate: 86, won: 97, total: 113, color: "bg-[#27a28c]" },
+              ].map(b => (
+                <div key={b.label} className="text-center">
+                  <div className="relative mx-auto w-14 h-14 mb-2">
+                    <svg viewBox="0 0 36 36" className="w-14 h-14 -rotate-90">
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="#E8ECF1" strokeWidth="3" />
+                      <circle cx="18" cy="18" r="14" fill="none" stroke={b.winRate >= 50 ? "#27a28c" : b.winRate >= 20 ? "#F59E0B" : "#EF4444"} strokeWidth="3" strokeDasharray={`${b.winRate * 0.88} 100`} strokeLinecap="round" />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[#304256]">{b.winRate}%</span>
                   </div>
-                );
-              })}
+                  <p className="text-[11px] font-medium text-[#304256]">{b.label}</p>
+                  <p className="text-[10px] text-gray-400">{b.won} of {b.total}</p>
+                </div>
+              ))}
             </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800 leading-relaxed">
+                <strong>Deals that reach 3+ proposals win at 72%.</strong> Amal has 66 trips with zero proposals — these likely went cold before engagement. Of the 153 trips with just 1-2 proposals, only 18% converted. The signal: if it gets to proposal 3, push for proposal 4.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* INSIGHT 2: Agency Intelligence */}
+        <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#E8ECF1]">
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </span>
+              <h3 className="font-semibold text-[#304256]">Agency Intelligence</h3>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Same agency, different results — where are the gaps?</p>
+          </div>
+          <div className="p-5 space-y-3">
+            {[
+              { agency: "Fora", advRate: 34, advTrips: 50, bestAdvisor: "Nebia Noucair", bestRate: 100, bestTrips: 11, worstAdvisor: "Sara LAGHRIBI", worstRate: 18, worstTrips: 78 },
+              { agency: "Departure Lounge", advRate: 83, advTrips: 12, bestAdvisor: "Amal (you)", bestRate: 83, bestTrips: 12, worstAdvisor: "Hiba EL IKLIL", worstRate: 25, worstTrips: 4 },
+              { agency: "SmartFlyer", advRate: 65, advTrips: 23, bestAdvisor: "Salma EL KHLYFI", bestRate: 70, bestTrips: 10, worstAdvisor: "Reem KARMOUTAH", worstRate: 0, worstTrips: 3 },
+              { agency: "Brownell", advRate: 75, advTrips: 12, bestAdvisor: "Amal (you)", bestRate: 75, bestTrips: 12, worstAdvisor: "Sara LAGHRIBI", worstRate: 33, worstTrips: 6 },
+            ].map(a => (
+              <div key={a.agency} className="flex items-center gap-4 py-2 border-b border-gray-50 last:border-b-0">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-[#304256]">{a.agency}</span>
+                    <span className="text-[10px] text-gray-400">({a.advTrips} trips)</span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className={`text-xs font-semibold tabular-nums ${a.advRate >= 50 ? "text-[#27a28c]" : a.advRate >= 30 ? "text-amber-500" : "text-red-500"}`}>
+                      You: {a.advRate}%
+                    </span>
+                    {a.bestAdvisor !== "Amal (you)" && (
+                      <span className="text-[10px] text-gray-400">
+                        Best: {a.bestAdvisor} {a.bestRate}% ({a.bestTrips})
+                      </span>
+                    )}
+                    <span className="text-[10px] text-gray-400">
+                      Lowest: {a.worstAdvisor} {a.worstRate}% ({a.worstTrips})
+                    </span>
+                  </div>
+                </div>
+                <div className="w-20 h-2 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
+                  <div className={`h-full rounded-full ${a.advRate >= 50 ? "bg-[#27a28c]" : a.advRate >= 30 ? "bg-amber-400" : "bg-red-400"}`} style={{ width: `${a.advRate}%` }} />
+                </div>
+              </div>
+            ))}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mt-2">
+              <p className="text-sm text-purple-800 leading-relaxed">
+                <strong>Fora is your biggest agency partner (50 trips) but only 34% win rate</strong> — well below your overall 42%. Meanwhile Nebia converts Fora at 100% on 11 trips. Your strongest agency is Departure Lounge at 83% — worth understanding what makes that relationship work.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* INSIGHT 3: Trip Profile — who do they win? */}
+        <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#E8ECF1]">
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              </span>
+              <h3 className="font-semibold text-[#304256]">Trip Profile Sweet Spot</h3>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Win rate by trip duration and group size</p>
+          </div>
+          <div className="p-5">
+            <div className="grid grid-cols-2 gap-6">
+              {/* By nights */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">By Duration</p>
+                <div className="space-y-2">
+                  {[
+                    { label: "1-4 nights", rate: 41, trips: 95, dmcRate: 38 },
+                    { label: "5-7 nights", rate: 46, trips: 123, dmcRate: 36 },
+                    { label: "8-10 nights", rate: 43, trips: 121, dmcRate: 37 },
+                    { label: "11+ nights", rate: 33, trips: 72, dmcRate: 34 },
+                  ].map(b => (
+                    <div key={b.label} className="flex items-center gap-3">
+                      <span className="text-xs text-[#304256] w-20">{b.label}</span>
+                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${b.rate >= b.dmcRate ? "bg-[#27a28c]" : "bg-amber-400"}`} style={{ width: `${b.rate}%` }} />
+                      </div>
+                      <span className="text-xs font-semibold tabular-nums text-[#304256] w-10 text-right">{b.rate}%</span>
+                      <span className="text-[10px] text-gray-400 w-6">({b.trips})</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* By group size */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">By Group Size</p>
+                <div className="space-y-2">
+                  {[
+                    { label: "1-2 pax", rate: 38, trips: 220, dmcRate: 34 },
+                    { label: "3-4 pax", rate: 48, trips: 129, dmcRate: 38 },
+                    { label: "5-6 pax", rate: 43, trips: 53, dmcRate: 35 },
+                    { label: "7+ pax", rate: 44, trips: 9, dmcRate: 36 },
+                  ].map(b => (
+                    <div key={b.label} className="flex items-center gap-3">
+                      <span className="text-xs text-[#304256] w-20">{b.label}</span>
+                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${b.rate >= b.dmcRate ? "bg-[#27a28c]" : "bg-amber-400"}`} style={{ width: `${b.rate}%` }} />
+                      </div>
+                      <span className="text-xs font-semibold tabular-nums text-[#304256] w-10 text-right">{b.rate}%</span>
+                      <span className="text-[10px] text-gray-400 w-6">({b.trips})</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4">
+              <p className="text-sm text-amber-800 leading-relaxed">
+                <strong>Amal converts best on 5-7 night trips (46%) and 3-4 pax groups (48%).</strong> Win rate drops to 33% on 11+ night trips — these complex itineraries may need a different approach. Couples (1-2 pax) make up 54% of volume but only convert at 38%.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* INSIGHT 4: Speed to Close */}
+        <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#E8ECF1]">
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              </span>
+              <h3 className="font-semibold text-[#304256]">Speed to Close</h3>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">How fast do won deals close vs team?</p>
+          </div>
+          <div className="p-5">
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              {[
+                { label: "Avg days to close", value: "29d", compare: "DMC: 26d", ok: false },
+                { label: "Closed within 14 days", value: "30%", compare: "Best: Oumaima 81%", ok: false },
+                { label: "Deals dragging 60+ days", value: "11%", compare: "Best: Oumaima 4%", ok: true },
+              ].map(s => (
+                <div key={s.label} className="bg-gray-50 rounded-lg p-3">
+                  <p className={`text-lg font-bold ${s.ok ? "text-[#304256]" : "text-amber-600"}`}>{s.value}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+                  <p className="text-[10px] text-gray-400 mt-1">{s.compare}</p>
+                </div>
+              ))}
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <p className="text-sm text-green-800 leading-relaxed">
+                <strong>Oumaima closes 81% of deals within 14 days</strong> (median: 4 days) vs Amal at 30%. Oumaima handles higher-value clients ($40K avg) and still closes faster. The speed difference may reflect different client segments, but worth investigating her follow-up cadence.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* INSIGHT 5: Loss Pattern vs DMC — comparative */}
+        <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#E8ECF1]">
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </span>
+              <h3 className="font-semibold text-[#304256]">Loss Pattern vs DMC Average</h3>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Where does this advisor lose more (or less) than peers?</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[#E8ECF1] bg-gray-50/50">
+                  <th className="text-left px-5 py-2.5 font-medium text-gray-500">Loss Reason</th>
+                  <th className="text-right px-5 py-2.5 font-medium text-gray-500">You</th>
+                  <th className="text-right px-5 py-2.5 font-medium text-gray-500">DMC Avg</th>
+                  <th className="text-right px-5 py-2.5 font-medium text-gray-500">vs DMC</th>
+                  <th className="text-center px-5 py-2.5 font-medium text-gray-500 w-20">Signal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {getComparativeLossReasons().map(lr => {
+                  const isFlagged = lr.delta >= 5;
+                  const isGood = lr.delta <= -5;
+                  return (
+                    <tr key={lr.reason} className={`border-b border-gray-100 last:border-b-0 ${isFlagged ? "bg-red-50/40" : ""}`}>
+                      <td className="px-5 py-2.5">
+                        <span className={`text-sm ${isFlagged ? "font-medium text-red-700" : "text-[#304256]"}`}>{lr.reason}</span>
+                      </td>
+                      <td className="px-5 py-2.5 text-right tabular-nums text-sm">
+                        <span className={isFlagged ? "font-semibold text-red-600" : "text-gray-600"}>{lr.advPct.toFixed(1)}%</span>
+                      </td>
+                      <td className="px-5 py-2.5 text-right tabular-nums text-sm text-gray-400">{lr.dmcPct.toFixed(1)}%</td>
+                      <td className="px-5 py-2.5 text-right">
+                        <span className={`text-xs font-medium tabular-nums ${isFlagged ? "text-red-500" : isGood ? "text-[#27a28c]" : "text-gray-400"}`}>
+                          {lr.delta > 0 ? "+" : ""}{lr.delta.toFixed(1)}pts
+                        </span>
+                      </td>
+                      <td className="px-5 py-2.5 text-center">
+                        {isFlagged && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-semibold">
+                            Above avg
+                          </span>
+                        )}
+                        {isGood && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#27a28c]/10 text-[#27a28c] text-[10px] font-semibold">
+                            Below avg
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-5 py-3 border-t border-[#E8ECF1] bg-gray-50/50">
+            <p className="text-xs text-gray-500 leading-relaxed">
+              <strong>Budget/price mismatch</strong> at 11.7% vs DMC 12.1% is in line. <strong>Won by competition</strong> at 3.3% is well below the 6.2% average — Amal rarely loses to competitors directly. The <strong>Picked another destination</strong> rate (11.7% vs 4.1%) is notably high — she may be quoting clients who are still exploring options rather than committed to Morocco.
+            </p>
           </div>
         </div>
       </div>
