@@ -273,6 +273,109 @@ const MOROCCO_DATA: SubsidiaryData = {
   advisors: MOROCCO_ADVISORS,
 };
 
+/* ─────────────────── MOCK DATA: ITALY (Authenticus Italy) ─────────────────── */
+// Real aggregated numbers from SF export — 1,142 trips, 8 advisors
+
+const ITALY_ADVISORS: AdvisorData[] = [
+  {
+    name: "Elisa Sciabica",
+    totalTrips: 322, confirmed: 100, lost: 222, conversionRate: 31.1, totalSale: 1833763, avgSale: 18338, avgProposals: 2.1, avgProposalTime: 1238,
+    channels: {
+      "KimKim": { trips: 84, won: 24, lost: 60, convRate: 28.6, avgSale: 13415 },
+      "Zicasso": { trips: 156, won: 29, lost: 127, convRate: 18.6, avgSale: 21411 },
+      "WendyPerrin": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "B2B": { trips: 69, won: 40, lost: 29, convRate: 58.0, avgSale: 19404 },
+      "Direct": { trips: 7, won: 5, lost: 2, convRate: 71.4, avgSale: 17621 },
+      "DMC": { trips: 1, won: 1, lost: 0, convRate: 100, avgSale: 13264 },
+      "MICE": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+    },
+    lossReasons: [{ reason: "Unresponsive end customer", count: 100 }, { reason: "Cancelled", count: 27 }, { reason: "Other", count: 26 }, { reason: "Won by competition", count: 20 }],
+  },
+  {
+    name: "Eleonora Arrigoni",
+    totalTrips: 315, confirmed: 113, lost: 202, conversionRate: 35.9, totalSale: 1988193, avgSale: 17595, avgProposals: 2.9, avgProposalTime: 1298,
+    channels: {
+      "KimKim": { trips: 84, won: 17, lost: 67, convRate: 20.2, avgSale: 10987 },
+      "Zicasso": { trips: 1, won: 1, lost: 0, convRate: 100, avgSale: 2688 },
+      "WendyPerrin": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "B2B": { trips: 220, won: 93, lost: 127, convRate: 42.3, avgSale: 19295 },
+      "Direct": { trips: 8, won: 1, lost: 7, convRate: 12.5, avgSale: 1010 },
+      "DMC": { trips: 1, won: 0, lost: 1, convRate: 0, avgSale: 0 },
+      "MICE": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+    },
+    lossReasons: [{ reason: "Other", count: 54 }, { reason: "Unresponsive end customer", count: 53 }, { reason: "Unresponsive agent", count: 34 }, { reason: "Budget/price mismatch", count: 22 }],
+  },
+  {
+    name: "Martina Venturi",
+    totalTrips: 206, confirmed: 66, lost: 140, conversionRate: 32.0, totalSale: 1338829, avgSale: 20285, avgProposals: 2.7, avgProposalTime: 449,
+    channels: {
+      "KimKim": { trips: 72, won: 10, lost: 62, convRate: 13.9, avgSale: 14057 },
+      "Zicasso": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "WendyPerrin": { trips: 60, won: 30, lost: 30, convRate: 50.0, avgSale: 22799 },
+      "B2B": { trips: 64, won: 20, lost: 44, convRate: 31.2, avgSale: 23472 },
+      "Direct": { trips: 10, won: 6, lost: 4, convRate: 60.0, avgSale: 7476 },
+      "DMC": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "MICE": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+    },
+    lossReasons: [{ reason: "Unresponsive end customer", count: 54 }, { reason: "Other", count: 25 }, { reason: "Budget/price mismatch", count: 23 }, { reason: "Picked another destination", count: 17 }],
+  },
+  {
+    name: "Giulia Catalano",
+    totalTrips: 197, confirmed: 75, lost: 122, conversionRate: 38.1, totalSale: 1268219, avgSale: 16910, avgProposals: 2.6, avgProposalTime: 2382,
+    channels: {
+      "KimKim": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "Zicasso": { trips: 83, won: 20, lost: 63, convRate: 24.1, avgSale: 18058 },
+      "WendyPerrin": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+      "B2B": { trips: 99, won: 48, lost: 51, convRate: 48.5, avgSale: 17333 },
+      "Direct": { trips: 9, won: 4, lost: 5, convRate: 44.4, avgSale: 11684 },
+      "DMC": { trips: 2, won: 2, lost: 0, convRate: 100, avgSale: 5359 },
+      "MICE": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+    },
+    lossReasons: [{ reason: "Cancelled", count: 37 }, { reason: "Unresponsive end customer", count: 26 }, { reason: "Won by competition", count: 16 }, { reason: "Other", count: 12 }],
+  },
+];
+
+const ITALY_DATA: SubsidiaryData = {
+  subsidiary: "Italy",
+  brand: "Authenticus Italy",
+  totalTrips: 1142,
+  confirmed: 388,
+  lost: 754,
+  conversionRate: 34.0,
+  totalSale: 7122893,
+  avgSale: 18358,
+  advisorCount: 8,
+  agencyCount: 143,
+  avgDaysToClose: 22,
+  avgNights: 8.2,
+  avgTravelers: 2.6,
+  channels: {
+    "KimKim": { trips: 243, won: 51, lost: 192, convRate: 21.0, avgSale: 12732 },
+    "Zicasso": { trips: 281, won: 52, lost: 229, convRate: 18.5, avgSale: 19543 },
+    "WendyPerrin": { trips: 97, won: 54, lost: 43, convRate: 55.7, avgSale: 22812 },
+    "B2B": { trips: 470, won: 207, lost: 263, convRate: 44.0, avgSale: 19215 },
+    "Direct": { trips: 35, won: 17, lost: 18, convRate: 48.6, avgSale: 10894 },
+    "DMC": { trips: 5, won: 4, lost: 1, convRate: 80.0, avgSale: 7110 },
+    "MICE": { trips: 0, won: 0, lost: 0, convRate: 0, avgSale: 0 },
+  },
+  lossReasons: [
+    { reason: "Unresponsive end customer", count: 280, pct: 37.1 },
+    { reason: "Other", count: 125, pct: 16.6 },
+    { reason: "Cancelled", count: 74, pct: 9.8 },
+    { reason: "Budget/price mismatch", count: 73, pct: 9.7 },
+    { reason: "Unresponsive agent", count: 58, pct: 7.7 },
+    { reason: "Picked another destination", count: 51, pct: 6.8 },
+    { reason: "Won by competition", count: 51, pct: 6.8 },
+    { reason: "Postponed", count: 40, pct: 5.3 },
+  ],
+  advisors: ITALY_ADVISORS,
+};
+
+const DMC_OPTIONS: { key: string; data: SubsidiaryData }[] = [
+  { key: "morocco", data: MOROCCO_DATA },
+  { key: "italy", data: ITALY_DATA },
+];
+
 // All subsidiaries summary for the global overview
 const ALL_SUBSIDIARIES: { subsidiary: string; brand: string; trips: number; confirmed: number; convRate: number; totalSale: number; avgSale: number; advisors: number }[] = [
   { subsidiary: "Morocco", brand: "Experience Morocco", trips: 3194, confirmed: 1142, convRate: 35.8, totalSale: 23223739, avgSale: 20336, advisors: 22 },
@@ -442,6 +545,8 @@ export default function SalesEnablementPage() {
   const [calibration, setCalibration] = useState(DEFAULT_CALIBRATION);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("all");
   const [engagementChannel, setEngagementChannel] = useState<"all" | "B2B" | "B2C" | "Direct">("all");
+  const [activeDMCKey, setActiveDMCKey] = useState<string>("morocco");
+  const activeDMCData = DMC_OPTIONS.find(d => d.key === activeDMCKey)?.data ?? MOROCCO_DATA;
   const isDragging = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(260);
@@ -631,15 +736,24 @@ export default function SalesEnablementPage() {
 
   /* ─────── RENDER: DMC DETAIL (Morocco) ─────── */
   const renderDmcDetail = () => {
-    const d = MOROCCO_DATA;
+    const d = activeDMCData;
     const brandColor = DMC_COLORS[d.brand] || "#304256";
 
     return (
       <div className="space-y-6">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: brandColor }} />
-            <h2 className="text-xl font-bold text-[#304256]">{d.brand}</h2>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: brandColor }} />
+              <h2 className="text-xl font-bold text-[#304256]">{d.brand}</h2>
+            </div>
+            <div className="flex gap-1">
+              {DMC_OPTIONS.map(opt => (
+                <button key={opt.key} onClick={() => { setActiveDMCKey(opt.key); setSelectedAdvisor(null); }} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${activeDMCKey === opt.key ? "bg-[#304256] text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
+                  {opt.data.brand}
+                </button>
+              ))}
+            </div>
           </div>
           <p className="text-sm text-gray-500">{d.totalTrips.toLocaleString()} trips &middot; {d.advisorCount} advisors &middot; {d.agencyCount} agency partners</p>
         </div>
@@ -759,8 +873,8 @@ export default function SalesEnablementPage() {
 
   /* ─────── RENDER: ADVISOR SCORECARD ─────── */
   const renderAdvisor = () => {
-    const adv = MOROCCO_DATA.advisors.find((a) => a.name === selectedAdvisor) || MOROCCO_DATA.advisors[0];
-    const dmcAvg = MOROCCO_DATA;
+    const adv = activeDMCData.advisors.find((a) => a.name === selectedAdvisor) || activeDMCData.advisors[0];
+    const dmcAvg = activeDMCData;
     const brandColor = DMC_COLORS[dmcAvg.brand] || "#304256";
     const trends = ADVISOR_TRENDS[adv.name];
     const hasTrends = !!trends;
@@ -831,13 +945,22 @@ export default function SalesEnablementPage() {
       <div className="space-y-5">
         {/* Header + time pills */}
         <div>
-          <button
-            onClick={() => setActiveSection("dmc-detail")}
-            className="text-xs text-[#27a28c] hover:underline mb-2 flex items-center gap-1"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            Back to {dmcAvg.brand}
-          </button>
+          <div className="flex items-center justify-between mb-2">
+            <button
+              onClick={() => setActiveSection("dmc-detail")}
+              className="text-xs text-[#27a28c] hover:underline flex items-center gap-1"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              Back to {dmcAvg.brand}
+            </button>
+            <div className="flex gap-1">
+              {DMC_OPTIONS.map(opt => (
+                <button key={opt.key} onClick={() => { setActiveDMCKey(opt.key); setSelectedAdvisor(null); }} className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeDMCKey === opt.key ? "bg-[#304256] text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
+                  {opt.data.brand}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: brandColor }}>
@@ -990,86 +1113,179 @@ export default function SalesEnablementPage() {
 
         {/* INSIGHT 1: Deal Engagement — proposal count × loss reason, filtered by channel */}
         {(() => {
-          // Real data from SF export for Amal, broken down by channel group
-          const engagementData: Record<"all" | "B2B" | "B2C" | "Direct", {
+          type EngagementSet = Record<"all" | "B2B" | "B2C" | "Direct", {
             summary: { label: string; winRate: number; lost: number; total: number }[];
             rows: { reason: string; p0: number; p12: number; p34: number; p5: number; diagnosis: string; flag: boolean }[];
             narrative: string;
-          }> = {
-            all: {
-              summary: [
-                { label: "0 proposals", winRate: 0, lost: 66, total: 66 },
-                { label: "1-2 proposals", winRate: 18, lost: 126, total: 153 },
-                { label: "3-4 proposals", winRate: 61, lost: 31, total: 79 },
-                { label: "5+ proposals", winRate: 86, lost: 16, total: 113 },
+          }>;
+          type EngagementTabs = { key: "all" | "B2B" | "B2C" | "Direct"; label: string; count: number }[];
+
+          // Per-advisor engagement data, keyed by name
+          const ENGAGEMENT_BY_ADVISOR: Record<string, { data: EngagementSet; tabs: EngagementTabs }> = {
+            "Amal Amezargou": {
+              tabs: [
+                { key: "all", label: "All Channels", count: 239 },
+                { key: "B2B", label: "B2B Agencies", count: 179 },
+                { key: "B2C", label: "B2C Platforms", count: 37 },
+                { key: "Direct", label: "Direct", count: 23 },
               ],
-              rows: [
-                { reason: "Unresponsive end customer", p0: 26, p12: 21, p34: 1, p5: 1, diagnosis: "Includes B2C platform noise", flag: false },
-                { reason: "Unresponsive agent", p0: 8, p12: 26, p34: 1, p5: 6, diagnosis: "Agent dropped after 1st proposal", flag: true },
-                { reason: "Budget/price mismatch", p0: 3, p12: 17, p34: 7, p5: 1, diagnosis: "Price rejected at proposal stage", flag: true },
-                { reason: "Picked another destination", p0: 7, p12: 16, p34: 5, p5: 0, diagnosis: "Lost interest in Morocco", flag: false },
-                { reason: "Other / uncategorised", p0: 17, p12: 33, p34: 9, p5: 4, diagnosis: "Data quality gap", flag: false },
-                { reason: "Won by competition", p0: 2, p12: 4, p34: 2, p5: 0, diagnosis: "Competitive loss", flag: false },
-                { reason: "Postponed / Cancelled", p0: 3, p12: 9, p34: 6, p5: 4, diagnosis: "Timing issue", flag: false },
-              ],
-              narrative: "All-channel view is noisy — B2C platforms (KimKim, Zicasso) naturally have high unresponsive rates. Filter to B2B for the clearest coaching signal.",
+              data: {
+                all: {
+                  summary: [
+                    { label: "0 proposals", winRate: 0, lost: 66, total: 66 },
+                    { label: "1-2 proposals", winRate: 18, lost: 126, total: 153 },
+                    { label: "3-4 proposals", winRate: 61, lost: 31, total: 79 },
+                    { label: "5+ proposals", winRate: 86, lost: 16, total: 113 },
+                  ],
+                  rows: [
+                    { reason: "Unresponsive end customer", p0: 26, p12: 21, p34: 1, p5: 1, diagnosis: "Includes B2C platform noise", flag: false },
+                    { reason: "Unresponsive agent", p0: 8, p12: 26, p34: 1, p5: 6, diagnosis: "Agent dropped after 1st proposal", flag: true },
+                    { reason: "Budget/price mismatch", p0: 3, p12: 17, p34: 7, p5: 1, diagnosis: "Price rejected at proposal stage", flag: true },
+                    { reason: "Picked another destination", p0: 7, p12: 16, p34: 5, p5: 0, diagnosis: "Lost interest in Morocco", flag: false },
+                    { reason: "Other / uncategorised", p0: 17, p12: 33, p34: 9, p5: 4, diagnosis: "Data quality gap", flag: false },
+                    { reason: "Won by competition", p0: 2, p12: 4, p34: 2, p5: 0, diagnosis: "Competitive loss", flag: false },
+                    { reason: "Postponed / Cancelled", p0: 3, p12: 9, p34: 6, p5: 4, diagnosis: "Timing issue", flag: false },
+                  ],
+                  narrative: "All-channel view is noisy \u2014 B2C platforms (KimKim, Zicasso) naturally have high unresponsive rates. Filter to B2B for the clearest coaching signal.",
+                },
+                B2B: {
+                  summary: [
+                    { label: "0 proposals", winRate: 0, lost: 30, total: 30 },
+                    { label: "1-2 proposals", winRate: 17, lost: 104, total: 125 },
+                    { label: "3-4 proposals", winRate: 64, lost: 26, total: 72 },
+                    { label: "5+ proposals", winRate: 86, lost: 14, total: 96 },
+                  ],
+                  rows: [
+                    { reason: "Unresponsive agent", p0: 6, p12: 25, p34: 1, p5: 6, diagnosis: "Agent saw proposal and walked away", flag: true },
+                    { reason: "Budget/price mismatch", p0: 3, p12: 17, p34: 7, p5: 1, diagnosis: "Missed budget before 1st proposal", flag: true },
+                    { reason: "Picked another destination", p0: 6, p12: 14, p34: 4, p5: 0, diagnosis: "Morocco wasn\u2019t the right fit", flag: false },
+                    { reason: "Other / uncategorised", p0: 14, p12: 31, p34: 7, p5: 4, diagnosis: "Data quality gap", flag: false },
+                    { reason: "Unresponsive end customer", p0: 3, p12: 8, p34: 1, p5: 0, diagnosis: "End traveller went cold", flag: false },
+                    { reason: "Postponed / Cancelled", p0: 1, p12: 8, p34: 4, p5: 4, diagnosis: "Timing issue", flag: false },
+                  ],
+                  narrative: "B2B is where the actionable signal lives. 42 deals lost at 1-2 proposals to \u201cunresponsive agent\u201d (25) or \u201cbudget mismatch\u201d (17). These are real agency relationships where the agent saw the first proposal and disengaged \u2014 either the price was off or the itinerary didn\u2019t match the brief. Coaching focus: confirm budget expectations before sending the first proposal; follow up within 24h.",
+                },
+                B2C: {
+                  summary: [
+                    { label: "0 proposals", winRate: 0, lost: 30, total: 30 },
+                    { label: "1-2 proposals", winRate: 22, lost: 14, total: 18 },
+                    { label: "3-4 proposals", winRate: 57, lost: 3, total: 7 },
+                    { label: "5+ proposals", winRate: 100, lost: 0, total: 10 },
+                  ],
+                  rows: [
+                    { reason: "Unresponsive end customer", p0: 15, p12: 6, p34: 0, p5: 0, diagnosis: "Platform leads going cold \u2014 expected", flag: false },
+                    { reason: "Won by competition", p0: 2, p12: 3, p34: 1, p5: 0, diagnosis: "Zicasso/WP comparison shoppers", flag: false },
+                    { reason: "Picked another destination", p0: 1, p12: 1, p34: 1, p5: 0, diagnosis: "Not committed to Morocco", flag: false },
+                    { reason: "Other / uncategorised", p0: 2, p12: 2, p34: 1, p5: 0, diagnosis: "\u2014", flag: false },
+                  ],
+                  narrative: "B2C platform leads (KimKim, Zicasso, Wendy Perrin) have naturally high drop-off \u2014 15 of 30 zero-proposal losses are \u201cunresponsive end customer\u201d. This is the platform model: travellers submit to multiple DMCs and go with whoever responds best. Low signal here for coaching; focus on response speed instead.",
+                },
+                Direct: {
+                  summary: [
+                    { label: "0 proposals", winRate: 0, lost: 11, total: 11 },
+                    { label: "1-2 proposals", winRate: 27, lost: 8, total: 11 },
+                    { label: "3-4 proposals", winRate: 40, lost: 3, total: 5 },
+                    { label: "5+ proposals", winRate: 71, lost: 2, total: 7 },
+                  ],
+                  rows: [
+                    { reason: "Unresponsive end customer", p0: 8, p12: 7, p34: 0, p5: 1, diagnosis: "Lead went cold", flag: false },
+                    { reason: "Unresponsive agent", p0: 1, p12: 1, p34: 0, p5: 0, diagnosis: "\u2014", flag: false },
+                    { reason: "Other", p0: 1, p12: 0, p34: 1, p5: 0, diagnosis: "\u2014", flag: false },
+                    { reason: "Picked another destination", p0: 0, p12: 1, p34: 0, p5: 0, diagnosis: "\u2014", flag: false },
+                  ],
+                  narrative: "Direct enquiries are mostly unresponsive end customers \u2014 leads who found Morocco online but didn\u2019t commit. Small sample (34 trips) so limited signal.",
+                },
+              },
             },
-            B2B: {
-              summary: [
-                { label: "0 proposals", winRate: 0, lost: 30, total: 30 },
-                { label: "1-2 proposals", winRate: 17, lost: 104, total: 125 },
-                { label: "3-4 proposals", winRate: 64, lost: 26, total: 72 },
-                { label: "5+ proposals", winRate: 86, lost: 14, total: 96 },
+            "Elisa Sciabica": {
+              tabs: [
+                { key: "all", label: "All Channels", count: 222 },
+                { key: "B2B", label: "B2B Agencies", count: 29 },
+                { key: "B2C", label: "B2C Platforms", count: 187 },
+                { key: "Direct", label: "Direct", count: 2 },
               ],
-              rows: [
-                { reason: "Unresponsive agent", p0: 6, p12: 25, p34: 1, p5: 6, diagnosis: "Agent saw proposal and walked away", flag: true },
-                { reason: "Budget/price mismatch", p0: 3, p12: 17, p34: 7, p5: 1, diagnosis: "Missed budget before 1st proposal", flag: true },
-                { reason: "Picked another destination", p0: 6, p12: 14, p34: 4, p5: 0, diagnosis: "Morocco wasn\u2019t the right fit", flag: false },
-                { reason: "Other / uncategorised", p0: 14, p12: 31, p34: 7, p5: 4, diagnosis: "Data quality gap", flag: false },
-                { reason: "Unresponsive end customer", p0: 3, p12: 8, p34: 1, p5: 0, diagnosis: "End traveller went cold", flag: false },
-                { reason: "Postponed / Cancelled", p0: 1, p12: 8, p34: 4, p5: 4, diagnosis: "Timing issue", flag: false },
-              ],
-              narrative: "B2B is where the actionable signal lives. 42 deals lost at 1-2 proposals to \u201cunresponsive agent\u201d (25) or \u201cbudget mismatch\u201d (17). These are real agency relationships where the agent saw the first proposal and disengaged \u2014 either the price was off or the itinerary didn\u2019t match the brief. Coaching focus: confirm budget expectations before sending the first proposal; follow up within 24h.",
-            },
-            B2C: {
-              summary: [
-                { label: "0 proposals", winRate: 0, lost: 30, total: 30 },
-                { label: "1-2 proposals", winRate: 22, lost: 14, total: 18 },
-                { label: "3-4 proposals", winRate: 57, lost: 3, total: 7 },
-                { label: "5+ proposals", winRate: 100, lost: 0, total: 10 },
-              ],
-              rows: [
-                { reason: "Unresponsive end customer", p0: 15, p12: 6, p34: 0, p5: 0, diagnosis: "Platform leads going cold — expected", flag: false },
-                { reason: "Won by competition", p0: 2, p12: 3, p34: 1, p5: 0, diagnosis: "Zicasso/WP comparison shoppers", flag: false },
-                { reason: "Picked another destination", p0: 1, p12: 1, p34: 1, p5: 0, diagnosis: "Not committed to Morocco", flag: false },
-                { reason: "Other / uncategorised", p0: 2, p12: 2, p34: 1, p5: 0, diagnosis: "—", flag: false },
-              ],
-              narrative: "B2C platform leads (KimKim, Zicasso, Wendy Perrin) have naturally high drop-off — 15 of 30 zero-proposal losses are \u201cunresponsive end customer\u201d. This is the platform model: travellers submit to multiple DMCs and go with whoever responds best. Low signal here for coaching; focus on response speed instead.",
-            },
-            Direct: {
-              summary: [
-                { label: "0 proposals", winRate: 0, lost: 11, total: 11 },
-                { label: "1-2 proposals", winRate: 27, lost: 8, total: 11 },
-                { label: "3-4 proposals", winRate: 40, lost: 3, total: 5 },
-                { label: "5+ proposals", winRate: 71, lost: 2, total: 7 },
-              ],
-              rows: [
-                { reason: "Unresponsive end customer", p0: 8, p12: 7, p34: 0, p5: 1, diagnosis: "Lead went cold", flag: false },
-                { reason: "Unresponsive agent", p0: 1, p12: 1, p34: 0, p5: 0, diagnosis: "—", flag: false },
-                { reason: "Other", p0: 1, p12: 0, p34: 1, p5: 0, diagnosis: "—", flag: false },
-                { reason: "Picked another destination", p0: 0, p12: 1, p34: 0, p5: 0, diagnosis: "—", flag: false },
-              ],
-              narrative: "Direct enquiries are mostly unresponsive end customers — leads who found Morocco online but didn\u2019t commit. Small sample (34 trips) so limited signal. The 27% win rate at 1-2 proposals vs 71% at 5+ still shows that engaged direct clients convert well.",
+              data: {
+                all: {
+                  summary: [
+                    { label: "0 proposals", winRate: 0, lost: 105, total: 105 },
+                    { label: "1-2 proposals", winRate: 17, lost: 93, total: 112 },
+                    { label: "3-4 proposals", winRate: 65, lost: 20, total: 57 },
+                    { label: "5+ proposals", winRate: 92, lost: 4, total: 48 },
+                  ],
+                  rows: [
+                    { reason: "Unresponsive end customer", p0: 69, p12: 25, p34: 5, p5: 1, diagnosis: "Dominated by B2C platform noise", flag: false },
+                    { reason: "Cancelled", p0: 11, p12: 13, p34: 2, p5: 1, diagnosis: "Travel plans changed", flag: false },
+                    { reason: "Other / uncategorised", p0: 7, p12: 14, p34: 4, p5: 1, diagnosis: "Data quality gap", flag: false },
+                    { reason: "Won by competition", p0: 4, p12: 12, p34: 4, p5: 0, diagnosis: "Competitor won the deal", flag: false },
+                    { reason: "Postponed", p0: 5, p12: 12, p34: 1, p5: 0, diagnosis: "Timing issue", flag: false },
+                    { reason: "Budget/price mismatch", p0: 1, p12: 10, p34: 3, p5: 1, diagnosis: "Price rejected at proposal stage", flag: true },
+                    { reason: "Picked another destination", p0: 8, p12: 5, p34: 1, p5: 0, diagnosis: "Lost interest in Italy", flag: false },
+                  ],
+                  narrative: "Elisa\u2019s portfolio is 75% B2C platforms (Zicasso + KimKim) where 0-proposal losses are expected. The all-channel view is misleading \u2014 filter to B2B for actionable signal, or B2C to benchmark platform performance.",
+                },
+                B2B: {
+                  summary: [
+                    { label: "0 proposals", winRate: 0, lost: 2, total: 2 },
+                    { label: "1-2 proposals", winRate: 22, lost: 18, total: 23 },
+                    { label: "3-4 proposals", winRate: 68, lost: 7, total: 22 },
+                    { label: "5+ proposals", winRate: 91, lost: 2, total: 22 },
+                  ],
+                  rows: [
+                    { reason: "Other / uncategorised", p0: 0, p12: 6, p34: 3, p5: 0, diagnosis: "Needs better categorisation", flag: false },
+                    { reason: "Won by competition", p0: 0, p12: 4, p34: 0, p5: 0, diagnosis: "Lost to competing DMC", flag: true },
+                    { reason: "Cancelled", p0: 1, p12: 1, p34: 1, p5: 1, diagnosis: "Travel plans changed", flag: false },
+                    { reason: "Budget/price mismatch", p0: 0, p12: 2, p34: 1, p5: 1, diagnosis: "Price rejected", flag: false },
+                    { reason: "Unresponsive end customer", p0: 1, p12: 1, p34: 1, p5: 0, diagnosis: "End traveller went cold", flag: false },
+                    { reason: "Unresponsive agent", p0: 0, p12: 2, p34: 0, p5: 0, diagnosis: "Agent disengaged", flag: false },
+                  ],
+                  narrative: "B2B is Elisa\u2019s strongest channel at 58% win rate (vs 44% Italy avg). Only 29 lost B2B trips total. \u201cWon by competition\u201d is the top flag at 1-2 proposals \u2014 agencies compared her proposal to another DMC and went elsewhere. Smaller sample but clean data.",
+                },
+                B2C: {
+                  summary: [
+                    { label: "0 proposals", winRate: 0, lost: 102, total: 102 },
+                    { label: "1-2 proposals", winRate: 15, lost: 71, total: 84 },
+                    { label: "3-4 proposals", winRate: 61, lost: 12, total: 31 },
+                    { label: "5+ proposals", winRate: 91, lost: 2, total: 23 },
+                  ],
+                  rows: [
+                    { reason: "Unresponsive end customer", p0: 67, p12: 21, p34: 4, p5: 1, diagnosis: "Platform comparison shoppers \u2014 expected", flag: false },
+                    { reason: "Won by competition", p0: 4, p12: 8, p34: 4, p5: 0, diagnosis: "Zicasso comparison shopping", flag: true },
+                    { reason: "Cancelled", p0: 10, p12: 12, p34: 1, p5: 0, diagnosis: "Travel plans changed", flag: false },
+                    { reason: "Postponed", p0: 5, p12: 10, p34: 0, p5: 0, diagnosis: "Timing issue", flag: false },
+                    { reason: "Budget/price mismatch", p0: 1, p12: 8, p34: 2, p5: 0, diagnosis: "Price rejected by traveller", flag: true },
+                    { reason: "Other", p0: 7, p12: 8, p34: 0, p5: 1, diagnosis: "\u2014", flag: false },
+                    { reason: "Picked another destination", p0: 8, p12: 4, p34: 1, p5: 0, diagnosis: "Italy wasn\u2019t the right fit", flag: false },
+                  ],
+                  narrative: "B2C platforms (Zicasso 156 + KimKim 84): 67 of 102 zero-proposal losses are unresponsive travellers \u2014 normal for the platform model. The signal is at 1-2 proposals: 8 \u201cwon by competition\u201d and 8 \u201cbudget mismatch\u201d. Zicasso travellers compare multiple DMCs \u2014 speed of response and competitive pricing matter most here.",
+                },
+                Direct: {
+                  summary: [
+                    { label: "0 proposals", winRate: 0, lost: 1, total: 1 },
+                    { label: "1-2 proposals", winRate: 50, lost: 1, total: 2 },
+                    { label: "3-4 proposals", winRate: 100, lost: 0, total: 2 },
+                    { label: "5+ proposals", winRate: 100, lost: 0, total: 2 },
+                  ],
+                  rows: [
+                    { reason: "Unresponsive end customer", p0: 1, p12: 1, p34: 0, p5: 0, diagnosis: "Lead went cold", flag: false },
+                  ],
+                  narrative: "Only 7 direct enquiries (5 won) \u2014 too small a sample for meaningful analysis.",
+                },
+              },
             },
           };
 
-          const d = engagementData[engagementChannel];
-          const channelTabs: { key: "all" | "B2B" | "B2C" | "Direct"; label: string; count: number }[] = [
-            { key: "all", label: "All Channels", count: 239 },
-            { key: "B2B", label: "B2B Agencies", count: 179 },
-            { key: "B2C", label: "B2C Platforms", count: 37 },
-            { key: "Direct", label: "Direct", count: 23 },
-          ];
+          const advEngagement = ENGAGEMENT_BY_ADVISOR[adv.name];
+          if (!advEngagement) {
+            return (
+              <div className="bg-white rounded-xl border border-[#E8ECF1] p-6 text-center">
+                <p className="text-sm text-gray-400">Deal Engagement Signal data not yet analysed for {adv.name}.</p>
+                <p className="text-xs text-gray-300 mt-1">Select Amal Amezargou (Morocco) or Elisa Sciabica (Italy) for deep insights.</p>
+              </div>
+            );
+          }
+
+          const ed = advEngagement.data[engagementChannel];
+          const channelTabs = advEngagement.tabs;
 
           return (
             <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
@@ -1105,7 +1321,7 @@ export default function SalesEnablementPage() {
               <div className="p-5">
                 {/* Win rate by proposal count */}
                 <div className="grid grid-cols-4 gap-3 mb-4">
-                  {d.summary.map((b, i) => (
+                  {ed.summary.map((b, i) => (
                     <div key={b.label} className={`rounded-lg p-3 text-center ${b.winRate < 20 ? "bg-red-50 border border-red-100" : b.winRate < 50 ? "bg-amber-50 border border-amber-100" : "bg-green-50 border border-green-100"}`}>
                       <p className={`text-lg font-bold ${b.winRate < 20 ? "text-red-600" : b.winRate < 50 ? "text-amber-600" : "text-[#27a28c]"}`}>{b.winRate}%</p>
                       <p className="text-[11px] font-medium text-[#304256]">{b.label}</p>
@@ -1140,7 +1356,7 @@ export default function SalesEnablementPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {d.rows.map(r => (
+                      {ed.rows.map(r => (
                         <tr key={r.reason} className={`border-b border-gray-50 last:border-b-0 ${r.flag ? "bg-red-50/30" : ""}`}>
                           <td className="px-3 py-2 text-xs text-[#304256] font-medium">{r.reason}</td>
                           <td className={`px-3 py-2 text-center text-xs tabular-nums ${r.p0 >= 10 ? "font-bold text-red-600" : "text-gray-500"}`}>{r.p0}</td>
@@ -1161,7 +1377,7 @@ export default function SalesEnablementPage() {
                 </div>
                 <div className={`rounded-lg p-3 ${engagementChannel === "B2B" ? "bg-blue-50 border border-blue-200" : engagementChannel === "B2C" ? "bg-purple-50 border border-purple-200" : engagementChannel === "Direct" ? "bg-gray-50 border border-gray-200" : "bg-blue-50 border border-blue-200"}`}>
                   <p className={`text-sm leading-relaxed ${engagementChannel === "B2B" ? "text-blue-800" : engagementChannel === "B2C" ? "text-purple-800" : engagementChannel === "Direct" ? "text-gray-700" : "text-blue-800"}`}>
-                    {d.narrative}
+                    {ed.narrative}
                   </p>
                 </div>
               </div>
@@ -1181,12 +1397,17 @@ export default function SalesEnablementPage() {
             <p className="text-xs text-gray-400 mt-1">Same agency, different results — where are the gaps?</p>
           </div>
           <div className="p-5 space-y-3">
-            {[
+            {(adv.name === "Elisa Sciabica" ? [
+              { agency: "Zicasso", advRate: 19, advTrips: 156, bestAdvisor: "Giulia Catalano", bestRate: 24, bestTrips: 83, worstAdvisor: "Vincenzo Granato", worstRate: 5, worstTrips: 39 },
+              { agency: "KimKim", advRate: 29, advTrips: 84, bestAdvisor: "Elisa (you)", bestRate: 29, bestTrips: 84, worstAdvisor: "Eleonora Arrigoni", worstRate: 20, worstTrips: 84 },
+              { agency: "Fora", advRate: 67, advTrips: 21, bestAdvisor: "Elisa (you)", bestRate: 67, bestTrips: 21, worstAdvisor: "Martina Venturi", worstRate: 38, worstTrips: 16 },
+              { agency: "Designer Journeys", advRate: 20, advTrips: 5, bestAdvisor: "Giulia Catalano", bestRate: 25, bestTrips: 4, worstAdvisor: "Elisa (you)", worstRate: 20, worstTrips: 5 },
+            ] : [
               { agency: "Fora", advRate: 34, advTrips: 50, bestAdvisor: "Nebia Noucair", bestRate: 100, bestTrips: 11, worstAdvisor: "Sara LAGHRIBI", worstRate: 18, worstTrips: 78 },
               { agency: "Departure Lounge", advRate: 83, advTrips: 12, bestAdvisor: "Amal (you)", bestRate: 83, bestTrips: 12, worstAdvisor: "Hiba EL IKLIL", worstRate: 25, worstTrips: 4 },
               { agency: "SmartFlyer", advRate: 65, advTrips: 23, bestAdvisor: "Salma EL KHLYFI", bestRate: 70, bestTrips: 10, worstAdvisor: "Reem KARMOUTAH", worstRate: 0, worstTrips: 3 },
               { agency: "Brownell", advRate: 75, advTrips: 12, bestAdvisor: "Amal (you)", bestRate: 75, bestTrips: 12, worstAdvisor: "Sara LAGHRIBI", worstRate: 33, worstTrips: 6 },
-            ].map(a => (
+            ]).map(a => (
               <div key={a.agency} className="flex items-center gap-4 py-2 border-b border-gray-50 last:border-b-0">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -1214,7 +1435,10 @@ export default function SalesEnablementPage() {
             ))}
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mt-2">
               <p className="text-sm text-purple-800 leading-relaxed">
-                <strong>Fora is your biggest agency partner (50 trips) but only 34% win rate</strong> — well below your overall 42%. Meanwhile Nebia converts Fora at 100% on 11 trips. Your strongest agency is Departure Lounge at 83% — worth understanding what makes that relationship work.
+                {adv.name === "Elisa Sciabica"
+                  ? <><strong>Zicasso is Elisa&apos;s biggest channel (156 trips) at 19% win rate</strong> — below Giulia&apos;s 24% on the same platform. KimKim performs slightly better at 29%. B2B agency Fora is a bright spot at 67% — significantly outperforming Martina (38%) on the same agency.</>
+                  : <><strong>Fora is your biggest agency partner (50 trips) but only 34% win rate</strong> — well below your overall 42%. Meanwhile Nebia converts Fora at 100% on 11 trips. Your strongest agency is Departure Lounge at 83% — worth understanding what makes that relationship work.</>
+                }
               </p>
             </div>
           </div>
@@ -1237,12 +1461,17 @@ export default function SalesEnablementPage() {
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">By Duration</p>
                 <div className="space-y-2">
-                  {[
+                  {(adv.name === "Elisa Sciabica" ? [
+                    { label: "1-4 nights", rate: 27, trips: 22, dmcRate: 35 },
+                    { label: "5-7 nights", rate: 30, trips: 73, dmcRate: 34 },
+                    { label: "8-10 nights", rate: 28, trips: 120, dmcRate: 30 },
+                    { label: "11+ nights", rate: 36, trips: 107, dmcRate: 38 },
+                  ] : [
                     { label: "1-4 nights", rate: 41, trips: 95, dmcRate: 38 },
                     { label: "5-7 nights", rate: 46, trips: 123, dmcRate: 36 },
                     { label: "8-10 nights", rate: 43, trips: 121, dmcRate: 37 },
                     { label: "11+ nights", rate: 33, trips: 72, dmcRate: 34 },
-                  ].map(b => (
+                  ]).map(b => (
                     <div key={b.label} className="flex items-center gap-3">
                       <span className="text-xs text-[#304256] w-20">{b.label}</span>
                       <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -1258,12 +1487,17 @@ export default function SalesEnablementPage() {
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">By Group Size</p>
                 <div className="space-y-2">
-                  {[
+                  {(adv.name === "Elisa Sciabica" ? [
+                    { label: "1-2 pax", rate: 31, trips: 196, dmcRate: 34 },
+                    { label: "3-4 pax", rate: 28, trips: 83, dmcRate: 33 },
+                    { label: "5-6 pax", rate: 28, trips: 25, dmcRate: 38 },
+                    { label: "7+ pax", rate: 50, trips: 18, dmcRate: 32 },
+                  ] : [
                     { label: "1-2 pax", rate: 38, trips: 220, dmcRate: 34 },
                     { label: "3-4 pax", rate: 48, trips: 129, dmcRate: 38 },
                     { label: "5-6 pax", rate: 43, trips: 53, dmcRate: 35 },
                     { label: "7+ pax", rate: 44, trips: 9, dmcRate: 36 },
-                  ].map(b => (
+                  ]).map(b => (
                     <div key={b.label} className="flex items-center gap-3">
                       <span className="text-xs text-[#304256] w-20">{b.label}</span>
                       <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -1278,7 +1512,10 @@ export default function SalesEnablementPage() {
             </div>
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4">
               <p className="text-sm text-amber-800 leading-relaxed">
-                <strong>Amal converts best on 5-7 night trips (46%) and 3-4 pax groups (48%).</strong> Win rate drops to 33% on 11+ night trips — these complex itineraries may need a different approach. Couples (1-2 pax) make up 54% of volume but only convert at 38%.
+                {adv.name === "Elisa Sciabica"
+                  ? <><strong>Elisa&apos;s win rates are fairly flat across durations (27-36%)</strong> — slightly below Italy DMC average for shorter trips. Her sweet spot is 7+ pax groups (50%) and 11+ night itineraries (36%). Couples dominate volume (196 trips, 61%) but convert at only 31%.</>
+                  : <><strong>Amal converts best on 5-7 night trips (46%) and 3-4 pax groups (48%).</strong> Win rate drops to 33% on 11+ night trips — these complex itineraries may need a different approach. Couples (1-2 pax) make up 54% of volume but only convert at 38%.</>
+                }
               </p>
             </div>
           </div>
@@ -1297,11 +1534,15 @@ export default function SalesEnablementPage() {
           </div>
           <div className="p-5">
             <div className="grid grid-cols-3 gap-4 mb-4">
-              {[
+              {(adv.name === "Elisa Sciabica" ? [
+                { label: "Median days to close", value: "22d", compare: "Italy DMC: 22d", ok: true },
+                { label: "Closed within 14 days", value: "32%", compare: "Italy avg: 28%", ok: true },
+                { label: "Deals dragging 60+ days", value: "9%", compare: "Italy avg: 10%", ok: true },
+              ] : [
                 { label: "Avg days to close", value: "29d", compare: "DMC: 26d", ok: false },
                 { label: "Closed within 14 days", value: "30%", compare: "Best: Oumaima 81%", ok: false },
                 { label: "Deals dragging 60+ days", value: "11%", compare: "Best: Oumaima 4%", ok: true },
-              ].map(s => (
+              ]).map(s => (
                 <div key={s.label} className="bg-gray-50 rounded-lg p-3">
                   <p className={`text-lg font-bold ${s.ok ? "text-[#304256]" : "text-amber-600"}`}>{s.value}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
@@ -1311,7 +1552,10 @@ export default function SalesEnablementPage() {
             </div>
             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
               <p className="text-sm text-green-800 leading-relaxed">
-                <strong>Oumaima closes 81% of deals within 14 days</strong> (median: 4 days) vs Amal at 30%. Oumaima handles higher-value clients ($40K avg) and still closes faster. The speed difference may reflect different client segments, but worth investigating her follow-up cadence.
+                {adv.name === "Elisa Sciabica"
+                  ? <><strong>Elisa&apos;s closing speed is right at the Italy average</strong> — median 22 days, 32% within 14 days. No red flags here. All Italy advisors cluster around 21-27 day medians, unlike Morocco where Oumaima significantly outpaces the team.</>
+                  : <><strong>Oumaima closes 81% of deals within 14 days</strong> (median: 4 days) vs Amal at 30%. Oumaima handles higher-value clients ($40K avg) and still closes faster. The speed difference may reflect different client segments, but worth investigating her follow-up cadence.</>
+                }
               </p>
             </div>
           </div>
@@ -1408,7 +1652,7 @@ export default function SalesEnablementPage() {
 
   /* ─────── RENDER: LOSS ANALYSIS ─────── */
   const renderLossAnalysis = () => {
-    const d = MOROCCO_DATA;
+    const d = activeDMCData;
     return (
       <div className="space-y-6">
         <div>
