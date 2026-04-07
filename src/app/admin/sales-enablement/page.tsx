@@ -538,16 +538,16 @@ export default function SalesEnablementPage() {
   const { data: session } = useSession();
   const userEmail = session?.user?.email || "";
   const hardcodedAdmin = isAdmin(userEmail);
-  const [isGm, setIsGm] = useState(false);
+  const [hasDbAccess, setHasDbAccess] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/permissions")
       .then(r => r.json())
-      .then(d => { if (d.gmForBrand) setIsGm(true); })
+      .then(d => { if (d.isDbAdmin || d.gmForBrand) setHasDbAccess(true); })
       .catch(() => {});
   }, []);
 
-  const userIsAdmin = hardcodedAdmin || isGm;
+  const userIsAdmin = hardcodedAdmin || hasDbAccess;
 
   const [activeSection, setActiveSection] = useState<NavSection>("overview");
   const [selectedAdvisor, setSelectedAdvisor] = useState<string | null>(null);

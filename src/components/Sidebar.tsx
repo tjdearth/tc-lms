@@ -11,6 +11,7 @@ import { BRAND_NAMES } from "@/lib/brands";
 
 interface UserPermissions {
   isGlobalAdmin: boolean;
+  isDbAdmin: boolean;
   isGlobalCourseCreator: boolean;
   gmForBrand: string | null;
 }
@@ -121,7 +122,8 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
 
   // GM check: show admin links when in their DMC mode
   const isGmForCurrentBrand = permissions?.gmForBrand && isDmc && permissions.gmForBrand === brand.mode;
-  const showWikiAdmin = globalAdmin || !!isGmForCurrentBrand;
+  const isDbAdmin = !!permissions?.isDbAdmin;
+  const showWikiAdmin = globalAdmin || isDbAdmin || !!isGmForCurrentBrand;
   const showCourseAdmin = globalCourseCreator || !!isGmForCurrentBrand;
 
   useEffect(() => {

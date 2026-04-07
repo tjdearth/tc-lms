@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { isAdmin, isCourseCreator } from "@/lib/admin";
+import { isAdmin, isCourseCreator, isAdminFromDb } from "@/lib/admin";
 import { getGmBrand } from "@/lib/admin-server";
 
 export async function GET() {
@@ -12,11 +12,13 @@ export async function GET() {
 
   const email = session.user.email;
   const isGlobalAdmin = isAdmin(email);
+  const isDbAdmin = await isAdminFromDb(email);
   const isGlobalCourseCreator = isCourseCreator(email);
   const gmForBrand = await getGmBrand(email);
 
   return NextResponse.json({
     isGlobalAdmin,
+    isDbAdmin,
     isGlobalCourseCreator,
     gmForBrand,
   });
