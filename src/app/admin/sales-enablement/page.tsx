@@ -537,7 +537,17 @@ const ALL_CHANNELS: ChannelGroup[] = ["KimKim", "Zicasso", "WendyPerrin", "B2B",
 export default function SalesEnablementPage() {
   const { data: session } = useSession();
   const userEmail = session?.user?.email || "";
-  const userIsAdmin = isAdmin(userEmail);
+  const hardcodedAdmin = isAdmin(userEmail);
+  const [isGm, setIsGm] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/permissions")
+      .then(r => r.json())
+      .then(d => { if (d.gmForBrand) setIsGm(true); })
+      .catch(() => {});
+  }, []);
+
+  const userIsAdmin = hardcodedAdmin || isGm;
 
   const [activeSection, setActiveSection] = useState<NavSection>("overview");
   const [selectedAdvisor, setSelectedAdvisor] = useState<string | null>(null);

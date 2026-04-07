@@ -192,6 +192,8 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
           </svg>
         ),
       },
+    ] : []),
+    ...(showWikiAdmin ? [
       {
         label: "Sales Enablement",
         href: "/admin/sales-enablement",
