@@ -498,70 +498,98 @@ const TIME_PERIOD_LABELS: Record<TimePeriod, string> = {
   "3m": "Last 3 Months",
 };
 
-// Monthly trend data for Amal Amezargou (simulated from real totals, realistic distribution)
+const ALL_CHANNELS: ChannelGroup[] = ["KimKim", "Zicasso", "WendyPerrin", "B2B", "Direct", "DMC", "MICE"];
+
 // Months: Jan 2025 → Mar 2026 (15 months of data)
 const MONTHS = ["Jan 25","Feb 25","Mar 25","Apr 25","May 25","Jun 25","Jul 25","Aug 25","Sep 25","Oct 25","Nov 25","Dec 25","Jan 26","Feb 26","Mar 26"];
 
 interface MonthlyData { won: number; lost: number; winRate: number; revenue: number }
 type AdvisorMonthlyTrends = Record<string, Record<ChannelGroup, MonthlyData[]>>;
 
-// Realistic monthly trends per advisor (showing Amal as example)
-const ADVISOR_TRENDS: AdvisorMonthlyTrends = {
-  "Amal Amezargou": {
-    "B2B": [
-      { won: 8, lost: 11, winRate: 42.1, revenue: 185600 }, { won: 10, lost: 13, winRate: 43.5, revenue: 232000 },
-      { won: 11, lost: 14, winRate: 44.0, revenue: 255200 }, { won: 12, lost: 12, winRate: 50.0, revenue: 278400 },
-      { won: 10, lost: 15, winRate: 40.0, revenue: 232000 }, { won: 9, lost: 12, winRate: 42.9, revenue: 208800 },
-      { won: 8, lost: 10, winRate: 44.4, revenue: 185600 }, { won: 7, lost: 14, winRate: 33.3, revenue: 162400 },
-      { won: 11, lost: 11, winRate: 50.0, revenue: 255200 }, { won: 10, lost: 13, winRate: 43.5, revenue: 232000 },
-      { won: 12, lost: 10, winRate: 54.5, revenue: 278400 }, { won: 11, lost: 12, winRate: 47.8, revenue: 255200 },
-      { won: 9, lost: 14, winRate: 39.1, revenue: 208800 }, { won: 8, lost: 10, winRate: 44.4, revenue: 185600 },
-      { won: 6, lost: 10, winRate: 37.5, revenue: 139200 },
-    ],
-    "Zicasso": [
-      { won: 1, lost: 1, winRate: 50.0, revenue: 19500 }, { won: 0, lost: 2, winRate: 0, revenue: 0 },
-      { won: 1, lost: 1, winRate: 50.0, revenue: 19500 }, { won: 1, lost: 2, winRate: 33.3, revenue: 19500 },
-      { won: 1, lost: 1, winRate: 50.0, revenue: 19500 }, { won: 0, lost: 2, winRate: 0, revenue: 0 },
-      { won: 1, lost: 1, winRate: 50.0, revenue: 19500 }, { won: 1, lost: 2, winRate: 33.3, revenue: 19500 },
-      { won: 1, lost: 1, winRate: 50.0, revenue: 19500 }, { won: 1, lost: 1, winRate: 50.0, revenue: 19500 },
-      { won: 1, lost: 2, winRate: 33.3, revenue: 19500 }, { won: 0, lost: 1, winRate: 0, revenue: 0 },
-      { won: 1, lost: 2, winRate: 33.3, revenue: 19500 }, { won: 1, lost: 1, winRate: 50.0, revenue: 19500 },
-      { won: 0, lost: 1, winRate: 0, revenue: 0 },
-    ],
-    "WendyPerrin": [
-      { won: 0, lost: 1, winRate: 0, revenue: 0 }, { won: 1, lost: 0, winRate: 100, revenue: 17800 },
-      { won: 0, lost: 1, winRate: 0, revenue: 0 }, { won: 1, lost: 1, winRate: 50.0, revenue: 17800 },
-      { won: 0, lost: 1, winRate: 0, revenue: 0 }, { won: 1, lost: 1, winRate: 50.0, revenue: 17800 },
-      { won: 1, lost: 0, winRate: 100, revenue: 17800 }, { won: 0, lost: 1, winRate: 0, revenue: 0 },
-      { won: 0, lost: 1, winRate: 0, revenue: 0 }, { won: 1, lost: 1, winRate: 50.0, revenue: 17800 },
-      { won: 1, lost: 1, winRate: 50.0, revenue: 17800 }, { won: 0, lost: 1, winRate: 0, revenue: 0 },
-      { won: 1, lost: 0, winRate: 100, revenue: 17800 }, { won: 0, lost: 1, winRate: 0, revenue: 0 },
-      { won: 0, lost: 1, winRate: 0, revenue: 0 },
-    ],
-    "Direct": [
-      { won: 1, lost: 2, winRate: 33.3, revenue: 15200 }, { won: 1, lost: 1, winRate: 50.0, revenue: 15200 },
-      { won: 0, lost: 2, winRate: 0, revenue: 0 }, { won: 1, lost: 2, winRate: 33.3, revenue: 15200 },
-      { won: 1, lost: 1, winRate: 50.0, revenue: 15200 }, { won: 0, lost: 2, winRate: 0, revenue: 0 },
-      { won: 1, lost: 2, winRate: 33.3, revenue: 15200 }, { won: 1, lost: 2, winRate: 33.3, revenue: 15200 },
-      { won: 1, lost: 2, winRate: 33.3, revenue: 15200 }, { won: 1, lost: 1, winRate: 50.0, revenue: 15200 },
-      { won: 0, lost: 2, winRate: 0, revenue: 0 }, { won: 1, lost: 2, winRate: 33.3, revenue: 15200 },
-      { won: 1, lost: 2, winRate: 33.3, revenue: 15200 }, { won: 1, lost: 2, winRate: 33.3, revenue: 15200 },
-      { won: 0, lost: 1, winRate: 0, revenue: 0 },
-    ],
-    "KimKim": MONTHS.map(() => ({ won: 0, lost: 0, winRate: 0, revenue: 0 })),
-    "DMC": [
-      { won: 0, lost: 0, winRate: 0, revenue: 0 }, { won: 0, lost: 0, winRate: 0, revenue: 0 },
-      { won: 1, lost: 0, winRate: 100, revenue: 12000 }, { won: 0, lost: 0, winRate: 0, revenue: 0 },
-      { won: 0, lost: 0, winRate: 0, revenue: 0 }, { won: 0, lost: 0, winRate: 0, revenue: 0 },
-      { won: 0, lost: 0, winRate: 0, revenue: 0 }, { won: 0, lost: 0, winRate: 0, revenue: 0 },
-      { won: 1, lost: 0, winRate: 100, revenue: 12000 }, { won: 0, lost: 0, winRate: 0, revenue: 0 },
-      { won: 0, lost: 0, winRate: 0, revenue: 0 }, { won: 0, lost: 0, winRate: 0, revenue: 0 },
-      { won: 0, lost: 0, winRate: 0, revenue: 0 }, { won: 0, lost: 0, winRate: 0, revenue: 0 },
-      { won: 0, lost: 0, winRate: 0, revenue: 0 },
-    ],
-    "MICE": MONTHS.map(() => ({ won: 0, lost: 0, winRate: 0, revenue: 0 })),
-  },
-};
+// Generate monthly trends for ALL advisors from their aggregate totals
+// Uses a seeded PRNG so output is deterministic across renders
+function generateAllTrends(advisors: AdvisorData[]): AdvisorMonthlyTrends {
+  // Mulberry32 seeded PRNG
+  const mkRng = (s: number) => () => {
+    s |= 0; s = s + 0x6D2B79F5 | 0;
+    let t = Math.imul(s ^ s >>> 15, 1 | s);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+
+  const result: AdvisorMonthlyTrends = {};
+
+  for (const adv of advisors) {
+    // Seed from advisor name
+    let seed = 0;
+    for (let i = 0; i < adv.name.length; i++) seed = (seed * 31 + adv.name.charCodeAt(i)) | 0;
+    const rng = mkRng(seed);
+
+    const channels = {} as Record<ChannelGroup, MonthlyData[]>;
+
+    for (const ch of ALL_CHANNELS) {
+      const c = adv.channels[ch];
+
+      if (c.trips === 0) {
+        channels[ch] = MONTHS.map(() => ({ won: 0, lost: 0, winRate: 0, revenue: 0 }));
+        continue;
+      }
+
+      // Build weight curve: slight upward trend + seasonal noise
+      const weights: number[] = [];
+      for (let i = 0; i < 15; i++) {
+        const trend = 0.85 + (i / 14) * 0.30; // 0.85 → 1.15
+        const noise = 0.7 + rng() * 0.6;       // 0.7 → 1.3
+        weights.push(trend * noise);
+      }
+      const wSum = weights.reduce((a, b) => a + b, 0);
+
+      // Distribute won across months
+      let remW = c.won;
+      const wonArr: number[] = [];
+      for (let i = 0; i < 15; i++) {
+        if (i < 14) {
+          const v = Math.min(remW, Math.round(c.won * weights[i] / wSum));
+          wonArr.push(v);
+          remW -= v;
+        } else {
+          wonArr.push(Math.max(0, remW));
+        }
+      }
+
+      // Distribute lost with slightly different noise
+      const lWeights = weights.map(w => w * (0.8 + rng() * 0.4));
+      const lwSum = lWeights.reduce((a, b) => a + b, 0);
+      let remL = c.lost;
+      const lostArr: number[] = [];
+      for (let i = 0; i < 15; i++) {
+        if (i < 14) {
+          const v = Math.min(remL, Math.round(c.lost * lWeights[i] / lwSum));
+          lostArr.push(v);
+          remL -= v;
+        } else {
+          lostArr.push(Math.max(0, remL));
+        }
+      }
+
+      channels[ch] = wonArr.map((w, i) => {
+        const total = w + lostArr[i];
+        return {
+          won: w,
+          lost: lostArr[i],
+          winRate: total > 0 ? parseFloat(((w / total) * 100).toFixed(1)) : 0,
+          revenue: w * c.avgSale,
+        };
+      });
+    }
+
+    result[adv.name] = channels;
+  }
+
+  return result;
+}
+
+const ADVISOR_TRENDS: AdvisorMonthlyTrends = generateAllTrends([...MOROCCO_ADVISORS, ...ITALY_ADVISORS]);
 
 // Helper: get period-filtered data from monthly trends
 function getFilteredTrend(months: MonthlyData[], period: TimePeriod): { won: number; lost: number; winRate: number; revenue: number } {
@@ -605,8 +633,6 @@ const NAV_ITEMS: { id: NavSection; label: string; icon: string }[] = [
   { id: "calibration", label: "Calibration", icon: "sliders" },
   { id: "notes", label: "Data Notes", icon: "info" },
 ];
-
-const ALL_CHANNELS: ChannelGroup[] = ["KimKim", "Zicasso", "WendyPerrin", "B2B", "Direct", "DMC", "MICE"];
 
 /* ─────────────────── COMPONENT ─────────────────── */
 export default function SalesEnablementPage() {
