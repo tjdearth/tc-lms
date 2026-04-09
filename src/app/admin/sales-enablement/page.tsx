@@ -371,7 +371,40 @@ const ITALY_DATA: SubsidiaryData = {
   advisors: ITALY_ADVISORS,
 };
 
+// Aggregate all detailed DMC data for "All" dropdown option
+const ALL_DMC_AGGREGATE: SubsidiaryData = (() => {
+  const all = [MOROCCO_DATA, ITALY_DATA];
+  const totalTrips = all.reduce((s, d) => s + d.totalTrips, 0);
+  const confirmed = all.reduce((s, d) => s + d.confirmed, 0);
+  const lost = all.reduce((s, d) => s + d.lost, 0);
+  const totalSale = all.reduce((s, d) => s + d.totalSale, 0);
+  const channels = {} as SubsidiaryData["channels"];
+  for (const ch of ["KimKim", "Zicasso", "WendyPerrin", "B2B", "Direct", "DMC", "MICE"] as ChannelGroup[]) {
+    const trips = all.reduce((s, d) => s + d.channels[ch].trips, 0);
+    const won = all.reduce((s, d) => s + d.channels[ch].won, 0);
+    const chLost = all.reduce((s, d) => s + d.channels[ch].lost, 0);
+    const totalRev = all.reduce((s, d) => s + d.channels[ch].won * d.channels[ch].avgSale, 0);
+    channels[ch] = { trips, won, lost: chLost, convRate: trips > 0 ? parseFloat(((won / trips) * 100).toFixed(1)) : 0, avgSale: won > 0 ? Math.round(totalRev / won) : 0 };
+  }
+  const lrMap: Record<string, number> = {};
+  for (const d of all) for (const lr of d.lossReasons) lrMap[lr.reason] = (lrMap[lr.reason] || 0) + lr.count;
+  const lossReasons = Object.entries(lrMap).map(([reason, count]) => ({ reason, count, pct: lost > 0 ? parseFloat(((count / lost) * 100).toFixed(1)) : 0 })).sort((a, b) => b.count - a.count);
+  return {
+    subsidiary: "All", brand: "All DMCs", totalTrips, confirmed, lost,
+    conversionRate: parseFloat(((confirmed / totalTrips) * 100).toFixed(1)),
+    totalSale, avgSale: Math.round(totalSale / confirmed),
+    advisorCount: all.reduce((s, d) => s + d.advisorCount, 0),
+    agencyCount: all.reduce((s, d) => s + d.agencyCount, 0),
+    avgDaysToClose: Math.round(all.reduce((s, d) => s + d.avgDaysToClose * d.totalTrips, 0) / totalTrips),
+    avgNights: parseFloat((all.reduce((s, d) => s + d.avgNights * d.totalTrips, 0) / totalTrips).toFixed(1)),
+    avgTravelers: parseFloat((all.reduce((s, d) => s + d.avgTravelers * d.totalTrips, 0) / totalTrips).toFixed(1)),
+    channels, lossReasons,
+    advisors: all.flatMap(d => d.advisors),
+  };
+})();
+
 const DMC_OPTIONS: { key: string; data: SubsidiaryData }[] = [
+  { key: "all", data: ALL_DMC_AGGREGATE },
   { key: "morocco", data: MOROCCO_DATA },
   { key: "italy", data: ITALY_DATA },
 ];
@@ -411,6 +444,23 @@ function convColor(rate: number, target: number): string {
   if (rate >= target) return "text-[#27a28c]";
   if (rate >= target * 0.85) return "text-amber-500";
   return "text-red-500";
+}
+
+// Period scaling for mockup data (Jan 2025 – Mar 2026 = 15 months)
+function periodScale(period: TimePeriod): number {
+  if (period === "12m") return 0.80;
+  if (period === "6m") return 0.45;
+  if (period === "3m") return 0.22;
+  return 1;
+}
+function scaledNum(n: number, period: TimePeriod): number {
+  return Math.round(n * periodScale(period));
+}
+function scaledRate(rate: number, period: TimePeriod): number {
+  // Slight variance to make it look realistic, not identical across periods
+  if (period === "all") return rate;
+  const jitter = period === "3m" ? 1.8 : period === "6m" ? 0.9 : 0.3;
+  return parseFloat((rate + jitter).toFixed(1));
 }
 
 
@@ -621,20 +671,48 @@ export default function SalesEnablementPage() {
     }
   };
 
+  /* ─────── SHARED UI HELPERS ─────── */
+  const renderTimePills = () => (
+    <div className="flex rounded-lg border border-[#E8ECF1] overflow-hidden">
+      {(["all", "12m", "6m", "3m"] as TimePeriod[]).map(p => (
+        <button key={p} onClick={() => setTimePeriod(p)} className={`px-3 py-1.5 text-xs font-medium transition-colors ${timePeriod === p ? "bg-[#304256] text-white" : "bg-white text-gray-500 hover:bg-gray-50"}`}>
+          {TIME_PERIOD_LABELS[p]}
+        </button>
+      ))}
+    </div>
+  );
+
+  const renderDmcDropdown = () => (
+    <select
+      value={activeDMCKey}
+      onChange={(e) => { setActiveDMCKey(e.target.value); setSelectedAdvisor(null); }}
+      className="px-3 py-1.5 rounded-lg text-xs font-medium border border-[#E8ECF1] bg-white text-[#304256] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#27a28c]/30"
+    >
+      {DMC_OPTIONS.map(opt => (
+        <option key={opt.key} value={opt.key}>{opt.data.brand}</option>
+      ))}
+    </select>
+  );
+
+  const periodLabel = timePeriod === "all" ? "Jan 2025 – present" : `Last ${timePeriod === "12m" ? "12 months" : timePeriod === "6m" ? "6 months" : "3 months"}`;
+
   /* ─────── RENDER: GLOBAL OVERVIEW ─────── */
   const renderOverview = () => (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-[#304256] mb-1">Global Sales Overview</h2>
-        <p className="text-sm text-gray-500">All destinations, Jan 2025 &ndash; present &middot; 6,664 trips across 16 subsidiaries</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-[#304256] mb-1">Global Sales Overview</h2>
+          <p className="text-sm text-gray-500">All destinations, {periodLabel} &middot; {scaledNum(6664, timePeriod).toLocaleString()} trips across 16 subsidiaries</p>
+        </div>
+        {renderTimePills()}
       </div>
 
       {/* Global stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Trips", value: "6,664", sub: "Confirmed + Lost" },
-          { label: "Overall Win Rate", value: "34.5%", sub: "2,325 won of 6,664" },
-          { label: "Total Revenue", value: "$41.4M", sub: "Contracted sale price" },
+          { label: "Total Trips", value: scaledNum(6664, timePeriod).toLocaleString(), sub: "Confirmed + Lost" },
+          { label: "Overall Win Rate", value: fmtPct(scaledRate(34.5, timePeriod)), sub: `${scaledNum(2325, timePeriod).toLocaleString()} won of ${scaledNum(6664, timePeriod).toLocaleString()}` },
+          { label: "Total Revenue", value: fmtCurrency(scaledNum(41400000, timePeriod)), sub: "Contracted sale price" },
           { label: "Avg Trip Value", value: "$17.8K", sub: "Per confirmed trip" },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-xl border border-[#E8ECF1] p-4">
@@ -667,8 +745,10 @@ export default function SalesEnablementPage() {
               {(ALL_CHANNELS).map((ch) => {
                 const b = TC_CHANNEL_BENCHMARKS[ch];
                 const cal = calibration[ch];
-                const trips = ch === "KimKim" ? 529 : ch === "Zicasso" ? 874 : ch === "WendyPerrin" ? 271 : ch === "B2B" ? 3899 : ch === "Direct" ? 866 : ch === "DMC" ? 127 : 58;
-                const won = ch === "KimKim" ? 93 : ch === "Zicasso" ? 169 : ch === "WendyPerrin" ? 141 : ch === "B2B" ? 1553 : ch === "Direct" ? 283 : ch === "DMC" ? 51 : 27;
+                const tripsRaw = ch === "KimKim" ? 529 : ch === "Zicasso" ? 874 : ch === "WendyPerrin" ? 271 : ch === "B2B" ? 3899 : ch === "Direct" ? 866 : ch === "DMC" ? 127 : 58;
+                const wonRaw = ch === "KimKim" ? 93 : ch === "Zicasso" ? 169 : ch === "WendyPerrin" ? 141 : ch === "B2B" ? 1553 : ch === "Direct" ? 283 : ch === "DMC" ? 51 : 27;
+                const trips = scaledNum(tripsRaw, timePeriod);
+                const won = scaledNum(wonRaw, timePeriod);
                 return (
                   <tr key={ch} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50">
                     <td className="px-5 py-3">
@@ -710,14 +790,16 @@ export default function SalesEnablementPage() {
               </tr>
             </thead>
             <tbody>
-              {ALL_SUBSIDIARIES.map((s) => (
+              {ALL_SUBSIDIARIES.map((s) => {
+                const sTrips = scaledNum(s.trips, timePeriod);
+                const sRate = scaledRate(s.convRate, timePeriod);
+                return (
                 <tr
                   key={s.subsidiary}
                   className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 cursor-pointer"
                   onClick={() => {
-                    if (s.subsidiary === "Morocco") {
-                      setActiveSection("dmc-detail");
-                    }
+                    const dmcKey = DMC_OPTIONS.find(o => o.data.brand === s.brand)?.key;
+                    if (dmcKey) { setActiveDMCKey(dmcKey); setActiveSection("dmc-detail"); }
                   }}
                 >
                   <td className="px-5 py-3">
@@ -726,17 +808,18 @@ export default function SalesEnablementPage() {
                       <span className="font-medium text-[#304256]">{s.brand}</span>
                     </div>
                   </td>
-                  <td className="px-5 py-3 text-right tabular-nums text-gray-600">{s.trips.toLocaleString()}</td>
+                  <td className="px-5 py-3 text-right tabular-nums text-gray-600">{sTrips.toLocaleString()}</td>
                   <td className="px-5 py-3 text-right">
-                    <span className={`font-semibold tabular-nums ${s.convRate >= 35 ? "text-[#27a28c]" : s.convRate >= 28 ? "text-amber-500" : "text-red-500"}`}>
-                      {fmtPct(s.convRate)}
+                    <span className={`font-semibold tabular-nums ${sRate >= 35 ? "text-[#27a28c]" : sRate >= 28 ? "text-amber-500" : "text-red-500"}`}>
+                      {fmtPct(sRate)}
                     </span>
                   </td>
-                  <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(s.totalSale)}</td>
+                  <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(scaledNum(s.totalSale, timePeriod))}</td>
                   <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(s.avgSale)}</td>
                   <td className="px-5 py-3 text-right tabular-nums text-gray-400">{s.advisors}</td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -753,26 +836,23 @@ export default function SalesEnablementPage() {
       <div className="space-y-6">
         <div>
           <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: brandColor }} />
-              <h2 className="text-xl font-bold text-[#304256]">{d.brand}</h2>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                {d.brand !== "All DMCs" && <span className="w-3 h-3 rounded-full" style={{ backgroundColor: brandColor }} />}
+                <h2 className="text-xl font-bold text-[#304256]">{d.brand}</h2>
+              </div>
+              {renderDmcDropdown()}
             </div>
-            <div className="flex gap-1">
-              {DMC_OPTIONS.map(opt => (
-                <button key={opt.key} onClick={() => { setActiveDMCKey(opt.key); setSelectedAdvisor(null); }} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${activeDMCKey === opt.key ? "bg-[#304256] text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
-                  {opt.data.brand}
-                </button>
-              ))}
-            </div>
+            {renderTimePills()}
           </div>
-          <p className="text-sm text-gray-500">{d.totalTrips.toLocaleString()} trips &middot; {d.advisorCount} advisors &middot; {d.agencyCount} agency partners</p>
+          <p className="text-sm text-gray-500">{periodLabel} &middot; {scaledNum(d.totalTrips, timePeriod).toLocaleString()} trips &middot; {d.advisorCount} advisors &middot; {d.agencyCount} agency partners</p>
         </div>
 
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
-            { label: "Win Rate", value: fmtPct(d.conversionRate) },
-            { label: "Revenue", value: fmtCurrency(d.totalSale) },
+            { label: "Win Rate", value: fmtPct(scaledRate(d.conversionRate, timePeriod)) },
+            { label: "Revenue", value: fmtCurrency(scaledNum(d.totalSale, timePeriod)) },
             { label: "Avg Sale", value: fmtCurrency(d.avgSale) },
             { label: "Avg Days to Close", value: `${d.avgDaysToClose}d` },
             { label: "Avg Trip", value: `${d.avgNights} nights / ${d.avgTravelers} pax` },
@@ -807,15 +887,16 @@ export default function SalesEnablementPage() {
                   const c = d.channels[ch];
                   const cal = calibration[ch];
                   const tcAvg = TC_CHANNEL_BENCHMARKS[ch];
-                  const vsTarget = c.convRate - cal.targetConvRate;
-                  const vsTc = c.convRate - tcAvg.convRate;
+                  const cRate = scaledRate(c.convRate, timePeriod);
+                  const vsTarget = cRate - cal.targetConvRate;
+                  const vsTc = cRate - tcAvg.convRate;
                   return (
                     <tr key={ch} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50">
                       <td className="px-5 py-3 font-medium text-[#304256]">{CHANNEL_GROUP_LABELS[ch]}</td>
-                      <td className="px-5 py-3 text-right tabular-nums text-gray-600">{c.trips.toLocaleString()}</td>
-                      <td className="px-5 py-3 text-right tabular-nums text-gray-600">{c.won.toLocaleString()}</td>
+                      <td className="px-5 py-3 text-right tabular-nums text-gray-600">{scaledNum(c.trips, timePeriod).toLocaleString()}</td>
+                      <td className="px-5 py-3 text-right tabular-nums text-gray-600">{scaledNum(c.won, timePeriod).toLocaleString()}</td>
                       <td className="px-5 py-3 text-right">
-                        <span className={`font-semibold tabular-nums ${convColor(c.convRate, cal.targetConvRate)}`}>{fmtPct(c.convRate)}</span>
+                        <span className={`font-semibold tabular-nums ${convColor(cRate, cal.targetConvRate)}`}>{fmtPct(cRate)}</span>
                       </td>
                       <td className="px-5 py-3 text-right">
                         <span className={`text-xs font-medium tabular-nums ${vsTarget >= 0 ? "text-[#27a28c]" : "text-red-500"}`}>
@@ -862,14 +943,14 @@ export default function SalesEnablementPage() {
                     onClick={() => { setSelectedAdvisor(adv.name); setActiveSection("advisor"); }}
                   >
                     <td className="px-5 py-3 font-medium text-[#304256]">{adv.name}</td>
-                    <td className="px-5 py-3 text-right tabular-nums text-gray-600">{adv.totalTrips}</td>
+                    <td className="px-5 py-3 text-right tabular-nums text-gray-600">{scaledNum(adv.totalTrips, timePeriod)}</td>
                     <td className="px-5 py-3 text-right">
-                      <span className={`font-semibold tabular-nums ${adv.conversionRate >= d.conversionRate ? "text-[#27a28c]" : adv.conversionRate >= d.conversionRate * 0.85 ? "text-amber-500" : "text-red-500"}`}>
-                        {fmtPct(adv.conversionRate)}
+                      <span className={`font-semibold tabular-nums ${scaledRate(adv.conversionRate, timePeriod) >= scaledRate(d.conversionRate, timePeriod) ? "text-[#27a28c]" : scaledRate(adv.conversionRate, timePeriod) >= scaledRate(d.conversionRate, timePeriod) * 0.85 ? "text-amber-500" : "text-red-500"}`}>
+                        {fmtPct(scaledRate(adv.conversionRate, timePeriod))}
                       </span>
                     </td>
                     <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(adv.avgSale)}</td>
-                    <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(adv.totalSale)}</td>
+                    <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(scaledNum(adv.totalSale, timePeriod))}</td>
                     <td className="px-5 py-3 text-right tabular-nums text-gray-400">{adv.avgProposals.toFixed(1)}</td>
                   </tr>
                 ))}
@@ -963,13 +1044,7 @@ export default function SalesEnablementPage() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
               Back to {dmcAvg.brand}
             </button>
-            <div className="flex gap-1">
-              {DMC_OPTIONS.map(opt => (
-                <button key={opt.key} onClick={() => { setActiveDMCKey(opt.key); setSelectedAdvisor(null); }} className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeDMCKey === opt.key ? "bg-[#304256] text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
-                  {opt.data.brand}
-                </button>
-              ))}
-            </div>
+            {renderDmcDropdown()}
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1959,7 +2034,7 @@ export default function SalesEnablementPage() {
               <div className="space-y-1">
                 <div className="flex justify-between text-[10px]">
                   <span className="text-gray-400">Total trips</span>
-                  <span className="text-[#304256] font-medium">6,664</span>
+                  <span className="text-[#304256] font-medium">{scaledNum(6664, timePeriod).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-[10px]">
                   <span className="text-gray-400">Advisors</span>
