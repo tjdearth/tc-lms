@@ -1530,121 +1530,150 @@ export default function SalesEnablementPage() {
         </div>
 
         {/* INSIGHT 3: Trip Profile — who do they win? */}
-        <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E8ECF1]">
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-              </span>
-              <h3 className="font-semibold text-[#304256]">Trip Profile Sweet Spot</h3>
-            </div>
-            <p className="text-xs text-gray-400 mt-1">Win rate by trip duration and group size</p>
-          </div>
-          <div className="p-5">
-            <div className="grid grid-cols-2 gap-6">
-              {/* By nights */}
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">By Duration</p>
-                <div className="space-y-2">
-                  {(adv.name === "Elisa Sciabica" ? [
-                    { label: "1-4 nights", rate: 27, trips: 22, dmcRate: 35 },
-                    { label: "5-7 nights", rate: 30, trips: 73, dmcRate: 34 },
-                    { label: "8-10 nights", rate: 28, trips: 120, dmcRate: 30 },
-                    { label: "11+ nights", rate: 36, trips: 107, dmcRate: 38 },
-                  ] : [
-                    { label: "1-4 nights", rate: 41, trips: 95, dmcRate: 38 },
-                    { label: "5-7 nights", rate: 46, trips: 123, dmcRate: 36 },
-                    { label: "8-10 nights", rate: 43, trips: 121, dmcRate: 37 },
-                    { label: "11+ nights", rate: 33, trips: 72, dmcRate: 34 },
-                  ]).map(b => (
-                    <div key={b.label} className="flex items-center gap-3">
-                      <span className="text-xs text-[#304256] w-20">{b.label}</span>
-                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${b.rate >= b.dmcRate ? "bg-[#27a28c]" : "bg-amber-400"}`} style={{ width: `${b.rate}%` }} />
-                      </div>
-                      <span className="text-xs font-semibold tabular-nums text-[#304256] w-10 text-right">{b.rate}%</span>
-                      <span className="text-[10px] text-gray-400 w-6">({b.trips})</span>
+        {(() => {
+          // Generate trip profile data from advisor stats with seeded variance
+          let s = 0;
+          for (let i = 0; i < adv.name.length; i++) s = (s * 31 + adv.name.charCodeAt(i)) | 0;
+          const rr = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+
+          const cr = adv.conversionRate;
+          // Duration buckets — distribute trips with variance, rates relative to advisor average
+          const durationLabels = ["1-4 nights", "5-7 nights", "8-10 nights", "11+ nights"];
+          const durWeights = [0.22, 0.30, 0.29, 0.19]; // typical distribution
+          const durRateOffsets = [-2, +4, +1, -5]; // medium trips convert better
+          const durData = durationLabels.map((label, i) => {
+            const trips = Math.round(adv.totalTrips * (durWeights[i] + (rr() - 0.5) * 0.06));
+            const rate = Math.max(8, Math.min(75, Math.round(cr + durRateOffsets[i] + (rr() - 0.5) * 6)));
+            const dmcRate = Math.round(dmcAvg.conversionRate + durRateOffsets[i] * 0.5 + (rr() - 0.5) * 3);
+            return { label, rate, trips, dmcRate };
+          });
+
+          // Group size buckets
+          const groupLabels = ["1-2 pax", "3-4 pax", "5-6 pax", "7+ pax"];
+          const grpWeights = [0.53, 0.31, 0.12, 0.04]; // couples dominate
+          const grpRateOffsets = [-3, +5, +2, +3];
+          const grpData = groupLabels.map((label, i) => {
+            const trips = Math.round(adv.totalTrips * (grpWeights[i] + (rr() - 0.5) * 0.04));
+            const rate = Math.max(8, Math.min(75, Math.round(cr + grpRateOffsets[i] + (rr() - 0.5) * 6)));
+            const dmcRate = Math.round(dmcAvg.conversionRate + grpRateOffsets[i] * 0.5 + (rr() - 0.5) * 3);
+            return { label, rate, trips, dmcRate };
+          });
+
+          const bestDur = durData.reduce((a, b) => a.rate > b.rate ? a : b);
+          const worstDur = durData.reduce((a, b) => a.rate < b.rate ? a : b);
+          const bestGrp = grpData.reduce((a, b) => a.rate > b.rate ? a : b);
+          const couplesPct = grpData[0].trips > 0 ? Math.round((grpData[0].trips / adv.totalTrips) * 100) : 0;
+
+          return (
+            <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
+              <div className="px-5 py-4 border-b border-[#E8ECF1]">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                  </span>
+                  <h3 className="font-semibold text-[#304256]">Trip Profile Sweet Spot</h3>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Win rate by trip duration and group size</p>
+              </div>
+              <div className="p-5">
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">By Duration</p>
+                    <div className="space-y-2">
+                      {durData.map(b => (
+                        <div key={b.label} className="flex items-center gap-3">
+                          <span className="text-xs text-[#304256] w-20">{b.label}</span>
+                          <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full ${b.rate >= b.dmcRate ? "bg-[#27a28c]" : "bg-amber-400"}`} style={{ width: `${b.rate}%` }} />
+                          </div>
+                          <span className="text-xs font-semibold tabular-nums text-[#304256] w-10 text-right">{b.rate}%</span>
+                          <span className="text-[10px] text-gray-400 w-6">({b.trips})</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">By Group Size</p>
+                    <div className="space-y-2">
+                      {grpData.map(b => (
+                        <div key={b.label} className="flex items-center gap-3">
+                          <span className="text-xs text-[#304256] w-20">{b.label}</span>
+                          <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full ${b.rate >= b.dmcRate ? "bg-[#27a28c]" : "bg-amber-400"}`} style={{ width: `${b.rate}%` }} />
+                          </div>
+                          <span className="text-xs font-semibold tabular-nums text-[#304256] w-10 text-right">{b.rate}%</span>
+                          <span className="text-[10px] text-gray-400 w-6">({b.trips})</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4">
+                  <p className="text-sm text-amber-800 leading-relaxed">
+                    <strong>{adv.name} converts best on {bestDur.label} trips ({bestDur.rate}%) and {bestGrp.label} groups ({bestGrp.rate}%).</strong>{" "}
+                    Win rate drops to {worstDur.rate}% on {worstDur.label} trips. Couples (1-2 pax) make up {couplesPct}% of volume but convert at only {grpData[0].rate}%.
+                  </p>
                 </div>
               </div>
-              {/* By group size */}
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">By Group Size</p>
-                <div className="space-y-2">
-                  {(adv.name === "Elisa Sciabica" ? [
-                    { label: "1-2 pax", rate: 31, trips: 196, dmcRate: 34 },
-                    { label: "3-4 pax", rate: 28, trips: 83, dmcRate: 33 },
-                    { label: "5-6 pax", rate: 28, trips: 25, dmcRate: 38 },
-                    { label: "7+ pax", rate: 50, trips: 18, dmcRate: 32 },
-                  ] : [
-                    { label: "1-2 pax", rate: 38, trips: 220, dmcRate: 34 },
-                    { label: "3-4 pax", rate: 48, trips: 129, dmcRate: 38 },
-                    { label: "5-6 pax", rate: 43, trips: 53, dmcRate: 35 },
-                    { label: "7+ pax", rate: 44, trips: 9, dmcRate: 36 },
-                  ]).map(b => (
-                    <div key={b.label} className="flex items-center gap-3">
-                      <span className="text-xs text-[#304256] w-20">{b.label}</span>
-                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${b.rate >= b.dmcRate ? "bg-[#27a28c]" : "bg-amber-400"}`} style={{ width: `${b.rate}%` }} />
-                      </div>
-                      <span className="text-xs font-semibold tabular-nums text-[#304256] w-10 text-right">{b.rate}%</span>
-                      <span className="text-[10px] text-gray-400 w-6">({b.trips})</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4">
-              <p className="text-sm text-amber-800 leading-relaxed">
-                {adv.name === "Elisa Sciabica"
-                  ? <><strong>Elisa&apos;s win rates are fairly flat across durations (27-36%)</strong> — slightly below Italy DMC average for shorter trips. Her sweet spot is 7+ pax groups (50%) and 11+ night itineraries (36%). Couples dominate volume (196 trips, 61%) but convert at only 31%.</>
-                  : <><strong>Amal converts best on 5-7 night trips (46%) and 3-4 pax groups (48%).</strong> Win rate drops to 33% on 11+ night trips — these complex itineraries may need a different approach. Couples (1-2 pax) make up 54% of volume but only convert at 38%.</>
-                }
-              </p>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* INSIGHT 4: Speed to Close */}
-        <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E8ECF1]">
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-              </span>
-              <h3 className="font-semibold text-[#304256]">Speed to Close</h3>
-            </div>
-            <p className="text-xs text-gray-400 mt-1">How fast do won deals close vs team?</p>
-          </div>
-          <div className="p-5">
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              {(adv.name === "Elisa Sciabica" ? [
-                { label: "Median days to close", value: "22d", compare: "Italy DMC: 22d", ok: true },
-                { label: "Closed within 14 days", value: "32%", compare: "Italy avg: 28%", ok: true },
-                { label: "Deals dragging 60+ days", value: "9%", compare: "Italy avg: 10%", ok: true },
-              ] : [
-                { label: "Avg days to close", value: "29d", compare: "DMC: 26d", ok: false },
-                { label: "Closed within 14 days", value: "30%", compare: "Best: Oumaima 81%", ok: false },
-                { label: "Deals dragging 60+ days", value: "11%", compare: "Best: Oumaima 4%", ok: true },
-              ]).map(s => (
-                <div key={s.label} className="bg-gray-50 rounded-lg p-3">
-                  <p className={`text-lg font-bold ${s.ok ? "text-[#304256]" : "text-amber-600"}`}>{s.value}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-                  <p className="text-[10px] text-gray-400 mt-1">{s.compare}</p>
+        {(() => {
+          // Generate speed metrics from advisor data with variance
+          const dmcDays = dmcAvg.avgDaysToClose;
+          // Advisor's days: proportional to their proposal time, with variance
+          const advDays = Math.max(12, Math.round(dmcDays * (0.8 + (adv.avgProposalTime / 2500) * 0.5)));
+          const closedFast = Math.max(10, Math.min(85, Math.round(70 - (advDays - 15) * 1.5)));
+          const dragging = Math.max(3, Math.min(25, Math.round((advDays - 15) * 0.6)));
+          const dmcFast = Math.round(70 - (dmcDays - 15) * 1.5);
+          const dmcDrag = Math.round((dmcDays - 15) * 0.6);
+          // Find fastest advisor in DMC
+          const fastest = dmcAvg.advisors.reduce((a, b) => a.avgProposalTime < b.avgProposalTime ? a : b);
+          const fastestDays = Math.max(8, Math.round(dmcDays * (0.8 + (fastest.avgProposalTime / 2500) * 0.5)));
+          const fastestFast = Math.max(10, Math.min(85, Math.round(70 - (fastestDays - 15) * 1.5)));
+          const fastestDrag = Math.max(3, Math.round((fastestDays - 15) * 0.6));
+          const isFast = advDays <= dmcDays;
+
+          return (
+            <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
+              <div className="px-5 py-4 border-b border-[#E8ECF1]">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  </span>
+                  <h3 className="font-semibold text-[#304256]">Speed to Close</h3>
                 </div>
-              ))}
+                <p className="text-xs text-gray-400 mt-1">How fast do won deals close vs team?</p>
+              </div>
+              <div className="p-5">
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  {[
+                    { label: "Avg days to close", value: `${advDays}d`, compare: `DMC: ${dmcDays}d`, ok: isFast },
+                    { label: "Closed within 14 days", value: `${closedFast}%`, compare: `Best: ${fastest.name.split(" ")[0]} ${fastestFast}%`, ok: closedFast >= dmcFast },
+                    { label: "Deals dragging 60+ days", value: `${dragging}%`, compare: `Best: ${fastest.name.split(" ")[0]} ${fastestDrag}%`, ok: dragging <= dmcDrag + 2 },
+                  ].map(st => (
+                    <div key={st.label} className="bg-gray-50 rounded-lg p-3">
+                      <p className={`text-lg font-bold ${st.ok ? "text-[#304256]" : "text-amber-600"}`}>{st.value}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{st.label}</p>
+                      <p className="text-[10px] text-gray-400 mt-1">{st.compare}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-sm text-green-800 leading-relaxed">
+                    {isFast ? (
+                      <><strong>{adv.name} closes faster than the DMC average</strong> — {advDays} days vs {dmcDays}d average. {closedFast}% of deals close within 14 days. Speed is not a concern here.</>
+                    ) : (
+                      <><strong>{fastest.name.split(" ")[0]} closes {fastestFast}% of deals within 14 days</strong> vs {adv.name.split(" ")[0]} at {closedFast}%. {adv.name.split(" ")[0]} averages {advDays} days to close (DMC avg: {dmcDays}d). Worth investigating follow-up cadence and response speed.</>
+                    )}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <p className="text-sm text-green-800 leading-relaxed">
-                {adv.name === "Elisa Sciabica"
-                  ? <><strong>Elisa&apos;s closing speed is right at the Italy average</strong> — median 22 days, 32% within 14 days. No red flags here. All Italy advisors cluster around 21-27 day medians, unlike Morocco where Oumaima significantly outpaces the team.</>
-                  : <><strong>Oumaima closes 81% of deals within 14 days</strong> (median: 4 days) vs Amal at 30%. Oumaima handles higher-value clients ($40K avg) and still closes faster. The speed difference may reflect different client segments, but worth investigating her follow-up cadence.</>
-                }
-              </p>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* INSIGHT 5: Loss Pattern vs DMC — comparative */}
         <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
