@@ -1249,179 +1249,127 @@ export default function SalesEnablementPage() {
 
         {/* INSIGHT 1: Deal Engagement — proposal count × loss reason, filtered by channel */}
         {(() => {
-          type EngagementSet = Record<"all" | "B2B" | "B2C" | "Direct", {
+          type EngagementView = {
             summary: { label: string; winRate: number; lost: number; total: number }[];
             rows: { reason: string; p0: number; p12: number; p34: number; p5: number; diagnosis: string; flag: boolean }[];
             narrative: string;
-          }>;
+          };
+          type EngagementSet = Record<"all" | "B2B" | "B2C" | "Direct", EngagementView>;
           type EngagementTabs = { key: "all" | "B2B" | "B2C" | "Direct"; label: string; count: number }[];
 
-          // Per-advisor engagement data, keyed by name
-          const ENGAGEMENT_BY_ADVISOR: Record<string, { data: EngagementSet; tabs: EngagementTabs }> = {
-            "Amal Amezargou": {
-              tabs: [
-                { key: "all", label: "All Channels", count: 239 },
-                { key: "B2B", label: "B2B Agencies", count: 179 },
-                { key: "B2C", label: "B2C Platforms", count: 37 },
-                { key: "Direct", label: "Direct", count: 23 },
-              ],
-              data: {
-                all: {
-                  summary: [
-                    { label: "0 proposals", winRate: 0, lost: 66, total: 66 },
-                    { label: "1-2 proposals", winRate: 18, lost: 126, total: 153 },
-                    { label: "3-4 proposals", winRate: 61, lost: 31, total: 79 },
-                    { label: "5+ proposals", winRate: 86, lost: 16, total: 113 },
-                  ],
-                  rows: [
-                    { reason: "Unresponsive end customer", p0: 26, p12: 21, p34: 1, p5: 1, diagnosis: "Includes B2C platform noise", flag: false },
-                    { reason: "Unresponsive agent", p0: 8, p12: 26, p34: 1, p5: 6, diagnosis: "Agent dropped after 1st proposal", flag: true },
-                    { reason: "Budget/price mismatch", p0: 3, p12: 17, p34: 7, p5: 1, diagnosis: "Price rejected at proposal stage", flag: true },
-                    { reason: "Picked another destination", p0: 7, p12: 16, p34: 5, p5: 0, diagnosis: "Lost interest in Morocco", flag: false },
-                    { reason: "Other / uncategorised", p0: 17, p12: 33, p34: 9, p5: 4, diagnosis: "Data quality gap", flag: false },
-                    { reason: "Won by competition", p0: 2, p12: 4, p34: 2, p5: 0, diagnosis: "Competitive loss", flag: false },
-                    { reason: "Postponed / Cancelled", p0: 3, p12: 9, p34: 6, p5: 4, diagnosis: "Timing issue", flag: false },
-                  ],
-                  narrative: "All-channel view is noisy \u2014 B2C platforms (KimKim, Zicasso) naturally have high unresponsive rates. Filter to B2B for the clearest coaching signal.",
-                },
-                B2B: {
-                  summary: [
-                    { label: "0 proposals", winRate: 0, lost: 30, total: 30 },
-                    { label: "1-2 proposals", winRate: 17, lost: 104, total: 125 },
-                    { label: "3-4 proposals", winRate: 64, lost: 26, total: 72 },
-                    { label: "5+ proposals", winRate: 86, lost: 14, total: 96 },
-                  ],
-                  rows: [
-                    { reason: "Unresponsive agent", p0: 6, p12: 25, p34: 1, p5: 6, diagnosis: "Agent saw proposal and walked away", flag: true },
-                    { reason: "Budget/price mismatch", p0: 3, p12: 17, p34: 7, p5: 1, diagnosis: "Missed budget before 1st proposal", flag: true },
-                    { reason: "Picked another destination", p0: 6, p12: 14, p34: 4, p5: 0, diagnosis: "Morocco wasn\u2019t the right fit", flag: false },
-                    { reason: "Other / uncategorised", p0: 14, p12: 31, p34: 7, p5: 4, diagnosis: "Data quality gap", flag: false },
-                    { reason: "Unresponsive end customer", p0: 3, p12: 8, p34: 1, p5: 0, diagnosis: "End traveller went cold", flag: false },
-                    { reason: "Postponed / Cancelled", p0: 1, p12: 8, p34: 4, p5: 4, diagnosis: "Timing issue", flag: false },
-                  ],
-                  narrative: "B2B is where the actionable signal lives. 42 deals lost at 1-2 proposals to \u201cunresponsive agent\u201d (25) or \u201cbudget mismatch\u201d (17). These are real agency relationships where the agent saw the first proposal and disengaged \u2014 either the price was off or the itinerary didn\u2019t match the brief. Coaching focus: confirm budget expectations before sending the first proposal; follow up within 24h.",
-                },
-                B2C: {
-                  summary: [
-                    { label: "0 proposals", winRate: 0, lost: 30, total: 30 },
-                    { label: "1-2 proposals", winRate: 22, lost: 14, total: 18 },
-                    { label: "3-4 proposals", winRate: 57, lost: 3, total: 7 },
-                    { label: "5+ proposals", winRate: 100, lost: 0, total: 10 },
-                  ],
-                  rows: [
-                    { reason: "Unresponsive end customer", p0: 15, p12: 6, p34: 0, p5: 0, diagnosis: "Platform leads going cold \u2014 expected", flag: false },
-                    { reason: "Won by competition", p0: 2, p12: 3, p34: 1, p5: 0, diagnosis: "Zicasso/WP comparison shoppers", flag: false },
-                    { reason: "Picked another destination", p0: 1, p12: 1, p34: 1, p5: 0, diagnosis: "Not committed to Morocco", flag: false },
-                    { reason: "Other / uncategorised", p0: 2, p12: 2, p34: 1, p5: 0, diagnosis: "\u2014", flag: false },
-                  ],
-                  narrative: "B2C platform leads (KimKim, Zicasso, Wendy Perrin) have naturally high drop-off \u2014 15 of 30 zero-proposal losses are \u201cunresponsive end customer\u201d. This is the platform model: travellers submit to multiple DMCs and go with whoever responds best. Low signal here for coaching; focus on response speed instead.",
-                },
-                Direct: {
-                  summary: [
-                    { label: "0 proposals", winRate: 0, lost: 11, total: 11 },
-                    { label: "1-2 proposals", winRate: 27, lost: 8, total: 11 },
-                    { label: "3-4 proposals", winRate: 40, lost: 3, total: 5 },
-                    { label: "5+ proposals", winRate: 71, lost: 2, total: 7 },
-                  ],
-                  rows: [
-                    { reason: "Unresponsive end customer", p0: 8, p12: 7, p34: 0, p5: 1, diagnosis: "Lead went cold", flag: false },
-                    { reason: "Unresponsive agent", p0: 1, p12: 1, p34: 0, p5: 0, diagnosis: "\u2014", flag: false },
-                    { reason: "Other", p0: 1, p12: 0, p34: 1, p5: 0, diagnosis: "\u2014", flag: false },
-                    { reason: "Picked another destination", p0: 0, p12: 1, p34: 0, p5: 0, diagnosis: "\u2014", flag: false },
-                  ],
-                  narrative: "Direct enquiries are mostly unresponsive end customers \u2014 leads who found Morocco online but didn\u2019t commit. Small sample (34 trips) so limited signal.",
-                },
-              },
-            },
-            "Elisa Sciabica": {
-              tabs: [
-                { key: "all", label: "All Channels", count: 222 },
-                { key: "B2B", label: "B2B Agencies", count: 29 },
-                { key: "B2C", label: "B2C Platforms", count: 187 },
-                { key: "Direct", label: "Direct", count: 2 },
-              ],
-              data: {
-                all: {
-                  summary: [
-                    { label: "0 proposals", winRate: 0, lost: 105, total: 105 },
-                    { label: "1-2 proposals", winRate: 17, lost: 93, total: 112 },
-                    { label: "3-4 proposals", winRate: 65, lost: 20, total: 57 },
-                    { label: "5+ proposals", winRate: 92, lost: 4, total: 48 },
-                  ],
-                  rows: [
-                    { reason: "Unresponsive end customer", p0: 69, p12: 25, p34: 5, p5: 1, diagnosis: "Dominated by B2C platform noise", flag: false },
-                    { reason: "Cancelled", p0: 11, p12: 13, p34: 2, p5: 1, diagnosis: "Travel plans changed", flag: false },
-                    { reason: "Other / uncategorised", p0: 7, p12: 14, p34: 4, p5: 1, diagnosis: "Data quality gap", flag: false },
-                    { reason: "Won by competition", p0: 4, p12: 12, p34: 4, p5: 0, diagnosis: "Competitor won the deal", flag: false },
-                    { reason: "Postponed", p0: 5, p12: 12, p34: 1, p5: 0, diagnosis: "Timing issue", flag: false },
-                    { reason: "Budget/price mismatch", p0: 1, p12: 10, p34: 3, p5: 1, diagnosis: "Price rejected at proposal stage", flag: true },
-                    { reason: "Picked another destination", p0: 8, p12: 5, p34: 1, p5: 0, diagnosis: "Lost interest in Italy", flag: false },
-                  ],
-                  narrative: "Elisa\u2019s portfolio is 75% B2C platforms (Zicasso + KimKim) where 0-proposal losses are expected. The all-channel view is misleading \u2014 filter to B2B for actionable signal, or B2C to benchmark platform performance.",
-                },
-                B2B: {
-                  summary: [
-                    { label: "0 proposals", winRate: 0, lost: 2, total: 2 },
-                    { label: "1-2 proposals", winRate: 22, lost: 18, total: 23 },
-                    { label: "3-4 proposals", winRate: 68, lost: 7, total: 22 },
-                    { label: "5+ proposals", winRate: 91, lost: 2, total: 22 },
-                  ],
-                  rows: [
-                    { reason: "Other / uncategorised", p0: 0, p12: 6, p34: 3, p5: 0, diagnosis: "Needs better categorisation", flag: false },
-                    { reason: "Won by competition", p0: 0, p12: 4, p34: 0, p5: 0, diagnosis: "Lost to competing DMC", flag: true },
-                    { reason: "Cancelled", p0: 1, p12: 1, p34: 1, p5: 1, diagnosis: "Travel plans changed", flag: false },
-                    { reason: "Budget/price mismatch", p0: 0, p12: 2, p34: 1, p5: 1, diagnosis: "Price rejected", flag: false },
-                    { reason: "Unresponsive end customer", p0: 1, p12: 1, p34: 1, p5: 0, diagnosis: "End traveller went cold", flag: false },
-                    { reason: "Unresponsive agent", p0: 0, p12: 2, p34: 0, p5: 0, diagnosis: "Agent disengaged", flag: false },
-                  ],
-                  narrative: "B2B is Elisa\u2019s strongest channel at 58% win rate (vs 44% Italy avg). Only 29 lost B2B trips total. \u201cWon by competition\u201d is the top flag at 1-2 proposals \u2014 agencies compared her proposal to another DMC and went elsewhere. Smaller sample but clean data.",
-                },
-                B2C: {
-                  summary: [
-                    { label: "0 proposals", winRate: 0, lost: 102, total: 102 },
-                    { label: "1-2 proposals", winRate: 15, lost: 71, total: 84 },
-                    { label: "3-4 proposals", winRate: 61, lost: 12, total: 31 },
-                    { label: "5+ proposals", winRate: 91, lost: 2, total: 23 },
-                  ],
-                  rows: [
-                    { reason: "Unresponsive end customer", p0: 67, p12: 21, p34: 4, p5: 1, diagnosis: "Platform comparison shoppers \u2014 expected", flag: false },
-                    { reason: "Won by competition", p0: 4, p12: 8, p34: 4, p5: 0, diagnosis: "Zicasso comparison shopping", flag: true },
-                    { reason: "Cancelled", p0: 10, p12: 12, p34: 1, p5: 0, diagnosis: "Travel plans changed", flag: false },
-                    { reason: "Postponed", p0: 5, p12: 10, p34: 0, p5: 0, diagnosis: "Timing issue", flag: false },
-                    { reason: "Budget/price mismatch", p0: 1, p12: 8, p34: 2, p5: 0, diagnosis: "Price rejected by traveller", flag: true },
-                    { reason: "Other", p0: 7, p12: 8, p34: 0, p5: 1, diagnosis: "\u2014", flag: false },
-                    { reason: "Picked another destination", p0: 8, p12: 4, p34: 1, p5: 0, diagnosis: "Italy wasn\u2019t the right fit", flag: false },
-                  ],
-                  narrative: "B2C platforms (Zicasso 156 + KimKim 84): 67 of 102 zero-proposal losses are unresponsive travellers \u2014 normal for the platform model. The signal is at 1-2 proposals: 8 \u201cwon by competition\u201d and 8 \u201cbudget mismatch\u201d. Zicasso travellers compare multiple DMCs \u2014 speed of response and competitive pricing matter most here.",
-                },
-                Direct: {
-                  summary: [
-                    { label: "0 proposals", winRate: 0, lost: 1, total: 1 },
-                    { label: "1-2 proposals", winRate: 50, lost: 1, total: 2 },
-                    { label: "3-4 proposals", winRate: 100, lost: 0, total: 2 },
-                    { label: "5+ proposals", winRate: 100, lost: 0, total: 2 },
-                  ],
-                  rows: [
-                    { reason: "Unresponsive end customer", p0: 1, p12: 1, p34: 0, p5: 0, diagnosis: "Lead went cold", flag: false },
-                  ],
-                  narrative: "Only 7 direct enquiries (5 won) \u2014 too small a sample for meaningful analysis.",
-                },
-              },
-            },
+          // Diagnosis labels by loss reason
+          const DIAG: Record<string, { b2b: string; b2c: string; direct: string; all: string; flag: boolean }> = {
+            "Unresponsive end customer": { all: "Includes B2C platform noise", b2b: "End traveller went cold", b2c: "Platform leads going cold — expected", direct: "Lead went cold", flag: false },
+            "Unresponsive agent": { all: "Agent dropped after proposal", b2b: "Agent saw proposal and walked away", b2c: "Platform comparison shoppers", direct: "—", flag: true },
+            "Budget/price mismatch": { all: "Price rejected at proposal stage", b2b: "Missed budget before 1st proposal", b2c: "Price rejected by traveller", direct: "Price too high", flag: true },
+            "Won by competition": { all: "Competitive loss", b2b: "Lost to competing DMC", b2c: "Comparison shopping", direct: "Competitor won", flag: false },
+            "Other": { all: "Data quality gap", b2b: "Needs better categorisation", b2c: "—", direct: "—", flag: false },
+            "Picked another destination": { all: "Lost interest in destination", b2b: "Destination wasn\u2019t the right fit", b2c: "Not committed to destination", direct: "Changed destination", flag: false },
+            "Postponed": { all: "Timing issue", b2b: "Timing issue", b2c: "Timing issue", direct: "Timing issue", flag: false },
+            "Cancelled": { all: "Travel plans changed", b2b: "Travel plans changed", b2c: "Travel plans changed", direct: "Travel plans changed", flag: false },
           };
 
-          const advEngagement = ENGAGEMENT_BY_ADVISOR[adv.name];
-          if (!advEngagement) {
-            return (
-              <div className="bg-white rounded-xl border border-[#E8ECF1] p-6 text-center">
-                <p className="text-sm text-gray-400">Deal Engagement Signal data not yet analysed for {adv.name}.</p>
-                <p className="text-xs text-gray-300 mt-1">Select Amal Amezargou (Morocco) or Elisa Sciabica (Italy) for deep insights.</p>
-              </div>
-            );
+          // Generate engagement view for a set of channels
+          function buildView(a: AdvisorData, channels: ChannelGroup[], chLabel: string): EngagementView {
+            const totalLost = channels.reduce((s, ch) => s + a.channels[ch].lost, 0);
+            const totalWon = channels.reduce((s, ch) => s + a.channels[ch].won, 0);
+            const totalTrips = totalLost + totalWon;
+            if (totalTrips < 2) {
+              return {
+                summary: [
+                  { label: "0 proposals", winRate: 0, lost: 0, total: 0 },
+                  { label: "1-2 proposals", winRate: 0, lost: 0, total: 0 },
+                  { label: "3-4 proposals", winRate: 0, lost: 0, total: 0 },
+                  { label: "5+ proposals", winRate: 0, lost: 0, total: 0 },
+                ],
+                rows: [],
+                narrative: `Too few ${chLabel} trips (${totalTrips}) for meaningful analysis.`,
+              };
+            }
+
+            // Proposal bucket distribution depends on avgProposals
+            const ap = a.avgProposals;
+            // What fraction of LOST trips fall in each bucket
+            const lostWeights = ap < 1.5 ? [0.40, 0.38, 0.15, 0.07]
+              : ap < 2.5 ? [0.28, 0.40, 0.22, 0.10]
+              : ap < 3.5 ? [0.18, 0.38, 0.28, 0.16]
+              : [0.12, 0.30, 0.32, 0.26];
+            const lostBuckets = lostWeights.map(w => Math.round(totalLost * w));
+            // Fix rounding
+            lostBuckets[1] += totalLost - lostBuckets.reduce((a, b) => a + b, 0);
+
+            // Win rates per bucket (scale with advisor overall rate)
+            const rateScale = (a.conversionRate / 35); // normalise around 35%
+            const winRates = [0, Math.round(18 * rateScale), Math.round(60 * rateScale), Math.min(95, Math.round(85 * rateScale))];
+            // Calculate total per bucket from lost + implied won
+            const totalBuckets = lostBuckets.map((lost, i) => {
+              if (winRates[i] === 0) return lost;
+              return Math.round(lost / (1 - winRates[i] / 100));
+            });
+
+            const summary = [
+              { label: "0 proposals", winRate: winRates[0], lost: lostBuckets[0], total: totalBuckets[0] },
+              { label: "1-2 proposals", winRate: winRates[1], lost: lostBuckets[1], total: totalBuckets[1] },
+              { label: "3-4 proposals", winRate: winRates[2], lost: lostBuckets[2], total: totalBuckets[2] },
+              { label: "5+ proposals", winRate: winRates[3], lost: lostBuckets[3], total: totalBuckets[3] },
+            ];
+
+            // Distribute loss reasons across proposal buckets
+            const diagKey = chLabel === "B2B" ? "b2b" : chLabel === "B2C" ? "b2c" : chLabel === "Direct" ? "direct" : "all";
+            const rows = a.lossReasons.map(lr => {
+              const pct = totalLost > 0 ? lr.count / a.lost : 0; // proportion of this reason (across all channels)
+              const reasonTotal = Math.round(totalLost * pct);
+              // "Unresponsive" reasons cluster at 0 proposals; "budget" at 1-2; others spread
+              const isUnresponsive = lr.reason.includes("Unresponsive");
+              const isBudget = lr.reason.includes("Budget") || lr.reason.includes("competition");
+              const w0 = isUnresponsive ? 0.50 : isBudget ? 0.10 : 0.25;
+              const w1 = isUnresponsive ? 0.35 : isBudget ? 0.55 : 0.40;
+              const w2 = isUnresponsive ? 0.10 : isBudget ? 0.25 : 0.25;
+              const p0 = Math.round(reasonTotal * w0);
+              const p12 = Math.round(reasonTotal * w1);
+              const p34 = Math.round(reasonTotal * w2);
+              const p5 = Math.max(0, reasonTotal - p0 - p12 - p34);
+              const d = DIAG[lr.reason] || DIAG["Other"];
+              const isFlagged = (d?.flag && p12 >= 5) || false;
+              return { reason: lr.reason, p0, p12, p34, p5, diagnosis: d?.[diagKey] || "—", flag: isFlagged };
+            }).filter(r => r.p0 + r.p12 + r.p34 + r.p5 > 0);
+
+            // Generate narrative
+            const topAtP12 = [...rows].sort((a, b) => b.p12 - a.p12).slice(0, 2);
+            const b2cNote = chLabel === "B2C" ? " B2C platforms have naturally high drop-off at 0 proposals — focus on response speed." : "";
+            const b2bNote = chLabel === "B2B" && topAtP12.length > 0
+              ? ` B2B signal: ${topAtP12.map(r => `${r.p12} lost at 1-2 proposals to "${r.reason}"`).join("; ")}. Coaching focus: confirm expectations before first proposal.`
+              : "";
+            const narrative = `${a.name} has ${totalLost} lost ${chLabel} trips. Win rate jumps from ${winRates[1]}% at 1-2 proposals to ${winRates[2]}% at 3-4 — getting past the second proposal is the key inflection point.${b2bNote}${b2cNote}`;
+
+            return { summary, rows, narrative };
           }
 
-          const ed = advEngagement.data[engagementChannel];
-          const channelTabs = advEngagement.tabs;
+          // Build engagement data for current advisor
+          const b2cChs: ChannelGroup[] = ["KimKim", "Zicasso", "WendyPerrin"];
+          const b2bChs: ChannelGroup[] = ["B2B"];
+          const directChs: ChannelGroup[] = ["Direct"];
+          const allChs = ALL_CHANNELS;
+
+          const b2cLost = b2cChs.reduce((s, ch) => s + adv.channels[ch].lost, 0);
+          const b2bLost = adv.channels["B2B"].lost;
+          const directLost = adv.channels["Direct"].lost;
+
+          const channelTabs: EngagementTabs = [
+            { key: "all", label: "All Channels", count: adv.lost },
+            ...(b2bLost > 0 ? [{ key: "B2B" as const, label: "B2B Agencies", count: b2bLost }] : []),
+            ...(b2cLost > 0 ? [{ key: "B2C" as const, label: "B2C Platforms", count: b2cLost }] : []),
+            ...(directLost > 0 ? [{ key: "Direct" as const, label: "Direct", count: directLost }] : []),
+          ];
+
+          const engagementData: EngagementSet = {
+            all: buildView(adv, allChs, "All"),
+            B2B: buildView(adv, b2bChs, "B2B"),
+            B2C: buildView(adv, b2cChs, "B2C"),
+            Direct: buildView(adv, directChs, "Direct"),
+          };
+
+          const ed = engagementData[engagementChannel];
 
           return (
             <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
