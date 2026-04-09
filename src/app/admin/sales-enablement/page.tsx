@@ -447,6 +447,7 @@ function convColor(rate: number, target: number): string {
 }
 
 // Period scaling for mockup data (Jan 2025 – Mar 2026 = 15 months)
+// Volume scales proportionally; rates and averages shift realistically per window
 function periodScale(period: TimePeriod): number {
   if (period === "12m") return 0.80;
   if (period === "6m") return 0.45;
@@ -457,10 +458,34 @@ function scaledNum(n: number, period: TimePeriod): number {
   return Math.round(n * periodScale(period));
 }
 function scaledRate(rate: number, period: TimePeriod): number {
-  // Slight variance to make it look realistic, not identical across periods
+  // Recent periods trend slightly higher (advisors improving over time)
   if (period === "all") return rate;
-  const jitter = period === "3m" ? 1.8 : period === "6m" ? 0.9 : 0.3;
-  return parseFloat((rate + jitter).toFixed(1));
+  const shift = period === "3m" ? 1.8 : period === "6m" ? 0.9 : 0.3;
+  return parseFloat((rate + shift).toFixed(1));
+}
+function scaledAvgSale(avgSale: number, period: TimePeriod): number {
+  // Recent months skew higher (peak season, higher-value bookings closing)
+  if (period === "all") return avgSale;
+  const factor = period === "3m" ? 1.08 : period === "6m" ? 1.05 : 1.02;
+  return Math.round(avgSale * factor);
+}
+function scaledAvgNights(nights: number, period: TimePeriod): number {
+  // Recent trips trend slightly longer (more luxury itineraries)
+  if (period === "all") return nights;
+  const shift = period === "3m" ? 0.4 : period === "6m" ? 0.2 : 0.1;
+  return parseFloat((nights + shift).toFixed(1));
+}
+function scaledAvgTravelers(travelers: number, period: TimePeriod): number {
+  // Recent months slightly fewer travelers per trip (more couples vs groups)
+  if (period === "all") return travelers;
+  const shift = period === "3m" ? -0.3 : period === "6m" ? -0.2 : -0.1;
+  return parseFloat(Math.max(1.5, travelers + shift).toFixed(1));
+}
+function scaledDaysToClose(days: number, period: TimePeriod): number {
+  // Recent leads closing faster as team improves
+  if (period === "all") return days;
+  const shift = period === "3m" ? -3 : period === "6m" ? -2 : -1;
+  return Math.max(10, days + shift);
 }
 
 
@@ -713,7 +738,7 @@ export default function SalesEnablementPage() {
           { label: "Total Trips", value: scaledNum(6664, timePeriod).toLocaleString(), sub: "Confirmed + Lost" },
           { label: "Overall Win Rate", value: fmtPct(scaledRate(34.5, timePeriod)), sub: `${scaledNum(2325, timePeriod).toLocaleString()} won of ${scaledNum(6664, timePeriod).toLocaleString()}` },
           { label: "Total Revenue", value: fmtCurrency(scaledNum(41400000, timePeriod)), sub: "Contracted sale price" },
-          { label: "Avg Trip Value", value: "$17.8K", sub: "Per confirmed trip" },
+          { label: "Avg Trip Value", value: fmtCurrency(scaledAvgSale(17800, timePeriod)), sub: "Per confirmed trip" },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-xl border border-[#E8ECF1] p-4">
             <p className="text-2xl font-bold text-[#304256]">{s.value}</p>
@@ -815,7 +840,7 @@ export default function SalesEnablementPage() {
                     </span>
                   </td>
                   <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(scaledNum(s.totalSale, timePeriod))}</td>
-                  <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(s.avgSale)}</td>
+                  <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(scaledAvgSale(s.avgSale, timePeriod))}</td>
                   <td className="px-5 py-3 text-right tabular-nums text-gray-400">{s.advisors}</td>
                 </tr>
                 );
@@ -853,9 +878,9 @@ export default function SalesEnablementPage() {
           {[
             { label: "Win Rate", value: fmtPct(scaledRate(d.conversionRate, timePeriod)) },
             { label: "Revenue", value: fmtCurrency(scaledNum(d.totalSale, timePeriod)) },
-            { label: "Avg Sale", value: fmtCurrency(d.avgSale) },
-            { label: "Avg Days to Close", value: `${d.avgDaysToClose}d` },
-            { label: "Avg Trip", value: `${d.avgNights} nights / ${d.avgTravelers} pax` },
+            { label: "Avg Sale", value: fmtCurrency(scaledAvgSale(d.avgSale, timePeriod)) },
+            { label: "Avg Days to Close", value: `${scaledDaysToClose(d.avgDaysToClose, timePeriod)}d` },
+            { label: "Avg Trip", value: `${scaledAvgNights(d.avgNights, timePeriod)} nights / ${scaledAvgTravelers(d.avgTravelers, timePeriod)} pax` },
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-xl border border-[#E8ECF1] p-4">
               <p className="text-lg font-bold text-[#304256]">{s.value}</p>
@@ -908,7 +933,7 @@ export default function SalesEnablementPage() {
                           {vsTc >= 0 ? "+" : ""}{vsTc.toFixed(1)}pts
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(c.avgSale)}</td>
+                      <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(scaledAvgSale(c.avgSale, timePeriod))}</td>
                     </tr>
                   );
                 })}
@@ -949,7 +974,7 @@ export default function SalesEnablementPage() {
                         {fmtPct(scaledRate(adv.conversionRate, timePeriod))}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(adv.avgSale)}</td>
+                    <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(scaledAvgSale(adv.avgSale, timePeriod))}</td>
                     <td className="px-5 py-3 text-right tabular-nums text-gray-600">{fmtCurrency(scaledNum(adv.totalSale, timePeriod))}</td>
                     <td className="px-5 py-3 text-right tabular-nums text-gray-400">{adv.avgProposals.toFixed(1)}</td>
                   </tr>
@@ -1079,7 +1104,7 @@ export default function SalesEnablementPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { label: "Win Rate", value: fmtPct(periodStats.winRate), sub: `${periodStats.won} won of ${periodStats.total}` },
-            { label: "Avg Sale", value: periodStats.won > 0 ? fmtCurrency(periodStats.revenue / periodStats.won) : "$0", sub: `DMC avg: ${fmtCurrency(dmcAvg.avgSale)}` },
+            { label: "Avg Sale", value: periodStats.won > 0 ? fmtCurrency(periodStats.revenue / periodStats.won) : "$0", sub: `DMC avg: ${fmtCurrency(scaledAvgSale(dmcAvg.avgSale, timePeriod))}` },
             { label: "Revenue", value: fmtCurrency(periodStats.revenue), sub: `${periodStats.won} confirmed trips` },
             { label: "Trips", value: periodStats.total.toString(), sub: `${periodStats.won} won / ${periodStats.lost} lost` },
           ].map((s) => (
@@ -1118,7 +1143,7 @@ export default function SalesEnablementPage() {
                   const winRate = filtered ? filtered.winRate : adv.channels[ch].convRate;
                   const won = filtered ? filtered.won : adv.channels[ch].won;
                   const lost = filtered ? filtered.lost : adv.channels[ch].lost;
-                  const avgSale = filtered && filtered.won > 0 ? Math.round(filtered.revenue / filtered.won) : adv.channels[ch].avgSale;
+                  const avgSale = filtered && filtered.won > 0 ? Math.round(filtered.revenue / filtered.won) : scaledAvgSale(adv.channels[ch].avgSale, timePeriod);
                   const vsTarget = winRate - cal.targetConvRate;
 
                   // Trend indicator
