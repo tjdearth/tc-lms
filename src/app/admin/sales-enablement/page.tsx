@@ -1007,7 +1007,7 @@ export default function SalesEnablementPage() {
       }
       const total = totalWon + totalLost;
       return { won: totalWon, lost: totalLost, total, winRate: total > 0 ? (totalWon / total) * 100 : 0, revenue: totalRevenue };
-    })() : { won: adv.confirmed, lost: adv.lost, total: adv.totalTrips, winRate: adv.conversionRate, revenue: adv.totalSale };
+    })() : { won: scaledNum(adv.confirmed, timePeriod), lost: scaledNum(adv.lost, timePeriod), total: scaledNum(adv.totalTrips, timePeriod), winRate: scaledRate(adv.conversionRate, timePeriod), revenue: scaledNum(adv.totalSale, timePeriod) };
 
     // Generate AI insights based on trend data
     const generateInsights = (): string[] => {
@@ -1140,9 +1140,9 @@ export default function SalesEnablementPage() {
                   const hasCh = hasTrends && trends[ch];
                   const filtered = hasCh ? getFilteredTrend(trends[ch], timePeriod) : null;
                   const prev = hasCh ? getPreviousPeriodTrend(trends[ch], timePeriod) : null;
-                  const winRate = filtered ? filtered.winRate : adv.channels[ch].convRate;
-                  const won = filtered ? filtered.won : adv.channels[ch].won;
-                  const lost = filtered ? filtered.lost : adv.channels[ch].lost;
+                  const winRate = filtered ? filtered.winRate : scaledRate(adv.channels[ch].convRate, timePeriod);
+                  const won = filtered ? filtered.won : scaledNum(adv.channels[ch].won, timePeriod);
+                  const lost = filtered ? filtered.lost : scaledNum(adv.channels[ch].lost, timePeriod);
                   const avgSale = filtered && filtered.won > 0 ? Math.round(filtered.revenue / filtered.won) : scaledAvgSale(adv.channels[ch].avgSale, timePeriod);
                   const vsTarget = winRate - cal.targetConvRate;
 
