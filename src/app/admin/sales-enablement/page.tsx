@@ -886,17 +886,18 @@ export default function SalesEnablementPage() {
     return (
       <div className="space-y-6">
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                {d.brand !== "All DMCs" && <span className="w-3 h-3 rounded-full" style={{ backgroundColor: brandColor }} />}
-                <h2 className="text-xl font-bold text-[#304256]">{d.brand}</h2>
-              </div>
-              {renderDmcDropdown()}
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-400">DMC Performance</span>
+            {renderDmcDropdown()}
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {d.brand !== "All DMCs" && <span className="w-3 h-3 rounded-full" style={{ backgroundColor: brandColor }} />}
+              <h2 className="text-xl font-bold text-[#304256]">{d.brand}</h2>
             </div>
             {renderTimePills()}
           </div>
-          <p className="text-sm text-gray-500">{periodLabel} &middot; {scaledNum(d.totalTrips, timePeriod).toLocaleString()} trips &middot; {d.advisorCount} advisors &middot; {d.agencyCount} agency partners</p>
+          <p className="text-sm text-gray-500 mt-1">{periodLabel} &middot; {scaledNum(d.totalTrips, timePeriod).toLocaleString()} trips &middot; {d.advisorCount} advisors &middot; {d.agencyCount} agency partners</p>
         </div>
 
         {/* KPIs */}
