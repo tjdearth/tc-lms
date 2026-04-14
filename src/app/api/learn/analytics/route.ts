@@ -17,17 +17,21 @@ export async function GET() {
 
     const userIsAdmin = isAdmin(session.user.email);
 
-    const [usersResult, enrollmentsResult, coursesResult, quizResult] = await Promise.all([
+    const [usersResult, enrollmentsResult, coursesResult, quizResult, microLessonsResult, microViewsResult] = await Promise.all([
       supabaseAdmin.from("lms_users").select("id, email, name, brand"),
       supabaseAdmin.from("enrollments").select("id, user_id, course_id, status, due_date, enrolled_at, completed_at"),
       supabaseAdmin.from("courses").select("id, title, code, is_published").order("title"),
       supabaseAdmin.from("quiz_attempts").select("score_pct"),
+      supabaseAdmin.from("micro_lessons").select("id, title, brand, tags, is_published, created_at"),
+      supabaseAdmin.from("micro_lesson_views").select("micro_lesson_id, user_email, user_brand, created_at"),
     ]);
 
     const users = usersResult.data || [];
     const enrollments = enrollmentsResult.data || [];
     const courses = coursesResult.data || [];
     const quizAttempts = quizResult.data || [];
+    const microLessons = microLessonsResult.data || [];
+    const microViews = microViewsResult.data || [];
 
     // Overview
     const totalUsers = users.length;
@@ -160,6 +164,69 @@ export async function GET() {
       };
     }
 
+    // Micro-learning analytics
+    const weekAgoIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const monthAgoIso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Count views per lesson + unique viewers
+    const viewCountByLesson: Record<string, number> = {};
+    const uniqueViewersByLesson: Record<string, Set<string>> = {};
+    const viewsThisWeekByLesson: Record<string, number> = {};
+    const brandViewCounts: Record<string, number> = {};
+
+    for (const v of microViews) {
+      const lid = v.micro_lesson_id;
+      viewCountByLesson[lid] = (viewCountByLesson[lid] || 0) + 1;
+      if (v.user_email) {
+        if (!uniqueViewersByLesson[lid]) uniqueViewersByLesson[lid] = new Set();
+        uniqueViewersByLesson[lid].add(v.user_email);
+      }
+      if (v.created_at && v.created_at >= weekAgoIso) {
+        viewsThisWeekByLesson[lid] = (viewsThisWeekByLesson[lid] || 0) + 1;
+      }
+      const brand = v.user_brand || "Unknown";
+      brandViewCounts[brand] = (brandViewCounts[brand] || 0) + 1;
+    }
+
+    const lessonMap = new Map(microLessons.map((l) => [l.id, l]));
+    const microLessonStats = microLessons.map((l) => ({
+      id: l.id,
+      title: l.title,
+      brand: l.brand || "tc",
+      is_published: l.is_published,
+      views: viewCountByLesson[l.id] || 0,
+      unique_viewers: uniqueViewersByLesson[l.id]?.size || 0,
+      views_this_week: viewsThisWeekByLesson[l.id] || 0,
+    })).sort((a, b) => b.views - a.views);
+
+    // Lessons with no views (content gap — created but never watched)
+    const unwatchedLessons = microLessonStats
+      .filter((l) => l.is_published && l.views === 0)
+      .map((l) => ({ id: l.id, title: l.title, brand: l.brand }));
+
+    const totalMicroViews = microViews.length;
+    const viewsThisWeek = microViews.filter((v) => v.created_at && v.created_at >= weekAgoIso).length;
+    const viewsThisMonth = microViews.filter((v) => v.created_at && v.created_at >= monthAgoIso).length;
+    const uniqueViewersAll = new Set(microViews.map((v) => v.user_email).filter(Boolean)).size;
+
+    const microBrandBreakdown = Object.entries(brandViewCounts)
+      .map(([brand, views]) => ({ brand, views }))
+      .sort((a, b) => b.views - a.views);
+
+    const micro_learning = {
+      total_lessons: microLessons.length,
+      published_lessons: microLessons.filter((l) => l.is_published).length,
+      total_views: totalMicroViews,
+      views_this_week: viewsThisWeek,
+      views_this_month: viewsThisMonth,
+      unique_viewers: uniqueViewersAll,
+      top_lessons: microLessonStats.filter((l) => l.views > 0).slice(0, 10),
+      unwatched_lessons: unwatchedLessons.slice(0, 10),
+      brand_breakdown: microBrandBreakdown,
+    };
+    // lessonMap retained in case future enrichment needs it
+    void lessonMap;
+
     return NextResponse.json({
       overview: {
         total_users: totalUsers,
@@ -171,6 +238,7 @@ export async function GET() {
       courses: courseStats,
       overdue,
       brand_breakdown: brandBreakdown,
+      micro_learning,
       ...(kb_health ? { kb_health } : {}),
     });
   } catch (e: unknown) {

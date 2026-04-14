@@ -28,6 +28,14 @@ export default function MicroLessonViewer() {
       .then((data: MicroLesson[]) => {
         const found = data.find((l) => l.id === id);
         setLesson(found || null);
+        // Log a view once we've confirmed the lesson exists (fire-and-forget)
+        if (found) {
+          fetch("/api/learn/micro-lessons/view", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ micro_lesson_id: found.id }),
+          }).catch(() => {});
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));

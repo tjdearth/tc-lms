@@ -47,7 +47,28 @@ interface AnalyticsData {
     enrolled: number;
     completed: number;
   }[];
+  micro_learning?: MicroLearningStats;
   kb_health?: KBHealth;
+}
+
+interface MicroLearningStats {
+  total_lessons: number;
+  published_lessons: number;
+  total_views: number;
+  views_this_week: number;
+  views_this_month: number;
+  unique_viewers: number;
+  top_lessons: {
+    id: string;
+    title: string;
+    brand: string;
+    is_published: boolean;
+    views: number;
+    unique_viewers: number;
+    views_this_week: number;
+  }[];
+  unwatched_lessons: { id: string; title: string; brand: string }[];
+  brand_breakdown: { brand: string; views: number }[];
 }
 
 interface SearchAnalyticsData {
@@ -254,6 +275,118 @@ export default function AnalyticsPage() {
                 </div>
               </div>
             </div>
+
+            {/* Micro-Learning Analytics */}
+            {data.micro_learning && (
+              <div className="mb-8">
+                <div className="mb-4 mt-2">
+                  <h2 className="text-lg font-bold text-[#304256]">Micro-Learning</h2>
+                  <p className="text-sm text-gray-400">Views and engagement across 5-minute lessons</p>
+                </div>
+
+                {/* Stat cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  {[
+                    { label: "Total Views", value: data.micro_learning.total_views },
+                    { label: "Views This Week", value: data.micro_learning.views_this_week },
+                    { label: "Views This Month", value: data.micro_learning.views_this_month },
+                    { label: "Unique Viewers", value: data.micro_learning.unique_viewers },
+                  ].map((s) => (
+                    <div key={s.label} className="bg-white rounded-xl border border-[#E8ECF1] p-5">
+                      <div className="text-2xl font-bold text-[#304256] tabular-nums">{s.value}</div>
+                      <div className="text-sm text-gray-400 mt-1">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Top Viewed Micro-Lessons */}
+                  <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
+                    <div className="px-5 py-4 border-b border-[#E8ECF1] flex items-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#27a28c" strokeWidth="2" className="flex-shrink-0">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                      </svg>
+                      <h2 className="font-semibold text-[#304256]">Top 10 Most Viewed</h2>
+                    </div>
+                    <div className="max-h-[400px] overflow-y-auto">
+                      {data.micro_learning.top_lessons.length === 0 ? (
+                        <div className="px-5 py-8 text-center text-gray-400 text-sm">No views yet</div>
+                      ) : (
+                        <div>
+                          {data.micro_learning.top_lessons.map((l, i) => (
+                            <a
+                              key={l.id}
+                              href={`/learn/micro-learning/${l.id}`}
+                              className="px-5 py-2.5 border-b border-gray-100 last:border-b-0 flex items-center gap-3 hover:bg-gray-50/50"
+                            >
+                              <span className="text-xs text-gray-300 w-5 text-right tabular-nums">{i + 1}</span>
+                              <span className="flex-1 text-sm text-gray-800 truncate">{l.title}</span>
+                              <div className="flex items-center gap-3 text-xs tabular-nums flex-shrink-0">
+                                <span className="text-gray-400">{l.unique_viewers} unique</span>
+                                <span className="font-semibold text-[#27a28c]">{l.views}</span>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Unwatched / Views by Brand */}
+                  <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden">
+                    <div className="px-5 py-4 border-b border-[#E8ECF1] flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-amber-500" />
+                      <h2 className="font-semibold text-[#304256]">Never Watched</h2>
+                      {data.micro_learning.unwatched_lessons.length > 0 && (
+                        <span className="text-[10px] bg-amber-50 text-amber-600 rounded-full px-2 py-0.5 font-medium">
+                          {data.micro_learning.unwatched_lessons.length}
+                        </span>
+                      )}
+                    </div>
+                    <p className="px-5 pt-3 text-xs text-gray-400">Published micro-lessons with no views yet</p>
+                    <div className="max-h-[400px] overflow-y-auto">
+                      {data.micro_learning.unwatched_lessons.length === 0 ? (
+                        <div className="px-5 py-8 text-center">
+                          <div className="text-2xl mb-2">&#10003;</div>
+                          <p className="text-sm text-gray-400">Every published lesson has been watched</p>
+                        </div>
+                      ) : (
+                        <div>
+                          {data.micro_learning.unwatched_lessons.map((l) => (
+                            <a
+                              key={l.id}
+                              href={`/learn/micro-learning/${l.id}`}
+                              className="px-5 py-2.5 border-b border-gray-100 last:border-b-0 flex items-center gap-3 hover:bg-gray-50/50"
+                            >
+                              <span className="flex-1 text-sm text-gray-800 truncate">{l.title}</span>
+                              <span className="text-[10px] text-gray-400 uppercase tracking-wider flex-shrink-0">{l.brand}</span>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Views by Brand */}
+                {data.micro_learning.brand_breakdown.length > 0 && (
+                  <div className="bg-white rounded-xl border border-[#E8ECF1] overflow-hidden mt-6">
+                    <div className="px-5 py-4 border-b border-[#E8ECF1]">
+                      <h2 className="font-semibold text-[#304256]">Views by Brand</h2>
+                    </div>
+                    <div className="max-h-[300px] overflow-y-auto">
+                      {data.micro_learning.brand_breakdown.map((b) => (
+                        <div key={b.brand} className="px-5 py-3 border-b border-gray-100 last:border-b-0 flex items-center gap-3">
+                          <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: getBrandColor(b.brand) }} />
+                          <span className="flex-1 text-sm font-medium text-gray-800 truncate">{b.brand}</span>
+                          <span className="text-xs font-semibold text-[#27a28c] tabular-nums">{b.views} views</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* KB Health (admin only) */}
             {showSearchAnalytics && data.kb_health && (() => {
