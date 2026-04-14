@@ -17,23 +17,45 @@ function TreeNode({
   depth,
   activeArticleId,
   onSelectArticle,
+  forceExpanded,
+  searchQuery,
 }: {
   node: WikiNode;
   depth: number;
   activeArticleId: string | null;
   onSelectArticle: (article: WikiNode) => void;
+  forceExpanded?: boolean;
+  searchQuery?: string;
 }) {
   const [expanded, setExpanded] = useState(depth < 1);
   const hasChildren = node.children && node.children.length > 0;
   const isHeading = node.node_type === "heading";
   const isActive = node.id === activeArticleId;
+  const isExpanded = forceExpanded ? true : expanded;
+
+  const renderTitle = () => {
+    if (!searchQuery) return node.title;
+    const q = searchQuery.toLowerCase();
+    const title = node.title;
+    const idx = title.toLowerCase().indexOf(q);
+    if (idx === -1) return title;
+    return (
+      <>
+        {title.slice(0, idx)}
+        <mark style={{ backgroundColor: "#fef3c7", color: "inherit", padding: 0 }}>
+          {title.slice(idx, idx + q.length)}
+        </mark>
+        {title.slice(idx + q.length)}
+      </>
+    );
+  };
 
   return (
     <div>
       <button
         onClick={() => {
           if (hasChildren) {
-            setExpanded(!expanded);
+            setExpanded(!isExpanded);
           }
           if (node.node_type === "article" || (isHeading && !hasChildren) || (isHeading && node.html_content)) {
             onSelectArticle(node);
@@ -70,16 +92,16 @@ function TreeNode({
         {hasChildren ? (
           <span
             className="w-5 flex-shrink-0 inline-flex items-center justify-center text-[11px]"
-            style={{ color: isActive ? "#ffffff" : "#9ca3af", transition: "transform 150ms ease", transform: expanded ? "rotate(90deg)" : "rotate(0deg)" }}
+            style={{ color: isActive ? "#ffffff" : "#9ca3af", transition: "transform 150ms ease", transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}
           >
             &#x203A;
           </span>
         ) : (
           <span className="w-5 flex-shrink-0" />
         )}
-        <span className={isActive ? "" : ""}>{node.title}</span>
+        <span className={isActive ? "" : ""}>{renderTitle()}</span>
       </button>
-      {hasChildren && expanded && (
+      {hasChildren && isExpanded && (
         <div>
           {node.children!.map((child) => (
             <TreeNode
@@ -88,6 +110,8 @@ function TreeNode({
               depth={depth + 1}
               activeArticleId={activeArticleId}
               onSelectArticle={onSelectArticle}
+              forceExpanded={forceExpanded}
+              searchQuery={searchQuery}
             />
           ))}
         </div>
@@ -195,11 +219,13 @@ export default function WikiTree({
       <div className="flex-1 overflow-y-auto px-2 pb-4 wiki-tree-scroll">
         {filteredNodes.map((node) => (
           <TreeNode
-            key={node.id}
+            key={search ? `search-${node.id}` : node.id}
             node={node}
             depth={0}
             activeArticleId={activeArticleId}
             onSelectArticle={handleSelect}
+            forceExpanded={!!search}
+            searchQuery={search}
           />
         ))}
         {filteredNodes.length === 0 && search && (
