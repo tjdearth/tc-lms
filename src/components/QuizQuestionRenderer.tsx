@@ -111,18 +111,29 @@ export default function QuizQuestionRenderer({
 
   // True / False
   if (question.question_type === "true_false") {
+    // Use the actual options (and their IDs) from the question, so the answer
+    // we send back matches what the grader expects (option.id, not "true"/"false").
+    // Fall back to synthesized True/False buttons only if options are missing.
+    const tfOptions = question.options && question.options.length >= 2
+      ? question.options.slice(0, 2)
+      : [
+          { id: "true", text: "True", is_correct: false },
+          { id: "false", text: "False", is_correct: false },
+        ];
+
     return (
       <div className={`rounded-xl border ${borderColor} p-4`}>
         <p className="text-sm font-medium text-[#304256] mb-3">
           {question.question_text}
         </p>
         <div className="flex gap-3">
-          {["True", "False"].map((val) => {
-            const isSelected = answer[0] === val.toLowerCase();
+          {tfOptions.map((opt) => {
+            const isSelected = answer[0] === opt.id;
+            const showAsCorrect = showResult && opt.is_correct;
             return (
               <button
-                key={val}
-                onClick={() => !showResult && onChange([val.toLowerCase()])}
+                key={opt.id}
+                onClick={() => !showResult && onChange([opt.id])}
                 disabled={showResult}
                 className={`flex-1 py-3 rounded-lg text-sm font-medium border-2 transition-colors ${
                   isSelected
@@ -132,9 +143,13 @@ export default function QuizQuestionRenderer({
                   showResult && isSelected && !isCorrect
                     ? "border-red-400 bg-red-50 text-red-600"
                     : ""
+                } ${
+                  showAsCorrect && !isSelected
+                    ? "border-green-400 bg-green-50 text-green-700"
+                    : ""
                 }`}
               >
-                {val}
+                {opt.text}
               </button>
             );
           })}
