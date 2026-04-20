@@ -1,15 +1,21 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { WikiNode } from "@/types";
+import { WikiNode, MicroLesson } from "@/types";
 import { getAllArticles, buildBreadcrumb } from "@/lib/api";
 
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectArticle: (article: WikiNode) => void;
+  onSelectMicroLesson?: (lesson: MicroLesson) => void;
   nodes: WikiNode[];
+  microLessons?: MicroLesson[];
 }
+
+type SearchResult =
+  | { kind: "wiki"; article: WikiNode; score: number; titleMatch: boolean; contentMatch: boolean }
+  | { kind: "micro"; lesson: MicroLesson; score: number; titleMatch: boolean; contentMatch: boolean; snippet: string | null };
 
 function highlightMatch(text: string, query: string): React.ReactNode {
   if (!query.trim()) return text;
@@ -41,6 +47,13 @@ function getSnippet(searchText: string, query: string): string | null {
 }
 
 function ResultIcon({ type }: { type: string }) {
+  if (type === "micro") {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#27a28c" strokeWidth="2" className="flex-shrink-0">
+        <polygon points="5 3 19 12 5 21 5 3" />
+      </svg>
+    );
+  }
   if (type === "heading") {
     return (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 text-gray-400">
@@ -58,11 +71,17 @@ function ResultIcon({ type }: { type: string }) {
   );
 }
 
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
 export default function SearchModal({
   isOpen,
   onClose,
   onSelectArticle,
+  onSelectMicroLesson,
   nodes,
+  microLessons = [],
 }: SearchModalProps) {
   const [query, setQuery] = useState("");
   const [selectedIdx, setSelectedIdx] = useState(0);
@@ -103,26 +122,48 @@ export default function SearchModal({
     }
   }, [isOpen]);
 
-  const results = useMemo(() => {
+  const results = useMemo<SearchResult[]>(() => {
     if (!query.trim()) return [];
     const lower = query.toLowerCase();
-    return allArticles
+
+    const wikiResults: SearchResult[] = allArticles
       .map((a) => {
         const titleMatch = a.title.toLowerCase().includes(lower);
         const contentMatch = a.search_text?.toLowerCase().includes(lower) ?? false;
         if (!titleMatch && !contentMatch) return null;
-        // Score: title matches rank higher
         const score = titleMatch ? 2 : 1;
-        return { article: a, score, titleMatch, contentMatch };
+        return { kind: "wiki" as const, article: a, score, titleMatch, contentMatch };
       })
-      .filter(Boolean)
-      .sort((a, b) => b!.score - a!.score) as Array<{
-      article: WikiNode;
-      score: number;
-      titleMatch: boolean;
-      contentMatch: boolean;
-    }>;
-  }, [query, allArticles]);
+      .filter((r): r is Extract<SearchResult, { kind: "wiki" }> => r !== null);
+
+    const microResults: SearchResult[] = microLessons
+      .map((l) => {
+        const titleMatch = l.title.toLowerCase().includes(lower);
+        const descMatch = l.description?.toLowerCase().includes(lower) ?? false;
+        const tagMatch = (l.tags || []).some((t) => t.toLowerCase().includes(lower));
+        const transcript = l.transcript ? l.transcript.toLowerCase() : "";
+        const keyPoints = l.key_points_html ? stripHtml(l.key_points_html).toLowerCase() : "";
+        const transcriptMatch = transcript.includes(lower) || keyPoints.includes(lower);
+        const contentMatch = descMatch || tagMatch || transcriptMatch;
+        if (!titleMatch && !contentMatch) return null;
+
+        // Snippet pulled from description or transcript
+        let snippet: string | null = null;
+        if (descMatch && l.description) {
+          snippet = getSnippet(l.description, query);
+        } else if (transcriptMatch) {
+          snippet = getSnippet(l.transcript || stripHtml(l.key_points_html || ""), query);
+        } else if (tagMatch) {
+          snippet = `Tags: ${l.tags.join(", ")}`;
+        }
+
+        const score = titleMatch ? 2 : 1;
+        return { kind: "micro" as const, lesson: l, score, titleMatch, contentMatch, snippet };
+      })
+      .filter((r): r is Extract<SearchResult, { kind: "micro" }> => r !== null);
+
+    return [...wikiResults, ...microResults].sort((a, b) => b.score - a.score);
+  }, [query, allArticles, microLessons]);
 
   // Debounced search logging — log when user stops typing for 1 second
   useEffect(() => {
@@ -162,25 +203,37 @@ export default function SearchModal({
       }
       if (!isOpen) return;
 
-      const list = query.trim() ? results : recentArticles.map((a) => ({ article: a }));
+      const hasQuery = !!query.trim();
+      const listLength = hasQuery ? results.length : recentArticles.length;
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setSelectedIdx((prev) => Math.min(prev + 1, list.length - 1));
+        setSelectedIdx((prev) => Math.min(prev + 1, listLength - 1));
       }
       if (e.key === "ArrowUp") {
         e.preventDefault();
         setSelectedIdx((prev) => Math.max(prev - 1, 0));
       }
-      if (e.key === "Enter" && list.length > 0) {
+      if (e.key === "Enter" && listLength > 0) {
         e.preventDefault();
-        const item = list[selectedIdx];
-        if (item) {
-          onSelectArticle(item.article);
-          onClose();
+        if (hasQuery) {
+          const r = results[selectedIdx];
+          if (r?.kind === "wiki") {
+            onSelectArticle(r.article);
+            onClose();
+          } else if (r?.kind === "micro" && onSelectMicroLesson) {
+            onSelectMicroLesson(r.lesson);
+            onClose();
+          }
+        } else {
+          const article = recentArticles[selectedIdx];
+          if (article) {
+            onSelectArticle(article);
+            onClose();
+          }
         }
       }
     },
-    [isOpen, onClose, query, results, recentArticles, selectedIdx, onSelectArticle]
+    [isOpen, onClose, query, results, recentArticles, selectedIdx, onSelectArticle, onSelectMicroLesson]
   );
 
   useEffect(() => {
@@ -197,6 +250,16 @@ export default function SearchModal({
     }
     onSelectArticle(article);
     onClose();
+  };
+
+  const handleSelectMicro = (lesson: MicroLesson) => {
+    if (query.trim()) {
+      logSearch(query, results.length, lesson.id);
+    }
+    if (onSelectMicroLesson) {
+      onSelectMicroLesson(lesson);
+      onClose();
+    }
   };
 
   const showRecent = !query.trim();
@@ -333,36 +396,70 @@ export default function SearchModal({
                 {results.length} result{results.length !== 1 ? "s" : ""}
               </p>
               {results.map((result, idx) => {
-                const { article, titleMatch, contentMatch } = result;
-                const crumbs = buildBreadcrumb(nodes, article.id);
-                const parentPath = crumbs.slice(0, -1).join(" / ");
-                const snippet = contentMatch
-                  ? getSnippet(article.search_text || "", query)
-                  : null;
                 const isSelected = idx === selectedIdx;
+
+                if (result.kind === "wiki") {
+                  const { article, titleMatch, contentMatch } = result;
+                  const crumbs = buildBreadcrumb(nodes, article.id);
+                  const parentPath = crumbs.slice(0, -1).join(" / ");
+                  const snippet = contentMatch
+                    ? getSnippet(article.search_text || "", query)
+                    : null;
+                  return (
+                    <button
+                      key={`wiki-${article.id}`}
+                      data-selected={isSelected}
+                      onClick={() => handleSelect(article)}
+                      className={`w-full text-left px-5 py-2.5 flex items-start gap-3 transition-colors ${
+                        isSelected ? "bg-accent/5" : "hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="mt-0.5">
+                        <ResultIcon type={article.node_type} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-sm font-medium ${isSelected ? "text-accent" : "text-gray-800"}`}>
+                          {titleMatch ? highlightMatch(article.title, query) : article.title}
+                        </p>
+                        {parentPath && (
+                          <p className="text-[11px] text-gray-400 mt-0.5 truncate">{parentPath}</p>
+                        )}
+                        {snippet && (
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">
+                            {highlightMatch(snippet, query)}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  );
+                }
+
+                // Micro-lesson result
+                const { lesson, titleMatch, snippet } = result;
                 return (
                   <button
-                    key={article.id}
+                    key={`micro-${lesson.id}`}
                     data-selected={isSelected}
-                    onClick={() => handleSelect(article)}
+                    onClick={() => handleSelectMicro(lesson)}
                     className={`w-full text-left px-5 py-2.5 flex items-start gap-3 transition-colors ${
                       isSelected ? "bg-accent/5" : "hover:bg-gray-50"
                     }`}
                   >
                     <div className="mt-0.5">
-                      <ResultIcon type={article.node_type} />
+                      <ResultIcon type="micro" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm font-medium ${isSelected ? "text-accent" : "text-gray-800"}`}>
-                        {titleMatch
-                          ? highlightMatch(article.title, query)
-                          : article.title}
-                      </p>
-                      {parentPath && (
-                        <p className="text-[11px] text-gray-400 mt-0.5 truncate">
-                          {parentPath}
+                      <div className="flex items-center gap-2">
+                        <p className={`text-sm font-medium ${isSelected ? "text-accent" : "text-gray-800"}`}>
+                          {titleMatch ? highlightMatch(lesson.title, query) : lesson.title}
                         </p>
-                      )}
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#27a28c]/10 text-[#27a28c] flex-shrink-0">
+                          Micro-Learning
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-400 mt-0.5 truncate">
+                        5 min lesson{lesson.tags && lesson.tags.length > 0 ? ` · ${lesson.tags.slice(0, 3).join(", ")}` : ""}
+                      </p>
                       {snippet && (
                         <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">
                           {highlightMatch(snippet, query)}

@@ -6,15 +6,20 @@ import { useSession } from "next-auth/react";
 import Sidebar from "./Sidebar";
 import SearchModal from "./SearchModal";
 import { fetchWikiTree } from "@/lib/api";
-import { WikiNode } from "@/types";
+import { WikiNode, MicroLesson } from "@/types";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [wikiTree, setWikiTree] = useState<WikiNode[]>([]);
+  const [microLessons, setMicroLessons] = useState<MicroLesson[]>([]);
 
   useEffect(() => {
     fetchWikiTree().then(setWikiTree);
+    fetch("/api/learn/micro-lessons")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setMicroLessons(Array.isArray(data) ? data : []))
+      .catch(() => {});
   }, []);
   const router = useRouter();
   const { status } = useSession();
@@ -55,6 +60,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const handleSearchSelect = (article: WikiNode) => {
     router.push(`/wiki?article=${article.id}`);
+    setSearchOpen(false);
+  };
+
+  const handleSelectMicroLesson = (lesson: MicroLesson) => {
+    router.push(`/learn/micro-learning/${lesson.id}`);
     setSearchOpen(false);
   };
 
@@ -108,7 +118,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
         onSelectArticle={handleSearchSelect}
+        onSelectMicroLesson={handleSelectMicroLesson}
         nodes={wikiTree}
+        microLessons={microLessons}
       />
     </>
   );
