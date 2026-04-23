@@ -71,7 +71,7 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
     ],
     render: (v) => `<table cellpadding="5" cellspacing="0" style="font-family:Arial,sans-serif;color:#000"><tr>
   <td style="vertical-align:top;text-align:center;width:115px">
-    <a href="https://www.eluraaustralia.com" target="_blank"><img src="https://atlas.travelcollection.co/logos/elura-australia.png" width="75" height="97" alt="Elura Australia"></a>
+    <a href="https://www.eluraaustralia.com" target="_blank"><img src="https://atlas.travelcollection.co/logos/elura-australia-email.png" width="75" alt="Elura Australia"></a>
   </td>
   <td style="vertical-align:middle">
     <div style="font-size:12pt;font-weight:700">${v.name || "Full Name"}</div>
