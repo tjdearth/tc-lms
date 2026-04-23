@@ -267,7 +267,7 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
     <span style="font-family:Arial,sans-serif;font-size:12.8px;color:rgb(136,136,136)">M: ${v.phone || "+000 000 000 000"}</span>
   </p>
   <p dir="ltr" style="line-height:1.38;margin:0">&nbsp;</p>
-  <img src="https://atlas.travelcollection.co/logos/truly-swahili.png" width="200" height="100" alt="Truly Swahili">
+  <img src="https://atlas.travelcollection.co/logos/truly-swahili-email.png" width="200" alt="Truly Swahili">
   <p dir="ltr" style="line-height:1.38;margin:0">&nbsp;</p>
 </div>`,
   },
