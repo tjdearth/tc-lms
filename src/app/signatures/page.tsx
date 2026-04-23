@@ -297,8 +297,10 @@ export default function SignaturesPage() {
   }
 
   const html = template ? template.render(values) : "";
+  const tooLong = html.length > 1300;
 
   async function handleCopy() {
+    if (tooLong) return;
     await navigator.clipboard.writeText(html);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -419,18 +421,25 @@ export default function SignaturesPage() {
               />
             </div>
 
+            {tooLong && (
+              <p style={{ color: "#c0392b", fontSize: 13, marginBottom: 12 }}>
+                Signature HTML exceeds 1300 characters ({html.length}). Shorten your details before copying.
+              </p>
+            )}
+
             {/* Copy button */}
             <button
               onClick={handleCopy}
+              disabled={tooLong}
               style={{
                 padding: "12px 28px",
                 borderRadius: 8,
                 border: "none",
-                background: copied ? "#4F9E2D" : "#304256",
-                color: "#fff",
+                background: tooLong ? "#e2e8f0" : copied ? "#4F9E2D" : "#304256",
+                color: tooLong ? "#9aabb8" : "#fff",
                 fontSize: 14,
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: tooLong ? "not-allowed" : "pointer",
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
