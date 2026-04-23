@@ -192,9 +192,9 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
 <div><b>Phone:</b> <a href="tel:${telHref}" style="color:#fff">${v.phone || "+000 0 00 000 000"}</a></div>
 </td>
 <td style="vertical-align:bottom;padding-left:10px">
-<a href="https://linkedin.com/company/experience-morocco"><img width="18" alt="LinkedIn" src="https://experiencemorocco.com/s/li.png"></a><br><br>
-<a href="https://facebook.com/expmorocco"><img width="18" alt="Facebook" src="https://experiencemorocco.com/s/fb.png"></a><br><br>
-<a href="https://instagram.com/experiencemorocco"><img width="18" alt="Instagram" src="https://experiencemorocco.com/s/ig.png"></a>
+<a href="https://linkedin.com/company/experience-morocco"><img width="18" alt="LinkedIn" src="https://atlas.travelcollection.co/social/li.svg"></a><br><br>
+<a href="https://facebook.com/expmorocco"><img width="18" alt="Facebook" src="https://atlas.travelcollection.co/social/fb.svg"></a><br><br>
+<a href="https://instagram.com/experiencemorocco"><img width="18" alt="Instagram" src="https://atlas.travelcollection.co/social/ig.svg"></a>
 </td>
 </tr></table>`;
     },
