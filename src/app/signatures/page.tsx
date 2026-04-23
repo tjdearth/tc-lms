@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import AppShell from "@/components/AppShell";
 
 interface SignatureTemplate {
@@ -275,6 +276,7 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
 const SUBSIDIARIES = Object.keys(SIGNATURE_TEMPLATES);
 
 export default function SignaturesPage() {
+  const { data: session } = useSession();
   const [selected, setSelected] = useState<string>("");
   const [values, setValues] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
@@ -289,6 +291,10 @@ export default function SignaturesPage() {
     for (const field of SIGNATURE_TEMPLATES[sub].fields) {
       if (field.defaultValue) defaults[field.key] = field.defaultValue;
     }
+    if (session?.user?.name && SIGNATURE_TEMPLATES[sub].fields.some(f => f.key === "name"))
+      defaults["name"] = session.user.name;
+    if (session?.user?.email && SIGNATURE_TEMPLATES[sub].fields.some(f => f.key === "email"))
+      defaults["email"] = session.user.email;
     setValues(defaults);
     setCopied(false);
   }
