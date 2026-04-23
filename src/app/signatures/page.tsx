@@ -18,7 +18,7 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
       { key: "phone", label: "Phone", placeholder: "e.g. +1 617 308 0125", defaultValue: "+1 617 308 0125" },
     ],
     render: (v) => `<div style="font-family:Arial,sans-serif;font-size:10pt;color:#444;line-height:1.38">
-  <p style="margin:0"><img src="https://atlas.travelcollection.co/logos/sar-turkiye.png" width="96" height="96" alt="SAR Turkiye"></p>
+  <p style="margin:0"><img src="https://atlas.travelcollection.co/logos/sar-turkiye.png" width="200" alt="SAR Turkiye"></p>
   <p style="margin:0">${v.name || "Full Name"} | ${v.title || "Job Title"} | <a href="https://www.sarturkiye.com/" target="_blank">SAR Turkiye</a></p>
   <p style="margin:0">M: ${v.phone || "+0 000 000 0000"}</p>
 </div>`,
