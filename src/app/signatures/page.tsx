@@ -230,7 +230,7 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
       { key: "phoneUS", label: "US Phone", placeholder: "e.g. +1 646 917 6807", defaultValue: "+1 646 917 6807" },
     ],
     render: (v) => `<div style="color:rgb(136,136,136)">
-  <img src="https://atlas.travelcollection.co/logos/crown-journey.png" alt="Crown Journey"><br>
+  <img src="https://atlas.travelcollection.co/logos/crown-journey-email.png" width="67" height="67" alt="Crown Journey"><br>
   <b>${(v.name || "Full Name").toUpperCase()}, ${v.title || "Job Title"}, Crown Journey</b>
   <div><b>E: <a href="mailto:${v.email || "email@crownjourney.com"}">${v.email || "email@crownjourney.com"}</a> &nbsp;W: <a href="http://crownjourney.com" target="_blank">crownjourney.com</a></b></div>
   <div>UK phone ${v.phoneUK || "+44 0000 000000"} &nbsp;US phone ${v.phoneUS || "+1 000 000 0000"}</div>
