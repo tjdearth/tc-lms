@@ -278,6 +278,8 @@ export default function SignaturesPage() {
   const [selected, setSelected] = useState<string>("");
   const [values, setValues] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
+  const [copiedGmail, setCopiedGmail] = useState(false);
+  const [copiedSalesforce, setCopiedSalesforce] = useState(false);
 
   const template = selected ? SIGNATURE_TEMPLATES[selected] : null;
 
@@ -304,6 +306,22 @@ export default function SignaturesPage() {
     await navigator.clipboard.writeText(html);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleCopyGmail() {
+    if (tooLong) return;
+    await navigator.clipboard.writeText(html);
+    setCopiedGmail(true);
+    setTimeout(() => setCopiedGmail(false), 2000);
+    window.open("https://mail.google.com/mail/u/0/#settings/general", "_blank");
+  }
+
+  async function handleCopySalesforce() {
+    if (tooLong) return;
+    await navigator.clipboard.writeText(html);
+    setCopiedSalesforce(true);
+    setTimeout(() => setCopiedSalesforce(false), 2000);
+    window.open("https://travelcollection.lightning.force.com/lightning/settings/personal/EmailSettings/home", "_blank");
   }
 
   return (
@@ -427,42 +445,65 @@ export default function SignaturesPage() {
               </p>
             )}
 
-            {/* Copy button */}
-            <button
-              onClick={handleCopy}
-              disabled={tooLong}
-              style={{
-                padding: "12px 28px",
-                borderRadius: 8,
-                border: "none",
-                background: tooLong ? "#e2e8f0" : copied ? "#4F9E2D" : "#304256",
-                color: tooLong ? "#9aabb8" : "#fff",
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: tooLong ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                transition: "background 0.15s",
-              }}
-            >
-              {copied ? (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                  </svg>
-                  Copy HTML
-                </>
-              )}
-            </button>
+            {/* Buttons */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+              <button
+                onClick={handleCopy}
+                disabled={tooLong}
+                style={{
+                  padding: "12px 20px", borderRadius: 8, border: "none",
+                  background: tooLong ? "#e2e8f0" : copied ? "#4F9E2D" : "#304256",
+                  color: tooLong ? "#9aabb8" : "#fff",
+                  fontSize: 14, fontWeight: 600,
+                  cursor: tooLong ? "not-allowed" : "pointer",
+                  display: "flex", alignItems: "center", gap: 8, transition: "background 0.15s",
+                }}
+              >
+                {copied ? (
+                  <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>Copied!</>
+                ) : (
+                  <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>Copy HTML</>
+                )}
+              </button>
+
+              <button
+                onClick={handleCopyGmail}
+                disabled={tooLong}
+                style={{
+                  padding: "12px 20px", borderRadius: 8, border: "none",
+                  background: tooLong ? "#e2e8f0" : copiedGmail ? "#4F9E2D" : "#EA4335",
+                  color: tooLong ? "#9aabb8" : "#fff",
+                  fontSize: 14, fontWeight: 600,
+                  cursor: tooLong ? "not-allowed" : "pointer",
+                  display: "flex", alignItems: "center", gap: 8, transition: "background 0.15s",
+                }}
+              >
+                {copiedGmail ? (
+                  <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>Copied! Opening Gmail…</>
+                ) : (
+                  <>Copy &amp; Set in Gmail</>
+                )}
+              </button>
+
+              <button
+                onClick={handleCopySalesforce}
+                disabled={tooLong}
+                style={{
+                  padding: "12px 20px", borderRadius: 8, border: "none",
+                  background: tooLong ? "#e2e8f0" : copiedSalesforce ? "#4F9E2D" : "#00A1E0",
+                  color: tooLong ? "#9aabb8" : "#fff",
+                  fontSize: 14, fontWeight: 600,
+                  cursor: tooLong ? "not-allowed" : "pointer",
+                  display: "flex", alignItems: "center", gap: 8, transition: "background 0.15s",
+                }}
+              >
+                {copiedSalesforce ? (
+                  <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>Copied! Opening Salesforce…</>
+                ) : (
+                  <>Copy &amp; Set in Salesforce</>
+                )}
+              </button>
+            </div>
           </>
         )}
       </div>
