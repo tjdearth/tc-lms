@@ -321,7 +321,7 @@ export default function SignaturesPage() {
   }
 
   const html = template ? template.render(values) : "";
-  const tooLong = html.length > 1300;
+  const tooLong = html.length > 1333;
 
   async function handleCopy() {
     if (tooLong) return;
@@ -463,7 +463,7 @@ export default function SignaturesPage() {
 
             {tooLong && (
               <p style={{ color: "#c0392b", fontSize: 13, marginBottom: 12 }}>
-                Signature HTML exceeds 1300 characters ({html.length}). Shorten your details before copying.
+                Signature HTML exceeds 1333 characters ({html.length}). Shorten your details before copying.
               </p>
             )}
 
