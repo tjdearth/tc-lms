@@ -170,7 +170,7 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
   <div>${v.address || "Address"}</div>
   <div><a href="mailto:${v.email || "email@nostosgreece.com"}">${v.email || "email@nostosgreece.com"}</a></div>
   <div><br></div>
-  <div><img src="https://atlas.travelcollection.co/logos/nostos-greece.png" width="200" height="89" alt="Nostos Greece"></div>
+  <div><img src="https://atlas.travelcollection.co/logos/nostos-greece-email.png" width="200" alt="Nostos Greece"></div>
 </div>`,
   },
   "Experience Morocco": {
