@@ -434,6 +434,9 @@ export default function SignaturesPage() {
                 }}
                 dangerouslySetInnerHTML={{ __html: html }}
               />
+              <div style={{ textAlign: "right", fontSize: 11, color: "#c0c8d0", marginTop: 8 }}>
+                {html.length} chars
+              </div>
             </div>
 
             {tooLong && (
