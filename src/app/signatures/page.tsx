@@ -152,6 +152,19 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
   <div><img src="https://atlas.travelcollection.co/logos/authenticus-italy.png" width="84" height="96" alt="Authenticus Italy"></div>
 </div>`,
   },
+  "Kembali Asia": {
+    name: "Kembali Asia",
+    fields: [
+      { key: "name", label: "Full Name", placeholder: "e.g. Chloe Ong" },
+      { key: "title", label: "Job Title", placeholder: "e.g. General Manager" },
+      { key: "phone", label: "US Phone", placeholder: "e.g. +1 (510) 400-4203", defaultValue: "+1 (510) 400-4203" },
+    ],
+    render: (v) => `<div style="font-family:Arial,sans-serif;font-size:10pt;color:rgb(136,136,136);line-height:1.38">
+  <div>${v.name || "Full Name"} | ${v.title || "Job Title"} | <a href="http://www.kembaliindonesia.com" target="_blank" style="color:rgb(17,85,204)">Kembali Asia</a></div>
+  <div>M: ${v.phone || "+1 (000) 000-0000"} (US)</div>
+  <div><img src="https://atlas.travelcollection.co/logos/kembali-asia-email.png" width="200" height="200" alt="Kembali Asia"></div>
+</div>`,
+  },
   "Nostos Greece": {
     name: "Nostos Greece",
     fields: [
