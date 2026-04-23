@@ -32,17 +32,17 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
       { key: "phone", label: "Phone", placeholder: "e.g. +51 943 982 628", defaultValue: "+51 943 982 628" },
     ],
     render: (v) => `<table cellpadding="0" cellspacing="0" style="font-family:Arial,Helvetica,sans-serif;font-size:10pt"><tr>
-  <td style="border-right:1px solid #000;padding-right:10px;vertical-align:bottom">
-    <img src="https://atlas.travelcollection.co/logos/awaken-peru.png" width="200" alt="Awaken Peru">
+  <td style="border-right:1px solid #000;padding-right:10px;vertical-align:middle">
+    <img src="https://atlas.travelcollection.co/logos/awaken-peru-email.png" width="200" alt="Awaken Peru">
   </td>
   <td style="padding-left:10px;vertical-align:middle">
     <div><b style="color:#666">${v.name || "Full Name"}</b></div>
     <div style="color:#888">${v.title || "Job Title"}</div>
     <div style="color:#888">M: ${v.phone || "+00 000 000 000"}</div>
-    <div style="margin-top:4px">
-      <a href="http://www.awakenperu.com" target="_blank"><img src="https://atlas.travelcollection.co/social/website.png" width="24" height="24" alt="website" style="border:0"></a>&nbsp;
-      <a href="https://www.linkedin.com/company/awaken-peru/" target="_blank"><img src="https://atlas.travelcollection.co/social/linkedin-dark.png" width="24" height="24" alt="linkedin" style="border:0"></a>&nbsp;
-      <a href="https://www.instagram.com/awaken_peru/" target="_blank"><img src="https://atlas.travelcollection.co/social/instagram-dark.png" width="24" height="24" alt="instagram" style="border:0"></a>
+    <div style="margin-top:4px;white-space:nowrap">
+      <a href="http://www.awakenperu.com" target="_blank"><img src="https://atlas.travelcollection.co/social/website.png" width="24" height="24" alt="website" style="border:0;display:inline"></a>&nbsp;
+      <a href="https://www.linkedin.com/company/awaken-peru/" target="_blank"><img src="https://atlas.travelcollection.co/social/linkedin-dark.png" width="24" height="24" alt="linkedin" style="border:0;display:inline"></a>&nbsp;
+      <a href="https://www.instagram.com/awaken_peru/" target="_blank"><img src="https://atlas.travelcollection.co/social/instagram-dark.png" width="24" height="24" alt="instagram" style="border:0;display:inline"></a>
     </div>
   </td>
 </tr></table>`,
