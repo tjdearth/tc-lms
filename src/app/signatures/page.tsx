@@ -196,11 +196,11 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
     </td>
     <td style="padding:20px 20px 20px 8px;vertical-align:middle">
       <table cellpadding="0" cellspacing="0"><tr><td style="padding-bottom:8px">
-        <a href="https://linkedin.com/company/experience-morocco"><img width="18" height="18" alt="LinkedIn" src="https://atlas.travelcollection.co/social/li.svg"></a>
+        <a href="https://linkedin.com/company/experience-morocco"><img width="18" height="18" alt="LinkedIn" src="https://atlas.travelcollection.co/social/li.png"></a>
       </td></tr><tr><td style="padding-bottom:8px">
-        <a href="https://facebook.com/expmorocco"><img width="18" height="18" alt="Facebook" src="https://atlas.travelcollection.co/social/fb.svg"></a>
+        <a href="https://facebook.com/expmorocco"><img width="18" height="18" alt="Facebook" src="https://atlas.travelcollection.co/social/fb.png"></a>
       </td></tr><tr><td>
-        <a href="https://instagram.com/experiencemorocco"><img width="18" height="18" alt="Instagram" src="https://atlas.travelcollection.co/social/ig.svg"></a>
+        <a href="https://instagram.com/experiencemorocco"><img width="18" height="18" alt="Instagram" src="https://atlas.travelcollection.co/social/ig.png"></a>
       </td></tr></table>
     </td>
   </tr>
