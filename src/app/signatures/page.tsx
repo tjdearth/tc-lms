@@ -165,7 +165,7 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
     render: (v) => `<div style="font-family:Arial,sans-serif;font-size:10pt;color:rgb(136,136,136);line-height:1.38">
   <div>${v.name || "Full Name"} | ${v.title || "Job Title"} | <a href="http://www.kembaliindonesia.com" target="_blank" style="color:rgb(17,85,204)">Kembali Asia</a></div>
   <div>M: ${v.phone || "+1 (000) 000-0000"} (US)</div>
-  <div><img src="https://atlas.travelcollection.co/logos/kembali-asia-email.png" width="200" height="200" alt="Kembali Asia"></div>
+  <div><img src="https://atlas.travelcollection.co/logos/kembali-asia.png" width="200" height="200" alt="Kembali Asia"></div>
 </div>`,
   },
   "Nostos Greece": {
