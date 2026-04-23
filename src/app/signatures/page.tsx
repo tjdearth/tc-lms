@@ -182,21 +182,29 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
     ],
     render: (v) => {
       const telHref = (v.phone || "+000000000000").replace(/\s/g, "");
-      return `<table cellpadding="0" cellspacing="0" style="background:#a34e2f;font-family:Montserrat,Arial,sans-serif;color:#fff;padding:20px;max-width:600px"><tr>
-<td style="padding-right:20px"><img alt="Experience Morocco" src="https://atlas.travelcollection.co/logos/experience-morocco.png" width="200"></td>
-<td style="padding-left:20px;vertical-align:middle;font-size:13px;line-height:1.6">
-<div style="font-weight:600;font-size:15px">${v.name || "Full Name"}</div>
-<div style="font-size:12px;margin-bottom:10px">${v.title || "Job Title"}</div>
-<div><b>Email:</b> <a href="mailto:${v.email || "email@experiencemorocco.com"}" style="color:#fff">${v.email || "email@experiencemorocco.com"}</a></div>
-<div><b>Website:</b> <a href="https://www.experiencemorocco.com/" style="color:#fff">www.experiencemorocco.com</a></div>
-<div><b>Phone:</b> <a href="tel:${telHref}" style="color:#fff">${v.phone || "+000 0 00 000 000"}</a></div>
-</td>
-<td style="vertical-align:middle;padding-left:16px">
-<a href="https://linkedin.com/company/experience-morocco"><img width="32" alt="LinkedIn" src="https://atlas.travelcollection.co/social/li.svg"></a><br><br>
-<a href="https://facebook.com/expmorocco"><img width="32" alt="Facebook" src="https://atlas.travelcollection.co/social/fb.svg"></a><br><br>
-<a href="https://instagram.com/experiencemorocco"><img width="32" alt="Instagram" src="https://atlas.travelcollection.co/social/ig.svg"></a>
-</td>
-</tr></table>`;
+      return `<table cellpadding="0" cellspacing="0" style="background:#a34e2f;font-family:Montserrat,Arial,sans-serif;color:#fff;border-collapse:collapse">
+  <tr>
+    <td style="padding:20px 16px 20px 20px;vertical-align:middle">
+      <img alt="Experience Morocco" src="https://atlas.travelcollection.co/logos/experience-morocco.png" width="180">
+    </td>
+    <td style="padding:20px 16px;vertical-align:middle;font-size:13px;line-height:1.6;white-space:nowrap">
+      <div style="font-weight:600;font-size:15px">${v.name || "Full Name"}</div>
+      <div style="font-size:12px;margin-bottom:10px">${v.title || "Job Title"}</div>
+      <div><b>Email:</b> <a href="mailto:${v.email || "email@experiencemorocco.com"}" style="color:#fff">${v.email || "email@experiencemorocco.com"}</a></div>
+      <div><b>Website:</b> <a href="https://www.experiencemorocco.com/" style="color:#fff">www.experiencemorocco.com</a></div>
+      <div><b>Phone:</b> <a href="tel:${telHref}" style="color:#fff">${v.phone || "+000 0 00 000 000"}</a></div>
+    </td>
+    <td style="padding:20px 20px 20px 8px;vertical-align:middle">
+      <table cellpadding="0" cellspacing="0"><tr><td style="padding-bottom:8px">
+        <a href="https://linkedin.com/company/experience-morocco"><img width="30" height="30" alt="LinkedIn" src="https://atlas.travelcollection.co/social/li.svg"></a>
+      </td></tr><tr><td style="padding-bottom:8px">
+        <a href="https://facebook.com/expmorocco"><img width="30" height="30" alt="Facebook" src="https://atlas.travelcollection.co/social/fb.svg"></a>
+      </td></tr><tr><td>
+        <a href="https://instagram.com/experiencemorocco"><img width="30" height="30" alt="Instagram" src="https://atlas.travelcollection.co/social/ig.svg"></a>
+      </td></tr></table>
+    </td>
+  </tr>
+</table>`;
     },
   },
   "Unbox Spain & Portugal": {
