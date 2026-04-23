@@ -86,20 +86,10 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
     fields: [
       { key: "name", label: "Full Name", placeholder: "e.g. Livy LEROY" },
       { key: "title", label: "Job Title", placeholder: "e.g. General Manager" },
-      { key: "phoneFR", label: "France Phone", placeholder: "e.g. +33 6 67 43 39 45", defaultValue: "+33 6 67 43 39 45" },
-      { key: "phoneUS", label: "US Phone", placeholder: "e.g. +1 (872) 266 3600", defaultValue: "+1 (872) 266 3600" },
+      { key: "phone", label: "Phone", placeholder: "e.g. +33 6 67 43 39 45" },
+      { key: "email", label: "Email Address", placeholder: "e.g. livy@essentiallyfrench.com" },
     ],
-    render: (v) => `<table cellpadding="0" cellspacing="0" style="font-family:Helvetica,Arial,sans-serif;font-size:13px;color:#333;line-height:1.6"><tr>
-  <td style="padding:0 20px 0 0;vertical-align:middle;text-align:center">
-    <img alt="Essentially French" src="https://atlas.travelcollection.co/logos/essentially-french.png" width="80">
-  </td>
-  <td style="border-left:3px solid rgb(75,45,35);padding:4px 0 4px 16px;vertical-align:middle">
-    <div style="font-size:17px;font-weight:600;color:#1a1a1a;letter-spacing:0.3px;margin-bottom:2px">${v.name || "Full Name"}</div>
-    <div style="font-size:13px;color:#666;margin-bottom:10px">${v.title || "Job Title"} · Essentially French · Paris, France</div>
-    <div><span style="color:#888">M</span>&nbsp;&nbsp;${v.phoneFR || "+33 0 00 00 00 00"} &nbsp;·&nbsp; ${v.phoneUS || "+1 (000) 000 0000"}</div>
-    <div><span style="color:#888">W</span>&nbsp;&nbsp;<a href="https://www.essentiallyfrench.com" target="_blank" style="color:rgb(75,45,35);text-decoration:none">essentiallyfrench.com</a></div>
-  </td>
-</tr></table>`,
+    render: (v) => `<table width="600" style="background:#442620;font-family:Montserrat,Arial,sans-serif;color:#fff;font-weight:200;border-collapse:collapse"><tr style="height:95px"><td valign="middle" style="padding:0 30px"><img src="https://atlas.travelcollection.co/logos/essentially-french.png" alt="Essentially French" width="140" style="display:block;border:0"></td><td valign="middle" style="border-left:1px solid #fff;padding-left:30px;font-size:11px;line-height:13px"><div style="font-weight:300;font-size:17px;line-height:18px;letter-spacing:3px;text-transform:uppercase;white-space:nowrap">${v.name || "Full Name"}</div><div style="letter-spacing:2px;text-transform:uppercase;padding-top:6px">${v.title || "Job Title"}</div><div style="padding-top:8px">${v.phone || "+00 000 000 000"}<br><a href="mailto:${v.email || "email@essentiallyfrench.com"}" style="color:#fff;text-decoration:none">${v.email || "email@essentiallyfrench.com"}</a><br><a href="https://www.essentiallyfrench.com" style="color:#fff;text-decoration:none">www.essentiallyfrench.com</a></div></td><td valign="middle" align="right" style="padding-right:30px"><a href="https://www.instagram.com/essentiallyfrenchtravel/"><img src="https://atlas.travelcollection.co/social/ig.png" width="18" height="18" style="display:block;border:0;margin:0 0 6px auto"></a><a href="https://www.linkedin.com/company/106258477/"><img src="https://atlas.travelcollection.co/social/li.png" width="18" height="18" style="display:block;border:0;margin-left:auto"></a></td></tr></table>`,
   },
   "Oshinobi Travel": {
     name: "Oshinobi Travel",
