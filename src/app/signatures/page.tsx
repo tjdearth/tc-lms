@@ -298,18 +298,38 @@ export default function SignaturesPage() {
   const html = template ? template.render(values) : "";
   const tooLong = html.length > 1333;
 
+  function copyTextFallback(text: string) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+  }
+
+  async function copyText(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      copyTextFallback(text);
+    }
+  }
+
   async function copyAsHtml() {
     try {
       const blob = new Blob([html], { type: "text/html" });
       await navigator.clipboard.write([new ClipboardItem({ "text/html": blob })]);
     } catch {
-      await navigator.clipboard.writeText(html);
+      copyTextFallback(html);
     }
   }
 
   async function handleCopy() {
     if (tooLong) return;
-    await navigator.clipboard.writeText(html);
+    await copyText(html);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -324,7 +344,7 @@ export default function SignaturesPage() {
 
   async function handleCopySalesforce() {
     if (tooLong) return;
-    await navigator.clipboard.writeText(html);
+    await copyText(html);
     setCopiedSalesforce(true);
     setTimeout(() => setCopiedSalesforce(false), 2000);
     window.open("https://travelcollection.lightning.force.com/lightning/settings/personal/EmailSettings/home", "_blank");
