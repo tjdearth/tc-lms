@@ -8,6 +8,7 @@ import { useSession, signOut } from "next-auth/react";
 import { isAdmin, isCourseCreator } from "@/lib/admin";
 import { useBrand } from "@/lib/brand-context";
 import { BRAND_NAMES } from "@/lib/brands";
+import { APP_VERSION } from "@/lib/version";
 
 interface UserPermissions {
   isGlobalAdmin: boolean;
@@ -442,6 +443,9 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
               </span>
               <span className="text-[11px] truncate block" style={{ color: "#8A9BB0" }}>
                 Admin &middot; Travel Collection HQ
+              </span>
+              <span className="text-[10px] block" style={{ color: "rgba(138,155,176,0.45)" }}>
+                v{APP_VERSION}
               </span>
             </div>
             <button
