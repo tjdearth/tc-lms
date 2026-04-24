@@ -4,7 +4,7 @@ export const ADMIN_EMAILS: string[] = [
   "tucker@travelcollection.co",
   "giulia@travelcollection.co",
   "ihab@travelcollection.co",
-  // Add more admin emails here
+  "hamza@travelcollection.co",
 ];
 
 export function isAdmin(email: string | null | undefined): boolean {
