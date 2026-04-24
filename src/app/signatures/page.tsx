@@ -119,7 +119,7 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
     render: (v) => `<div style="color:rgb(136,136,136)">
   <div>${v.name || "Full Name"} | ${v.title || "Job Title"} | <a href="https://majlisretreats.com/" target="_blank">Majlis Retreats</a></div>
   <div>UAE: ${v.phoneUAE || "+971 00 000 0000"} | USA: ${v.phoneUSA || "+1 000 000 0000"}</div>
-  <div><img src="https://atlas.travelcollection.co/logos/majlis-retreats.png" width="200" height="79" alt="Majlis Retreats"></div>
+  <div><img src="https://atlas.travelcollection.co/logos/majlis-retreats-tcl.png" width="200" height="80" alt="Majlis Retreats"></div>
 </div>`,
   },
   "Authenticus Italy": {
@@ -299,8 +299,12 @@ export default function SignaturesPage() {
   const tooLong = html.length > 1333;
 
   async function copyAsHtml() {
-    const blob = new Blob([html], { type: "text/html" });
-    await navigator.clipboard.write([new ClipboardItem({ "text/html": blob })]);
+    try {
+      const blob = new Blob([html], { type: "text/html" });
+      await navigator.clipboard.write([new ClipboardItem({ "text/html": blob })]);
+    } catch {
+      await navigator.clipboard.writeText(html);
+    }
   }
 
   async function handleCopy() {
@@ -486,7 +490,7 @@ export default function SignaturesPage() {
                 {copiedGmail ? (
                   <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>Copied! Opening Gmail…</>
                 ) : (
-                  <>Copy &amp; Set in Gmail</>
+                  <>Copy and manually set in Gmail</>
                 )}
               </button>
 
@@ -505,7 +509,7 @@ export default function SignaturesPage() {
                 {copiedSalesforce ? (
                   <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>Copied! Opening Salesforce…</>
                 ) : (
-                  <>Copy &amp; Set in Salesforce</>
+                  <>Copy and manually set in Salesforce</>
                 )}
               </button>
             </div>
