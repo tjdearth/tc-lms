@@ -309,7 +309,7 @@ export default function SignaturesPage() {
 
   async function handleCopy() {
     if (tooLong) return;
-    await copyAsHtml();
+    await navigator.clipboard.writeText(html);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -324,7 +324,7 @@ export default function SignaturesPage() {
 
   async function handleCopySalesforce() {
     if (tooLong) return;
-    await copyAsHtml();
+    await navigator.clipboard.writeText(html);
     setCopiedSalesforce(true);
     setTimeout(() => setCopiedSalesforce(false), 2000);
     window.open("https://travelcollection.lightning.force.com/lightning/settings/personal/EmailSettings/home", "_blank");
