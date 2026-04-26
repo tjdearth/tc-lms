@@ -237,28 +237,7 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
     ],
     render: (v) => {
       const telHref = (v.phone || "").replace(/\s/g, "");
-      return `<table cellpadding="0" cellspacing="0" style="font-family:Arial,Helvetica,sans-serif;font-size:10pt"><tr>
-  <td style="padding-right:14px;vertical-align:middle">
-    <img src="https://atlas.travelcollection.co/logos/vista-colombia-email.png" width="90" alt="Vista Colombia" style="display:block">
-  </td>
-  <td style="border-left:2px solid #2d6b73;padding-left:14px;vertical-align:middle">
-    <div style="font-weight:700;font-size:12pt;color:#1a1a1a">${v.name || "Full Name"}</div>
-    <div style="color:#555;font-size:10pt;margin-bottom:8px">${v.title || "Job Title"}</div>
-    <table cellpadding="0" cellspacing="0"><tr><td style="padding-bottom:3px">
-      <img src="https://atlas.travelcollection.co/social/website.png" width="14" height="14" alt="" style="display:block;margin-right:6px">
-    </td><td style="padding-bottom:3px;padding-left:6px">
-      <a href="http://www.vistacolombia.com" target="_blank" style="text-decoration:none;color:#2d6b73;font-size:9.5pt">www.vistacolombia.com</a>
-    </td></tr><tr><td style="padding-bottom:3px">
-      <img src="https://atlas.travelcollection.co/social/phone.png" width="14" height="14" alt="" style="display:block;margin-right:6px">
-    </td><td style="padding-bottom:3px;padding-left:6px">
-      <a href="tel:${telHref}" style="text-decoration:none;color:#1a1a1a;font-size:9.5pt">${v.phone || "+00 000 000 0000"}</a>
-    </td></tr><tr><td>
-      <img src="https://atlas.travelcollection.co/social/email.png" width="14" height="14" alt="" style="display:block;margin-right:6px">
-    </td><td style="padding-left:6px">
-      <a href="mailto:${v.email || "email@vistacolombia.com"}" style="text-decoration:none;color:#1a1a1a;font-size:9.5pt">${v.email || "email@vistacolombia.com"}</a>
-    </td></tr></table>
-  </td>
-</tr></table>`;
+      return `<table style="font-family:Arial,sans-serif;font-size:9.5pt;color:#1a1a1a"><tr><td style="padding-right:14px"><img src="https://atlas.travelcollection.co/logos/vista-colombia-email.png" width="90" style="display:block"></td><td style="border-left:2px solid #2d6b73;padding-left:14px"><b style="font-size:12pt">${v.name || "Full Name"}</b><div style="color:#555;font-size:10pt;margin-bottom:8px">${v.title || "Job Title"}</div><table cellspacing="3"><tr><td style="padding-right:6px"><img src="https://atlas.travelcollection.co/social/website.png" width="14" height="14"></td><td><a href="http://vistacolombia.com" style="text-decoration:none;color:#2d6b73">www.vistacolombia.com</a></td></tr><tr><td style="padding-right:6px"><img src="https://atlas.travelcollection.co/social/phone.png" width="14" height="14"></td><td><a href="tel:${telHref}" style="text-decoration:none;color:#1a1a1a">${v.phone || "+00 000 000 0000"}</a></td></tr><tr><td style="padding-right:6px"><img src="https://atlas.travelcollection.co/social/email.png" width="14" height="14"></td><td><a href="mailto:${v.email || "email@vistacolombia.com"}" style="text-decoration:none;color:#1a1a1a">${v.email || "email@vistacolombia.com"}</a></td></tr></table></td></tr></table>`;
     },
   },
   "Across Mexico": {
