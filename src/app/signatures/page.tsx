@@ -227,6 +227,40 @@ const SIGNATURE_TEMPLATES: Record<string, SignatureTemplate> = {
   <div>UK phone ${v.phoneUK || "+44 0000 000000"} &nbsp;US phone ${v.phoneUS || "+1 000 000 0000"}</div>
 </div>`,
   },
+  "Vista Colombia": {
+    name: "Vista Colombia",
+    fields: [
+      { key: "name", label: "Full Name", placeholder: "e.g. Santiago Sabogal", defaultValue: "Santiago Sabogal" },
+      { key: "title", label: "Job Title", placeholder: "e.g. General Manager", defaultValue: "General Manager" },
+      { key: "email", label: "Email Address", placeholder: "e.g. santiago@vistacolombia.com", defaultValue: "santiago@vistacolombia.com" },
+      { key: "phone", label: "Phone", placeholder: "e.g. +57 311 882 7760", defaultValue: "+57 311 882 7760" },
+    ],
+    render: (v) => {
+      const telHref = (v.phone || "").replace(/\s/g, "");
+      return `<table cellpadding="0" cellspacing="0" style="font-family:Arial,Helvetica,sans-serif;font-size:10pt"><tr>
+  <td style="padding-right:14px;vertical-align:middle">
+    <img src="https://atlas.travelcollection.co/logos/vista-colombia-email.png" width="90" alt="Vista Colombia" style="display:block">
+  </td>
+  <td style="border-left:2px solid #2d6b73;padding-left:14px;vertical-align:middle">
+    <div style="font-weight:700;font-size:12pt;color:#1a1a1a">${v.name || "Full Name"}</div>
+    <div style="color:#555;font-size:10pt;margin-bottom:8px">${v.title || "Job Title"}</div>
+    <table cellpadding="0" cellspacing="0"><tr><td style="padding-bottom:3px">
+      <img src="https://atlas.travelcollection.co/social/website.png" width="14" height="14" alt="" style="display:block;margin-right:6px">
+    </td><td style="padding-bottom:3px;padding-left:6px">
+      <a href="http://www.vistacolombia.com" target="_blank" style="text-decoration:none;color:#2d6b73;font-size:9.5pt">www.vistacolombia.com</a>
+    </td></tr><tr><td style="padding-bottom:3px">
+      <img src="https://atlas.travelcollection.co/social/phone.png" width="14" height="14" alt="" style="display:block;margin-right:6px">
+    </td><td style="padding-bottom:3px;padding-left:6px">
+      <a href="tel:${telHref}" style="text-decoration:none;color:#1a1a1a;font-size:9.5pt">${v.phone || "+00 000 000 0000"}</a>
+    </td></tr><tr><td>
+      <img src="https://atlas.travelcollection.co/social/email.png" width="14" height="14" alt="" style="display:block;margin-right:6px">
+    </td><td style="padding-left:6px">
+      <a href="mailto:${v.email || "email@vistacolombia.com"}" style="text-decoration:none;color:#1a1a1a;font-size:9.5pt">${v.email || "email@vistacolombia.com"}</a>
+    </td></tr></table>
+  </td>
+</tr></table>`;
+    },
+  },
   "Across Mexico": {
     name: "Across Mexico",
     fields: [
