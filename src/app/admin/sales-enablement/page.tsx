@@ -642,9 +642,11 @@ export default function SalesEnablementPage() {
   const [hasDbAccess, setHasDbAccess] = useState(false);
 
   useEffect(() => {
+    // Sales Enablement is admin-only. GMs (gmForBrand) intentionally excluded —
+    // the page shows cross-DMC data and isn't appropriate for brand managers.
     fetch("/api/auth/permissions")
       .then(r => r.json())
-      .then(d => { if (d.isDbAdmin || d.gmForBrand) setHasDbAccess(true); })
+      .then(d => { if (d.isDbAdmin) setHasDbAccess(true); })
       .catch(() => {});
   }, []);
 

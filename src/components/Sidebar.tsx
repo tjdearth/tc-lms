@@ -206,7 +206,8 @@ export default function Sidebar({ onSearchClick, mobileOpen, onMobileClose }: Si
         ),
       },
     ] : []),
-    ...(showWikiAdmin ? [
+    // Sales Enablement is admin-only — GMs intentionally excluded
+    ...((globalAdmin || isDbAdmin) ? [
       {
         label: "Sales Enablement",
         href: "/admin/sales-enablement",
