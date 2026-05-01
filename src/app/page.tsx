@@ -7,11 +7,11 @@ import Link from "next/link";
 import { fetchWikiTree, fetchCalendarEvents, getAllArticles } from "@/lib/api";
 import { WikiNode, CalendarEvent, Course, Enrollment, MicroLesson } from "@/types";
 import { brandFromEmail } from "@/lib/brands";
+import { getVideoThumbnail } from "@/lib/video";
 
 function VideoThumbnail({ videoUrl, thumbnailUrl, title, size = 32 }: { videoUrl: string; thumbnailUrl?: string; title: string; size?: number }) {
   const [failed, setFailed] = useState(false);
-  const driveMatch = videoUrl?.match(/\/d\/([^/]+)/);
-  const thumbSrc = thumbnailUrl || (driveMatch ? `https://lh3.googleusercontent.com/d/${driveMatch[1]}=w400` : "");
+  const thumbSrc = thumbnailUrl || getVideoThumbnail(videoUrl, 400);
 
   if (!thumbSrc || failed) {
     return (

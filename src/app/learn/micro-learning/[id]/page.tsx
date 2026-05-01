@@ -4,15 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import type { MicroLesson } from "@/types";
-
-function toEmbedUrl(url: string): string {
-  // Convert Google Drive /view URLs to /preview for iframe embedding
-  const match = url.match(/\/file\/d\/([^/]+)/);
-  if (match) {
-    return `https://drive.google.com/file/d/${match[1]}/preview`;
-  }
-  return url;
-}
+import { toEmbedUrl } from "@/lib/video";
 
 export default function MicroLessonViewer() {
   const params = useParams();

@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import { useBrand } from "@/lib/brand-context";
 import type { MicroLesson } from "@/types";
+import { getVideoThumbnail } from "@/lib/video";
 
 function VideoThumbnail({ videoUrl, thumbnailUrl, title, size = 40 }: { videoUrl: string; thumbnailUrl?: string; title: string; size?: number }) {
   const [failed, setFailed] = useState(false);
-  const driveMatch = videoUrl?.match(/\/d\/([^/]+)/);
-  const thumbSrc = thumbnailUrl || (driveMatch ? `https://lh3.googleusercontent.com/d/${driveMatch[1]}=w400` : "");
+  const thumbSrc = thumbnailUrl || getVideoThumbnail(videoUrl, 400);
 
   if (!thumbSrc || failed) {
     return (

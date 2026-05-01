@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import CourseCard from "@/components/CourseCard";
 import { useBrand } from "@/lib/brand-context";
 import type { LmsUser, Course, Enrollment, MicroLesson } from "@/types";
+import { getVideoThumbnail } from "@/lib/video";
 
 export default function LearnDashboard() {
   const { data: session } = useSession();
@@ -330,8 +331,7 @@ export default function LearnDashboard() {
                   >
                     <div className="aspect-video bg-[#304256] relative flex items-center justify-center">
                       {(() => {
-                        const driveMatch = ml.video_url?.match(/\/d\/([^/]+)/);
-                        const thumbSrc = ml.thumbnail_url || (driveMatch ? `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w300` : "");
+                        const thumbSrc = ml.thumbnail_url || getVideoThumbnail(ml.video_url, 300);
                         return thumbSrc ? (
                           <img src={thumbSrc} alt={ml.title} className="w-full h-full object-cover" />
                         ) : (

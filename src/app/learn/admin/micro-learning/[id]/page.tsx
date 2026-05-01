@@ -8,6 +8,7 @@ import { useBrand } from "@/lib/brand-context";
 import { isAdmin, isCourseCreator } from "@/lib/admin";
 import { BRAND_NAMES } from "@/lib/brands";
 import type { MicroLesson } from "@/types";
+import { getVideoThumbnail } from "@/lib/video";
 
 function buildStandaloneEmailHtml(lesson: {
   title: string;
@@ -19,10 +20,9 @@ function buildStandaloneEmailHtml(lesson: {
   id: string;
 }): string {
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://atlas.travelcollection.co";
-  // Extract Google Drive file ID for thumbnail fallback
-  const driveMatch = lesson.video_url.match(/\/d\/([^/]+)/);
-  const driveThumbnail = driveMatch ? `https://lh3.googleusercontent.com/d/${driveMatch[1]}=w600` : "";
-  const thumbnailSrc = lesson.thumbnail_url || driveThumbnail;
+  // Auto-thumbnail works for both Google Drive and YouTube URLs
+  const autoThumbnail = getVideoThumbnail(lesson.video_url, 600);
+  const thumbnailSrc = lesson.thumbnail_url || autoThumbnail;
 
   return `<!DOCTYPE html>
 <html>
@@ -442,15 +442,15 @@ export default function MicroLessonEditor() {
 
             {/* Video URL + Thumbnail */}
             <div className="bg-white border border-[#E8ECF1] rounded-xl p-6 shadow-sm">
-              <label className="block text-xs font-semibold text-[#304256] uppercase tracking-wider mb-2">Google Drive Video URL *</label>
+              <label className="block text-xs font-semibold text-[#304256] uppercase tracking-wider mb-2">Video URL *</label>
               <input
                 type="text"
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="https://drive.google.com/file/d/XXXXX/view?usp=drive_link"
+                placeholder="Google Drive or YouTube link"
                 className="w-full px-3 py-2.5 border border-[#E8ECF1] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#27a28c]/30 focus:border-[#27a28c]"
               />
-              <p className="text-[11px] text-gray-400 mt-1">Paste a Google Drive sharing link. A thumbnail is auto-generated from the video for the email and gallery.</p>
+              <p className="text-[11px] text-gray-400 mt-1">Paste a Google Drive sharing link or a YouTube link. A thumbnail is auto-generated from the video for the email and gallery.</p>
 
               <div className="mt-4">
                 <label className="block text-xs font-semibold text-[#304256] uppercase tracking-wider mb-1">Custom Thumbnail URL</label>
