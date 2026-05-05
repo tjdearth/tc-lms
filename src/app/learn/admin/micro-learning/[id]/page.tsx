@@ -115,6 +115,12 @@ export default function MicroLessonEditor() {
   const [generating, setGenerating] = useState(false);
   const [sending, setSending] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
+  const [sendResult, setSendResult] = useState<{
+    sent: number;
+    attempted: number;
+    failed: number;
+    failures: { email: string; name: string | null; error: string }[];
+  } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(lessonId);
 
@@ -277,6 +283,7 @@ export default function MicroLessonEditor() {
     }
 
     setSending(true);
+    setSendResult(null);
     try {
       const res = await fetch("/api/learn/micro-lessons/send-email", {
         method: "POST",
@@ -291,13 +298,18 @@ export default function MicroLessonEditor() {
       }
 
       setSentAt(new Date().toISOString());
-      showToast(`Email sent to ${data.sent} user${data.sent !== 1 ? "s" : ""}!`);
+      setSendResult({
+        sent: data.sent ?? 0,
+        attempted: data.attempted ?? 0,
+        failed: data.failed ?? 0,
+        failures: data.failures ?? [],
+      });
+      // Keep modal open so the user can review the results
     } catch (err) {
       console.error("Send error:", err);
       showToast("Send failed");
     } finally {
       setSending(false);
-      setShowSendModal(false);
     }
   }
 
@@ -656,20 +668,59 @@ export default function MicroLessonEditor() {
                   }}
                 />
               </div>
+              {sendResult && (
+                <div className="px-6 pt-4 pb-2 border-t border-[#E8ECF1]">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-[#304256]">Send complete</div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        <span className="text-emerald-600 font-semibold">{sendResult.sent} delivered</span>
+                        {sendResult.failed > 0 && (
+                          <>
+                            <span className="text-gray-300 mx-1.5">·</span>
+                            <span className="text-red-600 font-semibold">{sendResult.failed} failed</span>
+                          </>
+                        )}
+                        <span className="text-gray-300 mx-1.5">·</span>
+                        <span>{sendResult.attempted} attempted</span>
+                      </div>
+                    </div>
+                  </div>
+                  {sendResult.failures.length > 0 && (
+                    <details className="bg-red-50/60 border border-red-100 rounded-lg">
+                      <summary className="px-3 py-2 text-xs font-semibold text-red-700 cursor-pointer hover:bg-red-50">
+                        View {sendResult.failures.length} failed recipient{sendResult.failures.length !== 1 ? "s" : ""}
+                      </summary>
+                      <div className="max-h-48 overflow-y-auto px-3 pb-2 pt-1 space-y-1">
+                        {sendResult.failures.map((f, i) => (
+                          <div key={i} className="text-[11px] py-1 border-b border-red-100/60 last:border-b-0">
+                            <div className="font-medium text-gray-800">
+                              {f.name ? `${f.name} — ` : ""}<span className="text-gray-600">{f.email}</span>
+                            </div>
+                            <div className="text-red-600 truncate">{f.error}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                </div>
+              )}
               <div className="p-6 border-t border-[#E8ECF1] flex justify-end gap-2">
                 <button
-                  onClick={() => setShowSendModal(false)}
+                  onClick={() => { setShowSendModal(false); setSendResult(null); }}
                   className="px-4 py-2 text-sm font-medium text-gray-500 border border-[#E8ECF1] rounded-lg hover:bg-gray-50"
                 >
-                  Cancel
+                  {sendResult ? "Close" : "Cancel"}
                 </button>
-                <button
-                  onClick={handleSendEmail}
-                  disabled={sending}
-                  className="px-4 py-2 text-sm font-semibold text-white bg-[#304256] rounded-lg hover:bg-[#304256]/90 disabled:opacity-50"
-                >
-                  {sending ? "Sending..." : "Send to All Users"}
-                </button>
+                {!sendResult && (
+                  <button
+                    onClick={handleSendEmail}
+                    disabled={sending}
+                    className="px-4 py-2 text-sm font-semibold text-white bg-[#304256] rounded-lg hover:bg-[#304256]/90 disabled:opacity-50"
+                  >
+                    {sending ? "Sending..." : "Send to All Users"}
+                  </button>
+                )}
               </div>
             </div>
           </div>

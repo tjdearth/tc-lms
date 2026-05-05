@@ -66,19 +66,31 @@ export async function POST(req: NextRequest) {
     });
 
     let sentCount = 0;
+    const failures: { email: string; name: string | null; error: string }[] = [];
     const resend = getResend();
 
     for (const user of users) {
       try {
-        await resend.emails.send({
+        const result = await resend.emails.send({
           from: fromEmail,
           to: user.email,
           subject: `New Micro-Lesson: ${lesson.title}`,
           html,
         });
-        sentCount++;
-      } catch {
-        console.error(`Failed to send micro-lesson email to ${user.email}`);
+        // Resend returns { data, error } — surface either path
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const err = (result as any)?.error;
+        if (err) {
+          const msg = typeof err === "string" ? err : err.message || JSON.stringify(err);
+          failures.push({ email: user.email, name: user.name || null, error: msg });
+          console.error(`Failed to send micro-lesson email to ${user.email}:`, msg);
+        } else {
+          sentCount++;
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Unknown error";
+        failures.push({ email: user.email, name: user.name || null, error: msg });
+        console.error(`Failed to send micro-lesson email to ${user.email}:`, msg);
       }
     }
 
@@ -88,7 +100,12 @@ export async function POST(req: NextRequest) {
       .update({ sent_at: new Date().toISOString() })
       .eq("id", id);
 
-    return NextResponse.json({ sent: sentCount });
+    return NextResponse.json({
+      sent: sentCount,
+      attempted: users.length,
+      failed: failures.length,
+      failures,
+    });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });

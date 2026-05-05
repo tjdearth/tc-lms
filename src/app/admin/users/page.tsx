@@ -54,6 +54,33 @@ export default function AdminUsersPage() {
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
+  // Backfill state
+  const [backfilling, setBackfilling] = useState(false);
+  const [backfillResult, setBackfillResult] = useState<{
+    inserted: number;
+    already_present: number;
+    hr_total: number;
+    message?: string;
+  } | null>(null);
+
+  async function runBackfill() {
+    if (!confirm("Seed lms_users from hr_users? Anyone in HR who isn't already in lms_users will be added so they receive micro-learning emails.")) {
+      return;
+    }
+    setBackfilling(true);
+    setBackfillResult(null);
+    try {
+      const res = await fetch("/api/admin/backfill-lms-users", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Backfill failed");
+      setBackfillResult(data);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Backfill failed");
+    } finally {
+      setBackfilling(false);
+    }
+  }
+
   const userEmail = session?.user?.email || "";
   const hasAccess = status === "authenticated" && isAdmin(userEmail);
 
@@ -185,6 +212,41 @@ export default function AdminUsersPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Email Recipient Backfill */}
+        <div className="bg-white rounded-xl border border-[#E8ECF1] p-5 mb-6">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex-1 min-w-[260px]">
+              <h2 className="text-sm font-semibold mb-1" style={{ color: "#304256" }}>
+                Email Recipient List
+              </h2>
+              <p className="text-xs text-gray-500">
+                Micro-learning emails go to everyone in <code className="text-[11px] bg-gray-100 px-1 rounded">lms_users</code>. By default that only includes people who&apos;ve visited the Learn section. Run this to backfill from HR so the whole company is covered.
+              </p>
+            </div>
+            <button
+              onClick={runBackfill}
+              disabled={backfilling}
+              className="px-4 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50 flex-shrink-0"
+              style={{ backgroundColor: "#27a28c" }}
+            >
+              {backfilling ? "Backfilling..." : "Backfill from HR"}
+            </button>
+          </div>
+          {backfillResult && (
+            <div className="mt-4 p-3 rounded-lg text-xs" style={{ backgroundColor: "#f0fdf9", border: "1px solid #d1fae5" }}>
+              <div className="font-semibold mb-1" style={{ color: "#065F46" }}>
+                {backfillResult.inserted > 0
+                  ? `Added ${backfillResult.inserted} new recipient${backfillResult.inserted !== 1 ? "s" : ""}`
+                  : "No backfill needed"}
+              </div>
+              <div style={{ color: "#374151" }}>
+                {backfillResult.hr_total} HR users · {backfillResult.already_present} already present · {backfillResult.inserted} inserted
+                {backfillResult.message ? ` — ${backfillResult.message}` : ""}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Add User Section */}

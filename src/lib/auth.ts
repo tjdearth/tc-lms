@@ -1,5 +1,7 @@
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { brandFromEmail } from "@/lib/brands";
 
 // Gmail scope is requested separately via /api/auth/gmail-scope
 // Only @travelcollection.co users get the Gmail compose permission
@@ -23,6 +25,33 @@ export const authOptions: NextAuthOptions = {
     error: "/login",
   },
   callbacks: {
+    async signIn({ user }) {
+      // Ensure every Atlas sign-in has a row in lms_users so they're
+      // included in micro-learning email blasts and other Learn features —
+      // even if they never visit /learn directly.
+      if (user?.email) {
+        try {
+          const email = user.email.toLowerCase();
+          const { data: existing } = await supabaseAdmin
+            .from("lms_users")
+            .select("id")
+            .eq("email", email)
+            .maybeSingle();
+          if (!existing) {
+            await supabaseAdmin.from("lms_users").insert({
+              email,
+              name: user.name || null,
+              image_url: user.image || null,
+              brand: brandFromEmail(email),
+            });
+          }
+        } catch (err) {
+          // Don't block sign-in if the upsert fails — log and continue
+          console.error("lms_users auto-create failed:", err);
+        }
+      }
+      return true;
+    },
     async jwt({ token, account }) {
       // Persist the Google access token and refresh token on first sign-in
       if (account) {
