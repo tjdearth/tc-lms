@@ -16,7 +16,7 @@ export async function POST() {
   // Pull every employee from HR
   const { data: hr, error: hrErr } = await supabaseAdmin
     .from("hr_users")
-    .select("email, first_name, last_name, dmc");
+    .select("email, name, dmc");
 
   if (hrErr) {
     return NextResponse.json({ error: hrErr.message }, { status: 500 });
@@ -37,12 +37,11 @@ export async function POST() {
     .filter((u) => !existingSet.has(u.email.toLowerCase()))
     .map((u) => {
       const email = u.email.toLowerCase();
-      const fullName = [u.first_name, u.last_name].filter(Boolean).join(" ").trim() || null;
       // Prefer the HR-assigned DMC; fall back to email-domain mapping
       const brand = u.dmc || brandFromEmail(email);
       return {
         email,
-        name: fullName,
+        name: u.name || null,
         image_url: null,
         brand,
       };

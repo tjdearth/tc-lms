@@ -66,15 +66,15 @@ export async function GET() {
   // 3. GMs from hr_users
   const { data: gms } = await supabaseAdmin
     .from("hr_users")
-    .select("email, first_name, last_name, dmc")
+    .select("email, name, dmc")
     .eq("hr_role", "gm");
 
   if (gms) {
     for (const gm of gms) {
       const user = getOrCreate(gm.email);
       user.roles.push({ role: "gm", brand: gm.dmc, source: "hr" });
-      if (!user.name && (gm.first_name || gm.last_name)) {
-        user.name = [gm.first_name, gm.last_name].filter(Boolean).join(" ");
+      if (!user.name && gm.name) {
+        user.name = gm.name;
       }
     }
   }
